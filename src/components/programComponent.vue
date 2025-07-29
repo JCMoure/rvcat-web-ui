@@ -33,7 +33,7 @@
 
     const nameExists = Array.from(selectEl.options).some(opt => opt.value === name);
     if (nameExists) {
-      nameError.value = "A program with this name already exists. Please choose another one.";
+      nameError.value = "A program with this name already exists. Please, choose another one.";
       return;
     }
 
@@ -176,13 +176,13 @@
   </div>
 
   <TutorialComponent v-if="showTutorial" :position="tutorialPosition"
-  text="This is the Program section. Use it to select a program to simulate.
-  You can also download the selected program in JSON format, or upload new custom ones.
-  The program and information about the instructions is displayed in the main box."
-  title="Program"
+  text="The simulated program consists of a fixed-iteration loop executing a sequence of machine instructions, each described in a high-level, informal language.
+        The simulation tracks data dependencies but omits detailed architectural state: it does not model processor registers, memory states, branch outcomes, or memory dependencies (e.g., store-load interactions).
+        &#13;The type, execution latency and eligible execution ports are shown for each instruction.
+        &#13;Programs can be uploaded or downloaded in JSON format."
+  title="Program Loop"
   @close="closeTutorial"
   />
-
 
 </template>
 
