@@ -1,22 +1,18 @@
-
 <template>
     <RouterView />
 </template>
 
 <style>
   body {
-    width: 100vf;
-    height: 100vh;
-    max-width: 100vf;
-    max-height: 100vh;
     font-family: 'Trebuchet MS', sans-serif;
-    font-size: 2.5vh;
-    height: 100%;
-    margin: 0;
-    padding: 0;
-    overflow: hidden;
+    font-size:  initial;
+    height:     100%;
+    margin:     0;
+    padding:    0;
+    overflow:   hidden;
     background: #e3e3e3;
   }
+
   ::-webkit-scrollbar {
     width: 0.75vh;
     height:0.75vh;
@@ -30,134 +26,186 @@
     border-radius:10px;
     height:0.75vh;
   }
-
-  /* Handle on hover */
   ::-webkit-scrollbar-thumb:hover {
     background: #8b8b8b;
   }
 
-  .output-block svg {
-    width: 100% !important;
-    max-height: 100% !important;
+  .main {
+    height:   100%;
+    width:    100%;
+    overflow: hidden;
+    padding:  2px 2px;
+    z-index:  10;
+    position: relative;
+    background:    white;
+    border-radius: 5px;
+    box-shadow:    0 1px 0 rgba(0,0,0,0.08);
   }
 
-  .pipeline-img svg {
-    width:100%;
-    height:auto;
+  .header {
+    display:     flex;
+    align-items: center;
+    padding:     5px;
+    justify-content: space-between;
   }
 
-  .simulation-img svg {
-    width:100%;
-    max-height:50%;
+  .section-title-and-info {
+    display:     flex;
+    align-items: center;
+    gap:         3px;
+    flex-wrap:   wrap;
   }
 
-  h3 {
-    margin: 0;
-    font-size: 3.5vh;
+  .header-title {
+    font-size:    large;
+    font-weight:  600
   }
 
-  h4{
-    font-size: 2.75vh;
+  .dropdown-wrapper {
+    display:       flex;
+    overflow:      auto;
+    align-items:   center;
+    flex-wrap:     nowrap;
+    gap:           0.4rem;
+    margin-top:    5px;
+    margin-bottom: 5px;
+  }
+  .dropdown-header {
+    all:         unset;  /* button reset */
+    width:       auto;
+    cursor:      pointer;
+    background:  #f3f3f3;
+    padding:     6px 10px;
+    display:     inline-flex;
+    align-items: center;
+    gap:         0.4rem;
+    font-size:   1.0rem;
+  }
+  .dropdown-header:hover {
+    background: #eaeaea;
+  }
+  .dropdown-title {
+    flex:      1;
+    font-size: 1.0rem;
+    overflow:  hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+  .arrow {
+    opacity:   0.8;
+    font-size: 0.85em;
+  }
+
+  .iters-group {
+    display:     inline-flex;
+    align-items: center;
+    gap:         6px;
+    margin-top:  3px;
+  }
+  .iters-label {
+    font-size:  medium;
+    text-align: center;
   }
 
   .blue-button {
-    background: #0085dd;
-    color: white;
-    border: none;
-    padding: 0.5vh 1vh;
-    font-size: 2.5vh;
-    border-radius: 1vh;
-    cursor: pointer;
-    transition: all 0.3s ease-in-out;
+    background: #e6f0ff;
+    color:      #1a4fb3;
+    border:     1px solid #7aa2e3;
+    padding:    3px 6px;
+    font-size:  small;
+    line-height:   1.2;
+    border-radius: 6px;
+    cursor:        pointer;
+    font-weight:   600;
+    white-space:   nowrap;
+    flex-shrink:   1;
+    max-height:   fit-content;
+    max-width:    fit-content;
+
+    transition:
+      background 0.15s ease,
+      color 0.15s ease,
+      box-shadow 0.15s ease,
+      transform 0.05s ease;
+  }
+  .blue-button.active {
+    background:   #1a4fb3;
+    border-color: #1a4fb3;
+    color:        white;
+    box-shadow:   inset 0 0 0 1px rgba(255,255,255,0.4);
+  }
+  .blue-button:active {
+    transform: translateY(1px);
   }
   .blue-button:hover {
     background: #006fb9;
-  }
-  .blue-button.active {
-    background: #003f73;
+    color:      white;
   }
   .blue-button[disabled] {
     opacity: 0.5;
-    cursor:default;
+    cursor:  default;
   }
-
-  .gray-button {
-    background: #e0e0e0;
-    border: 1px solid #b0b0b0;
-    border-radius: 4px;
-    width: 3.5vh;
-    height: 3.5vh;
-    line-height: 1;
-    text-align: center;
-    font-size: 2.5vh;
-    cursor: pointer;
-    user-select: none;
-  }
-
-  .gray-button:hover {
-    background: #d0d0d0;
+  .small-btn {
+    padding: 3px 0px;
   }
 
   input {
-    font-size: 2.5vh;
+    font-size: medium;
   }
 
   /* Modal styles */
   .modal-overlay {
-    position: fixed;
-    top: 0; left: 0; right: 0; bottom: 0;
+    position:   fixed;
+    top:        0; left: 0; right: 0; bottom: 0;
     background: rgba(0,0,0,0.5);
-    display: flex;
-    align-items: center;
+    display:    flex;
+    align-items:     center;
     justify-content: center;
-    z-index: 1000;
+    z-index:         1000;
   }
   .modal         {
-    background: white;
-    padding: 20px;
+    background:    white;
+    padding:       20px;
     border-radius: 8px;
-    width: 30%;
-    position: relative;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.3);
-    background: rgba(255,255,255);
-    z-index: 1000;
+    width:         30%;
+    position:      relative;
+    box-shadow:  0 2px 10px rgba(0,0,0,0.3);
+    background:  rgba(255,255,255);
+    z-index:     1000;
   }
   .modal-actions {
-    display: flex;
+    display:     flex;
     justify-content: flex-end;
-    gap: 10px;
+    gap:        10px;
     margin-top: 20px;
   }
   .error {
-    color: red;
+    color:  red;
     margin: 6px 0;
   }
 
   /* Folding animation */
   .fold-enter-active, .fold-leave-active {
-    transition: max-height 0.3s ease, opacity 0.3s ease;
-    overflow: hidden;
+    transition: max-height 0.25s ease, opacity 0.2s ease;
+    overflow:   hidden;
   }
   .fold-enter-from, .fold-leave-to {
     max-height: 0;
-    opacity: 0;
+    opacity:    0;
   }
   .fold-enter-to, .fold-leave-from {
     max-height: 500px;
-    opacity: 1;
-  }
-
-  .info-img {
-    height:2.5vh;
+    opacity:    1;
   }
 
   .info-icon {
-    cursor: pointer;
-    user-select: none;
-    margin-top:0.75vh;
+    display:      inline-flex;
+    align-items:  center;
+    cursor:       pointer;
   }
-  .section-title-and-info{
-    display:flex;
-    gap:5px;
+  .info-img {
+    height: 16px;
+    width:  16px;
   }
+
 </style>

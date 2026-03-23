@@ -1,27 +1,10 @@
 <template>
   <div class='main'>
-    <div class="header">
-      <h3>About</h3>
-    </div>
-
-      <p>
-          RVCAT (RISC-V Code Analysis Tool) is a simulation tool for the performance analysis of small programs from a computer architecture educational standpoint.
-      </p>
-      <p>
-          RVCAT and its web interface (RVCAT-Web) have been developed on
-          the Computer Architecture and Operating Systems Department of
-          the Universitat Autònoma de Barcelona (UAB) by Saul Adserias,
-          Quim Aguado Puig, Bern Vich Susanna, and Juan C. Moure.
-      </p>
-      <p>
-          The simulator and web interface are still under active
-          development. If you find any bugs or want to help improving the
-          tools (for example, as part of a final degree project), please
-          contact your professors.
-      </p>
-      <p>
-          <b>The RVCAT developers © 2025</b>
-      </p>
+      <p><strong>RVCAT</strong> (Code Analysis Tool) is an <strong>educational simulation tool</strong> that demonstrates how processor architecture impacts the <em>execution performance</em> of program loops.</p>
+      <p>RVCAT has been developed on the <em>Computer Architecture and Operating Systems</em> (CAOS) Department of the <em>Universitat Autònoma de Barcelona</em> (UAB) by Saul Adserias, Quim Aguado, Bern Vich, Aleix Jorda and Juan C. Moure.</p>
+      <p>The simulator is still under active development. If you find any bugs or want to help improving the tools, please contact us (JuanCarlos.Moure@uab.es).</p>
+      <p>We also want to thank the support from Santiago Marco, Albert Jimenez and Maria Carmen de Toro.</p>
+      <p><b>The RVCAT developers © 2026</b></p>
     </div>
 </template>
 
@@ -34,14 +17,5 @@
     padding: 5px;
     border-radius: 10px;
     position: relative;
-  }
-  .header{
-    position:sticky;
-    top:-5px;
-    background:white;
-    width:100%;
-  }
-  p{
-    font-size: 2.5vh;
   }
 </style>

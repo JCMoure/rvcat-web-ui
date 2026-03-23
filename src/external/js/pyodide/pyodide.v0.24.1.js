@@ -10,4 +10,3 @@
 `,l);let d=ve(r,s);if(c(),d.version.includes("dev")||r.setCdnUrl(`https://cdn.jsdelivr.net/pyodide/v${d.version}/full/`),await r.packageIndexReady,r._pyodide._importhook.register_module_not_found_hook(r._import_name_to_package_name,r.lockfile_unvendored_stdlibs_and_test),r.lockfile_info.version!==v)throw new Error("Lock file version doesn't match Pyodide version");return r.package_loader.init_loaded_packages(),s.fullStdLib&&await d.loadPackage(r.lockfile_unvendored_stdlibs),r.initializeStreams(s.stdin,s.stdout,s.stderr),d}m(T,"loadPyodide");globalThis.loadPyodide=T;return se(we);})();
 try{Object.assign(exports,loadPyodide)}catch(_){}
 globalThis.loadPyodide=loadPyodide.loadPyodide;
-//# sourceMappingURL=pyodide.js.map

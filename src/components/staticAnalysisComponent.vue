@@ -1,311 +1,713 @@
 <script setup>
-  import { ref, onMounted, nextTick, onUnmounted } from "vue";
-  import TutorialComponent from '@/components/tutorialComponent.vue';
+  import { ref, toRaw, onMounted, onUnmounted, nextTick, inject, watch, reactive } from 'vue'
+  import HelpComponent                                  from '@/components/helpComponent.vue'
+  import { createGraphVizGraph }                                              from '@/common'
+  import { useRVCAT_Api }                                                   from '@/rvcatAPI'
 
-  let processorsListHandler;
-  let programsListHandler;
-  const showAnnotations = ref(false);
-  const showFullScreen = ref(false);
-  const showTutorial = ref(false);
-  const tutorialPosition = ref({ top: '50%', left: '50%' });
-  const infoIcon = ref(null);
+  const { getDependenceGraph, getPerformanceAnalysis } = useRVCAT_Api();
+  const { registerHandler } = inject('worker');
+  const simState            = inject('simulationState');
 
-  function openTutorial() {
-    nextTick(() => {
-      const el = infoIcon.value
-      if (el) {
-        const r = el.getBoundingClientRect()
-        tutorialPosition.value = {
-          top: `${r.bottom}px`,
-          left: `${r.right}px`
-        }
-        showTutorial.value = true
+  /* ------------------------------------------------------------------
+   * Dependence Graph options (persistent in localStorage)
+   * ------------------------------------------------------------------ */
+  const STORAGE_KEY = 'dependentGraphOptions'
+  const defaultOptions = {
+    iters:       1,
+    showIntern:  false,
+    showLaten:   false,
+    showSmall:   false,
+    showFull:    false,
+    showThrough: false
+  }
+
+  const savedOptions = (() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY)
+      console.log('🔎load options')
+      return saved ? JSON.parse(saved) : defaultOptions
+    } catch {
+      return defaultOptions
+    }
+  })()
+
+  const dependenceGraphOptions = reactive({ ...defaultOptions, ...savedOptions })
+  const dependenceGraphSvg     = ref('')
+  const showFullScreen         = ref(false);
+
+  let graphTimeout          = null
+  let cleanupHandleGraph    = null
+  let cleanupHandleAnalysis = null
+
+  const performanceData = ref({
+    name:                "No data",
+    LatencyTime:         0.0,
+    ThroughputTime:      0.0,
+    "performance-bound": "N/A",
+    BestTime:            0.0,
+    "Throughput-Bottlenecks": []
+  })
+
+  const saveOptions = () => {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(dependenceGraphOptions))
+    } catch (error) {
+      console.error('🔎❌ Failed to save:', error)
+    }
+  }
+
+  onMounted(() => {
+    console.log('🔎🎯 Static Analysis Component mounted')
+    cleanupHandleGraph    = registerHandler('get_dependence_graph',     handleGraph);
+    cleanupHandleAnalysis = registerHandler('get_performance_analysis', handleAnalysis);
+
+    try {    // Load from localStorage
+      const saved = localStorage.getItem(STORAGE_KEY)
+      if (saved) {
+        Object.assign(dependenceGraphOptions, JSON.parse(saved))
       }
-    })
+      const { name, ROBsize, dispatch, retire, instruction_list } = simState.simulatedProcess
+      getPerformanceAnalysis(JSON.stringify( { name, ROBsize, dispatch, retire, instruction_list: toRaw(instruction_list)}, null, 2));
+    } catch (error) {
+      console.error('🔎❌ Failed to load:', error)
+    }
+  });
+
+  // Clean up on unmount
+  onUnmounted(() => {
+    if (cleanupHandleGraph) {
+        cleanupHandleGraph();
+        cleanupHandleAnalysis();
+        cleanupHandleGraph    = null;
+        cleanupHandleAnalysis = null
+    }
+  })
+
+ /* ------------------------------------------------------------------
+  * Dependence Graph options: UI actions
+  * ------------------------------------------------------------------ */
+  function toggleIntern () { dependenceGraphOptions.showIntern  = !dependenceGraphOptions.showIntern  }
+  function toggleLaten  () { dependenceGraphOptions.showLaten   = !dependenceGraphOptions.showLaten   }
+  function toggleSmall  () { dependenceGraphOptions.showSmall   = !dependenceGraphOptions.showSmall   }
+  function toggleFull   () { dependenceGraphOptions.showFull    = !dependenceGraphOptions.showFull    }
+  function toggleThrough() { dependenceGraphOptions.showThrough = !dependenceGraphOptions.showThrough }
+
+  watch(dependenceGraphOptions, () => {
+    clearTimeout(graphTimeout)
+    try {
+      dependenceGraphOptions.iters = Math.min(dependenceGraphOptions.iters, 7);
+      dependenceGraphOptions.iters = Math.max(dependenceGraphOptions.iters, 1);
+      saveOptions()
+      graphTimeout = setTimeout(() => {
+        getDependenceGraph(
+          JSON.stringify( toRaw(simState.simulatedProcess.instruction_list), null, 2),
+          dependenceGraphOptions.iters,
+          dependenceGraphOptions.showIntern,
+          dependenceGraphOptions.showLaten,
+          dependenceGraphOptions.showSmall,
+          dependenceGraphOptions.showFull
+        )
+      }, 75)
+      console.log('🔎✅ Saved graph options')
+    } catch (error) {
+      console.error('🔎❌Failed to save dependence graph options:', error)
+    }
+  },
+  { deep: true, immediate: true })
+
+  // Watch for changes on processor or program
+  watch (
+    [() => simState.simulatedProcess], () => {
+      clearTimeout(graphTimeout)
+      graphTimeout = setTimeout(() => {
+        const { name, ROBsize, dispatch, retire, instruction_list } = simState.simulatedProcess
+        getPerformanceAnalysis(JSON.stringify( { name, ROBsize, dispatch, retire, instruction_list: toRaw(instruction_list)}, null, 2));
+        getDependenceGraph(
+          JSON.stringify( toRaw(instruction_list), null, 2),
+          dependenceGraphOptions.iters,
+          dependenceGraphOptions.showIntern,
+          dependenceGraphOptions.showLaten,
+          dependenceGraphOptions.showSmall,
+          dependenceGraphOptions.showFull
+        )
+      }, 75)
+      console.log('🔎✅ Graph updated')
+    },
+    { deep: true, immediate: false })
+
+  // Handler for 'get_dependence_graph' message (fired by RVCAT getDependenceGraph function)
+  const handleGraph = async (data, dataType) => {
+    if (dataType === 'error') {
+      console.error('🔎❌Failed to get dependence graph:', data);
+      return;
+    }
+    try {
+      const svg = await createGraphVizGraph(data);
+      dependenceGraphSvg.value = svg.outerHTML;
+      console.log('🔎✅ Dependence Graph updated')
+    } catch (error) {
+      console.error('🔎❌Failed to generate SVG for graphviz Dependence Graph:', error)
+      dependenceGraphSvg.value = `<div class="error">Failed to render graph</div>`;
+    }
   }
 
-  function closeTutorial() {
-    showTutorial.value = false
+  // Handler for 'get_performance_analysis' message (fired by RVCAT getPerformanceAnalysis function)
+  const handleAnalysis = async (data, dataType) => {
+    if (dataType === 'error') {
+      console.error('🔎❌Failed to get performance analysis:', data);
+      return;
+    }
+    try {
+      Object.assign(performanceData.value, JSON.parse(data))  // let VUE understand reactive action
+      console.log('🔎✅ Performance Analysis updated')
+    } catch (error) {
+      console.error('🔎❌Error handling performance analysis:', error)
+    }
   }
 
+/* ------------------------------------------------------------------
+ * Fullscreen graph
+ * ------------------------------------------------------------------ */
   function openFullScreen() {
     showFullScreen.value = true;
-    // after DOM updates, clone the existing SVG into the popup
     nextTick(() => {
-      const src = document.getElementById("simulation-output");
-      const dst = document.getElementById("simulation-output-full");
+      const src = document.getElementById("dependence-graph");
+      const dst = document.getElementById("dependence-graph-full");
       if (src && dst) {
         dst.innerHTML = "";
         dst.appendChild(src.querySelector("svg").cloneNode(true));
       }
     });
   }
-
-  function closeFullScreen() {
+  function closeFullScreen()  {
     showFullScreen.value = false;
   }
 
-  function toggleAnnotations() {
-    showAnnotations.value = !showAnnotations.value;
+/* ------------------------------------------------------------------
+ * Help support
+ * ------------------------------------------------------------------ */
+  const showHelp1 = ref(false);  const showHelp2 = ref(false);  const showHelp3 = ref(false);
+  const helpIcon1 = ref(null);   const helpIcon2 = ref(null);   const helpIcon3 = ref(null);
+  const helpPosition = ref({ top: '0%', left: '0%' });
 
-    if (showAnnotations.value) {
-      if (typeof programShowPerfAnnotations === "function") {
-        nextTick(() => {
-          programShowPerfAnnotations();
-        });
-      } else {
-        console.error("programShowPerfAnnotations function not found.");
-      }
+  function openHelp1()  { nextTick(() => { showHelp1.value = true }) }
+  function closeHelp1() { showHelp1.value  = false }
+  function openHelp2()  { nextTick(() => { showHelp2.value = true }) }
+  function closeHelp2() { showHelp2.value  = false }
+  function openHelp3()  { nextTick(() => { showHelp3.value = true }) }
+  function closeHelp3() { showHelp3.value  = false }
+
+  // Method to determine CSS class based on performance bound
+  const getBoundClass = (bound) => {
+    switch(bound) {
+      case 'LATENCY':
+        return 'latency-bound'
+      case 'THROUGHPUT':
+        return 'throughput-bound'
+      default:
+        return 'both'
     }
   }
 
-  onMounted(() => {
-    nextTick(() => {
-      const processorsList = document.getElementById("processors-list");
-      if (processorsList) {
-        processorsListHandler = () => {
-          setTimeout(() => {
-            if (showAnnotations.value && typeof programShowPerfAnnotations === "function") {
-              programShowPerfAnnotations();
-            }
-          }, 100);
-        };
-        processorsList.addEventListener("change", processorsListHandler);
-      }
-      const programsList = document.getElementById("programs-list");
-      if (programsList) {
-        programsListHandler = () => {
-          setTimeout(() => {
-            if (showAnnotations.value && typeof programShowPerfAnnotations === "function") {
-              programShowPerfAnnotations();
-            }
-          }, 100);
-        };
-        programsList.addEventListener("change", programsListHandler);
-      }
-
-      if (typeof showCriticalPathsGraph === "function") {
-        showCriticalPathsGraph();
-      } else {
-        console.error("simulation-output element not found.");
-      }
-    });
-  });
-
-  onUnmounted(() => {
-    const processorsList = document.getElementById("processors-list");
-    if (processorsList && processorsListHandler) {
-      processorsList.removeEventListener("change", processorsListHandler);
-    }
-
-    const programsList = document.getElementById("programs-list");
-    if (programsList && programsListHandler) {
-      programsList.removeEventListener("change", programsListHandler);
-    }
-  });
 </script>
 
 <template>
   <div class="main">
     <div class="header">
       <div class="section-title-and-info">
-        <span ref="infoIcon" class="info-icon" @click="openTutorial" title="Show help"><img src="/img/info.png" class="info-img"></span>
-        <h3>Static Analysis</h3>
+        <span ref="helpIcon1" class="info-icon" @click="openHelp1" title="Show Help" >
+          <img src="/img/info.png" class="info-img">
+        </span>
+        <span class="header-title">Static Performance Analysis: <strong>{{  simState.programName }}</strong></span>
       </div>
     </div>
 
-    <div class="annotations-wrapper">
-      <div class="annotations-header" @click="toggleAnnotations">
-        <span class="arrow">{{ showAnnotations ? '▼' : '▶' }}</span>
-        <span class="title"><b>Performance Annotations</b></span>
-      </div>
+  <div class="performance-summary">
+    <div class="summary-card compact">
+      <div class="metrics-grid">
+        <div class="metric-item">
+          <span class="metric-label">Bound:</span>
+          <span class="metric-value"
+            id="performance-bound"
+            title="Performance bound: can be latency (cyclic dependencies) or throughput (resources)"
+            :class="getBoundClass(performanceData['performance-bound'])">
+            {{ performanceData['performance-bound'] }}
+          </span>
 
-      <Transition name="fold" appear>
-        <pre v-show="showAnnotations" id="performance-annotations" class="annotations-box"></pre>
-      </Transition>
-    </div>
-    <div class="output-block-wrapper" id="simulation-output-container">
-      <div class="graph-header">
-        <button class="blue-button" @click="openFullScreen">
-          <img src="/img/fullscreen.png" class="fs-img">
-        </button>
-        <h4>Recurrent Paths Graph</h4>
+        </div>
+        <div class="metric-item">
+          <span class="metric-label">Latency:</span>
+          <span class="metric-value"
+              id="latency-limit"
+              title="Minimum execution time (clock cycles per executed loop iteration) due to cyclic data dependencies among instructions"
+            >
+            {{ performanceData.LatencyTime.toFixed(2) }} cycles/iteration
+          </span>
+
+        </div>
+        <div class="metric-item">
+          <span class="metric-label">Throughput:</span>
+          <span class="metric-value"
+            id="throughput-limit"
+            title="Minimum execution time (clock cycles per executed loop iteration) due to execution/dispatch/retire throughput limits"
+            >
+            {{ performanceData.ThroughputTime.toFixed(2) }} cycles/iteration
+          </span>
+
+        </div>
+        <div class="metric-item">
+          <span class="metric-label">Best possible time:</span>
+          <span class="metric-value highlight"
+              id="best-limit"
+              title="Minimum execution time (clock cycles per executed loop iteration) due to either throughput or latency limits"
+            >
+            {{ performanceData.BestTime.toFixed(2) }} cycles/iteration
+          </span>
+
+        </div>
       </div>
-      <div class="output-block" id="simulation-output"></div>
     </div>
   </div>
-  <div v-if="showFullScreen" class="fullscreen-overlay">
+
+    <!-- Bottlenecks Section -->
+    <div class="dropdown-wrapper">
+
+      <span ref="helpIcon2" class="info-icon" @click="openHelp2" title="Show Help">
+        <img src="/img/info.png" class="info-img">
+      </span>
+
+      <button class="dropdown-header" @click="toggleThrough"
+              id="detailed-thorughput-limits"
+              title="Show detailed throughput limits"
+              :aria-expanded="dependenceGraphOptions.showThrough">
+
+        <span class="arrow" aria-hidden="true">
+          {{ dependenceGraphOptions.showThrough ? '▼' : '▶' }}
+        </span>
+
+        <span class="dropdown-title">
+          Throughput Bottlenecks ({{ performanceData['Throughput-Bottlenecks']?.length || 0 }})
+        </span>
+      </button>
+    </div>
+
+    <Transition name="fold" appear>
+      <div v-show="dependenceGraphOptions.showThrough" class="summary-card compact">
+        <div v-for="(bottleneck, index) in performanceData['Throughput-Bottlenecks']" :key="index" class="bottleneck-item">
+          <div class="bottleneck-index">{{ index + 1 }}: </div>
+          <div class="bottleneck-text">{{ bottleneck }}</div>
+        </div>
+      </div>
+    </Transition>
+
+    <div class="output-block-wrapper" id="simulation-output-container">
+      <div class="graph-toolbar">
+        <span ref="helpIcon3" class="info-icon" @click="openHelp3" title="Show Help">
+          <img src="/img/info.png" class="info-img">
+        </span>
+        <span class="dropdown-title"> Latency-bound Limits </span>
+
+        <div class="controls">
+          <div class="iters-group">
+            <span class="iters-label">Iterations:</span>
+            <input type="number" min="1" max="7" v-model.number="dependenceGraphOptions.iters"
+              title="# loop iterations (1 to 7)"
+              id="dependence-graph-iterations"
+            >
+          </div>
+          <div class="iters-group">
+            <button class="blue-button" :class="{ active: dependenceGraphOptions.showIntern }"
+                title="Show/Hide Nodes with only internal data dependencies"
+                id="show-internal-dependences"
+              @click="toggleIntern">
+              <span v-if="dependenceGraphOptions.showIntern">✔ </span>
+              Internal
+            </button>
+            <button class="blue-button" :class="{ active: dependenceGraphOptions.showLaten  }"
+                 title="Show/Hide Execution Latencies"
+                 id="show-latency-dependences"
+              @click="toggleLaten">
+              <span v-if="dependenceGraphOptions.showLaten">✔ </span>
+              Latencies
+            </button>
+            <button class="blue-button" :class="{ active: dependenceGraphOptions.showSmall  }"
+                 title="Show/Hide Instruction Text"
+                 id="show-instruction-dependences"
+              @click="toggleSmall">
+              <span v-if="dependenceGraphOptions.showSmall">✔ </span>
+              Small
+            </button>
+            <button class="blue-button" :class="{ active: dependenceGraphOptions.showFull   }"
+                 title="Show/Hide constant and read-only input data dependencies"
+                 id="show-full-dependences"
+              @click="toggleFull">
+              <span v-if="dependenceGraphOptions.showFull">✔ </span>
+              Full
+            </button>
+          </div>
+          <button class="icon-button" @click="openFullScreen"
+             title="Open fullscreen"
+             id="open-full-dependence-graph"
+            >
+             <img src="/img/fullscreen.png" class="bt-img">
+          </button>
+        </div>
+      </div>
+
+      <div class="output-block"
+           id="dependence-graph"
+           v-html="dependenceGraphSvg"
+           v-if="dependenceGraphSvg">
+      </div>
+    </div>
+  </div>
+
+  <div v-if="showFullScreen" class="fullscreen-overlay" @click.self="closeFullScreen">
     <div class="fullscreen-content">
       <div class="fullscreen-header">
-        <h3>Recurrent Paths Graph</h3>
-        <button class="close-btn" @click="closeFullScreen">x</button>
+        <span>Data Dependence Graph (circular paths in red)</span>
+        <button class="close-btn" @click="closeFullScreen">×</button>
       </div>
-      <div class="output-block" id="simulation-output-full"></div>
+      <div class="graph-container">
+        <div class="graph-wrapper"
+             v-html="dependenceGraphSvg"
+             v-if="dependenceGraphSvg">
+        </div>
+      </div>
     </div>
   </div>
-  <TutorialComponent v-if="showTutorial" :position="tutorialPosition"
-  text="The Static Analysis section shows performance and program information from a static point of view.
-  The Performance Annotations dropdown showcases the throughput and latency limits of the execution,
-  while the graph below depicts all recurrent paths in the program. Click on the fullscreen button to make
-  the graph larger in a resizeable window."
-  title="Static Analysis"
-  @close="closeTutorial"/>
+
+  <Teleport to="body">
+    <HelpComponent v-if="showHelp1" :position="helpPosition"
+    text="<em>Statically</em> determined <strong>throughput</strong> and <strong>latency</strong> bottlenecks. <p>The minimum execution time per loop iteration may be <em>throughput-bound</em>,
+      meaning it is limited by the processor’s instruction <strong>dispatch</strong>, <strong>execution</strong>, or <strong>retirement</strong> capacity for a given subset of instructions.</p>
+      <p>Alternatively, it may be <em>latency-bound</em>, meaning it is constrained by a <strong>loop-carried chain of data dependencies</strong> that forms a critical path across iterations.</p>"
+    title="Static Performance Analysis"
+    @close="closeHelp1"/>
+  </Teleport>
+
+  <Teleport to="body">
+    <HelpComponent v-if="showHelp2" :position="helpPosition"
+    text="Performance may be limited by the <strong>maximum throughput</strong> of a hardware resource,
+         such as <em>dispatch width</em> or a set of <em>execution ports</em> required to execute a particular subset of instructions."
+    title="Throughput-bound execution time"
+    @close="closeHelp2"/>
+  </Teleport>
+
+  <Teleport to="body">
+    <HelpComponent v-if="showHelp3" :position="helpPosition"
+    text="The data dependence graph highlights <strong>circular</strong> dependencies (shown in red) that determine <em>latency-bound</em> execution time (cycles per loop iteration).
+      <p>You can show or hide internal dependencies, execution latencies, instruction details, and full input dependencies on constant and read-only values.</p>
+      <p>Click the <strong>fullscreen</strong> button to enlarge the graph.</p>"
+    title="Latency-bound execution time"
+    @close="closeHelp3"/>
+    </Teleport>
 </template>
 
 <style scoped>
-  .main {
-    height: 100%;
-    width: 100%;
-    background: white;
-    overflow: auto;
-    padding: 5px;
-    border-radius: 10px;
-  }
-  .header {
-    position: sticky;
-    padding-top:2px;
-    padding-bottom:5px;
-    top: -5px;
-    left:0;
-    background: white;
-    width: 100%;
-  }
-  h3 {
-    margin: 0;
-  }
-  .annotations-wrapper {
-    margin-top: 5px;
-  }
-  .annotations-header {
-    cursor: pointer;
-    background-color: #f0f0f0;
-    padding: 4px 8px;
-    border-radius: 5px 5px 0 0;
-    display: flex;
+  .iters-group input[type="number"] { width: 4ch; }
+
+  .graph-toolbar {
+    display:     flex;
     align-items: center;
-    font-size: 14px;
+    gap:         8px;
+    width:       100%;
+    box-sizing:  border-box;
+    overflow:    hidden;
+    min-width:   0;
   }
-  .annotations-header .arrow {
-    margin-right: 5px;
+  .controls {
+    display:     flex;
+    align-items: center;
+    gap:         8px;
+    margin-left: auto;
+    min-width:   0;
   }
-  .annotations-box {
-    white-space: pre-wrap;
-    background: #f0f0f0;
-    padding: 10px;
-    border-radius: 0 0 5px 5px;
-    margin-top: 0;
-    font-size: 2.5vh;
+  .output-block-wrapper {
+    display:        flex;
+    flex-direction: column;
+    overflow:       hidden;
+    width:          100%;
+    min-width:      0;
   }
-  .fs-img {
+  .output-block {
+    position:   relative;
+    flex:       1;
+    width:      100%;
+    min-width:  0;
+    overflow:   hidden;
+    border:     1px solid #e0e0e0;
+    border-radius: 6px;
+  }
+  .output-block svg {
+    position: absolute;
+    inset:    0;
+    width:    100%;
+    height:   auto;
+    max-width:  100%;
+    display:    block;
+  }
+
+  .icon-button {
+    border:      none;
+    cursor:      pointer;
+    padding:     6px;
+    display:     inline-flex;
+    align-items: center;
+    background:  #b0b0b0;
+    transition:  background 0.2s;
+    justify-content: center;
+    border-radius:   6px;
+    margin-left:     auto;
+  }
+  .icon-button img,
+  .icon-button svg {
+    width:  1.2em;
+    height: 1.2em;
+  }
+  .icon-button:hover {
+    background: #a0a0a0;      /* darker at hover */
+  }
+  .icon-button:active {
+    background: #909090;      /* still darker */
+  }
+  .icon-button:focus {
+    outline:        2px solid #1a4fb3;  /* keypad */
+    outline-offset: 2px;
+  }
+
+  .btn-img {
     height:2.5vh;
   }
-  /* The full-screen overlay */
+
   .fullscreen-overlay {
     position: fixed;
     top: 0; left: 0;
     width: 100vw; height: 100vh;
-    background: rgba(0,0,0,0.4);
+    background: rgba(0,0,0,0.5);
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 1000;
+    z-index: 10000;
   }
 
-  .fullscreen-content {
-    background: white;
-    margin: 10px;
-    padding: 10px;
-    border: 1px solid #ccc;
-    border-radius: 8px;
-    width: 90%;
-    height: 90%;
-    resize: both;
-    overflow: auto;
-    min-width: 300px;
-    min-height: 200px;
-    max-width:99%;
-    max-height:99%;
+ .fullscreen-content {
+  position: fixed;
+  background: white;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+  display: flex;
+  flex-direction: column;
+  min-width: 400px;
+  min-height: 300px;
+  width: 800px; /* Tamaño fijo inicial */
+  height: 600px;
+  resize: both;
+  overflow: auto;
+  pointer-events: auto; /* IMPORTANTE: el contenido puede recibir clicks */
+  z-index: 1000;
+}
+
+.fullscreen-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  background: #2c3e50;
+  color: white;
+  font-weight: 600;
+  border-radius: 8px 8px 0 0;
+  cursor: grab;
+  user-select: none;
+  flex-shrink: 0; /* Evita que el header se encoja */
+}
+
+.fullscreen-header:active {
+  cursor: grabbing;
+}
+
+.fullscreen-header span {
+  flex: 1;
+  text-align: center;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 24px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 8px;
+  opacity: 0.8;
+}
+
+.close-btn:hover {
+  opacity: 1;
+}
+
+.graph-container {
+  flex: 1;
+  padding: 10px;
+  overflow: hidden;
+  background: #f8f9fa;
+  min-height: 0;
+}
+
+.graph-wrapper {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.graph-wrapper svg {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+  .performance-analysis {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+  }
+
+  .performance-summary {
+    margin: 0.2rem 0;
+  }
+
+  .summary-card {
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 2px;
+    padding: 0.2rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  }
+
+  .card-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #2c3e50;
+    margin-bottom: 1rem;
+    padding-bottom: 0.2rem;
+    border-bottom: 2px solid #e9ecef;
+  }
+
+  /* CSS para diseño horizontal */
+  .metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 0.5rem;
+    align-items: center;
+  }
+
+  .metric-item {
     display: flex;
     flex-direction: column;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+    align-items: center;
+    text-align: center;
+    padding: 0.3rem;
+    background: #f8f9fa;
+    border-radius: 4px;
   }
 
-
-  .fullscreen-content .close-btn {
-    align-self: flex-end;
-    background: none;
-    border: none;
-    font-size: 3vh;
-    cursor: pointer;
-    margin-bottom: 8px;
+  .metric-label {
+    font-size: 0.95em;
+    color: #6c757d;
+    margin-bottom: 0.1rem;
   }
 
-  .output-block {
+  .metric-value {
+    font-size: 1em;
+    font-weight: 600;
+  }
+
+  .metric-value.highlight {
+    color: #1a73e8;
+    font-size: 1.1em;
+  }
+
+  .metric-value.latency-bound {
+    color:         #d93025;
+    background:    #fce8e6;
+    padding:       0 4px;
+    border-radius: 3px;
+  }
+
+  .metric-value.throughput-bound {
+    color:         #188038;
+    background:    #e6f4ea;
+    padding:       0 4px;
+    border-radius: 3px;
+  }
+
+  .metric-value.both {
+    color:         #488038;
+    background:    #eff4ea;
+    padding:       0 4px;
+    border-radius: 3px;
+  }
+
+  .bottlenecks-list {
+    background: #fff;
+    border: 1px solid #dadce0;
+    border-radius: 3px;
+    overflow: hidden;
+  }
+
+  .bottleneck-item {
+    display: flex;
+    padding: 0.25rem 1rem;
+    border-bottom: 1px solid #f1f3f4;
+    background: #f8f9fa;
+  }
+
+  .bottleneck-item:last-child {
+    border-bottom: none;
+  }
+
+  .bottleneck-index {
+    min-width: 20px;
+    color: #5f6368;
+    font-weight: 600;
+    font-size: 0.95em;
+  }
+
+  .bottleneck-text {
     flex: 1;
+    color: #202124;
+    font-size: 0.9em;
+    line-height: 1.4;
+  }
+
+  .annotations-box {
+    margin-top: 0.5rem;
+  }
+
+  /* Fold transition */
+  .fold-enter-active, .fold-leave-active {
+    transition: all 0.3s ease;
+    max-height: 500px;
     overflow: hidden;
   }
 
-  .output-block svg {
-    width: 100%;
-    height: 100%;
+  .fold-enter-from, .fold-leave-to {
+    opacity: 0;
+    max-height: 0;
   }
-
-  .graph-header {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5em; /* space between button and title */
-  }
-
-  .fullscreen-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 12px;
-  }
-
-  .fullscreen-title {
-    margin: 0;
-    font-size: 1.2em;
-    font-weight: 500;
-  }
-
-  .title {
-    font-size: 2.75vh;
-  }
-
-  .close-btn {
-    background: none;
-    border: none;
-    font-size: 1.5em;
-    line-height: 1;
-    cursor: pointer;
-    padding: 4px;
-  }
-
-  .output-block-wrapper {
-    display: flex;
-    flex-direction: column;
-    height: 90%;
-  }
-
-  .graph-header {
-    flex: 0 0 auto;
-  }
-
-  .output-block {
-    flex: 1 1 auto;
-    position: relative;
-    overflow: hidden;
-  }
-
-  .output-block svg {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100% !important;
-    height: 100% !important;
-  }
-
-
 
 </style>

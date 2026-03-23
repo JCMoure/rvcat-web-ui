@@ -1,863 +1,728 @@
-
 <script setup>
-  import { ref, onMounted, nextTick, onUnmounted, watch} from 'vue';
-  import TutorialComponent from '@/components/tutorialComponent.vue';
+  import { ref, toRaw, onMounted, nextTick, onUnmounted, watch, inject, reactive} from 'vue'
+  import HelpComponent                                 from '@/components/helpComponent.vue'
+  import { charToProcessingState  }                                          from '@/common'
+  import { useRVCAT_Api }                                                  from '@/rvcatAPI'
 
-  let processorsListHandler;
-  let programsListHandler;
-  const canvasWidth = 1200;
-  const canvasHeight = 10000;
-  const hoverInfo = ref(null);
-  const timelineCanvas = ref(null);
-  const tooltipRef = ref(null);
-  let timelineData = ref(null);
-  const showTutorial = ref(false);
-  const tutorialPosition = ref({ top: '50%', left: '50%' });
-  const infoIcon = ref(null);
-  const clickedCellInfo = ref(null);
+  const { getTimeline }     = useRVCAT_Api()
+  const { registerHandler } = inject('worker')
+  const simState            = inject('simulationState')
 
-  function openTutorial() {
-    nextTick(() => {
-      const el = infoIcon.value
-      if (el) {
-        const r = el.getBoundingClientRect()
-        tutorialPosition.value = {
-          top: `${r.bottom}px`,
-          left: `${r.right}px`
+  /* ------------------------------------------------------------------
+   * Timeline options (persistent in localStorage)
+   * ------------------------------------------------------------------ */
+  const STORAGE_KEY = 'timelineOptions'
+
+  const defaultOptions = {
+    iters:         1,
+    showPorts:     false,
+    canvasScale:   1,
+    canvasOffsetX: 0,
+    canvasOffsetY: 0
+  }
+
+  const savedOptions = (() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY)
+      console.log('📈load options')
+      return saved ? JSON.parse(saved) : defaultOptions
+    } catch {
+      return defaultOptions
+    }
+  })()
+
+  const timelineOptions = reactive({ ...defaultOptions, ...savedOptions })
+
+  const saveOptions = () => {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(timelineOptions))
+    } catch (error) {
+      console.error('📈❌ Failed to save:', error)
+    }
+  }
+
+  function createDefaultTimeline() {
+    return {
+      cycles:       4,
+      instructions: [ [0, 0, 0, "0", "DEWR", [0,1,2,3]]],
+      portUsage:    { "0": [1], "1": [] }
+    };
+  }
+
+  const timeline       = ref(createDefaultTimeline())
+  const timelineCanvas = ref(null)
+  const overlayCanvas  = ref(null)
+
+// ============================================================================
+// WATCHES: timelineOptions, simulatedProcess, timeline  HANDLERS: getTimeline
+// ============================================================================
+  watch( () => timelineOptions.iters, (newIters, oldIters) => {
+      if (newIters === oldIters) return
+      try {
+        const clamped = Math.min(Math.max(newIters, 1), 9)
+        if (clamped !== newIters) {
+          timelineOptions.iters = clamped
+          return
         }
-        showTutorial.value = true
+        saveOptions()
+        requestTimeline() // request timeline to RVCAT, then update timeline --> fire drawTimeline
+        console.log('📈✅ Modified timeline iters')
+      } catch (error) {
+        console.error('📈❌Failed to save timeline options:', error)
       }
+    }
+  )
+
+  watch( () => [timeline.value, timelineOptions.showPorts, timelineOptions.canvasScale,
+      timelineOptions.canvasOffsetX, timelineOptions.canvasOffsetY ],
+    ([newTimeline, newShowPorts], [oldTimeline, oldShowPorts]) => {
+
+      if (!timelineCanvas.value || !newTimeline) return
+
+      if (newShowPorts !== oldShowPorts) {
+        saveOptions()
+        console.log('📈✅ Modified showPorts')
+      }
+      scheduleDraw()
+    }
+  )
+
+  watch ([() => simState.simulatedProcess], () => { requestTimeline() },
+    { deep: true, immediate: false })
+
+  // Handler for 'get_timeline' message (fired by RVCAT getTimeline function)
+  const handleTimeline = async (data, dataType) => {
+    if (dataType === 'error') {
+      console.error('📈❌Failed to get timeline:', data)
+      return;
+    }
+    try {
+      let timelineRVCAT       = JSON.parse(data)
+      timelineRVCAT.portUsage = getPortUsage(timelineRVCAT);
+      timeline.value = timelineRVCAT
+      timelineOptions.canvasScale   = 1
+      timelineOptions.canvasOffsetX = 0
+      timelineOptions.canvasOffsetY = 0
+    } catch (error) {
+      console.error('📈❌Failed to process JSON timeline:', error)
+    }
+  }
+
+// ============================================================================
+// LIFECYCLE:  Mount/unMount
+// ============================================================================
+  let cleanupHandleTimeline = null
+
+  // Load from localStorage
+  onMounted(() => {
+    cleanupHandleTimeline = registerHandler('get_timeline', handleTimeline)
+    addCanvasWrapper()
+    requestTimeline()  // generate timeline using RVCAT (if previous components are mounted)
+    console.log('📈🎯 Timeline Component mounted')
+  });
+
+  // Clean up on unmount
+  onUnmounted(() => {
+    if (cleanupHandleTimeline) {
+      cleanupHandleTimeline()
+      cleanupHandleTimeline = null
+    }
+  })
+
+/* ------------------------------------------------------------------
+* UI actions
+* ------------------------------------------------------------------ */
+  function togglePorts()  { timelineOptions.showPorts = !timelineOptions.showPorts }
+
+  function getPortUsage(timeline) {
+    const usage = {};
+    for (const [iter, instrIdx, startCycle, port, states] of timeline.instructions) {
+      const eIndex = states.indexOf("E");
+      if (eIndex < 0) continue;
+      const cycle = startCycle + eIndex;
+      (usage[port] ??= []).push(cycle);
+    }
+    for (const p in usage) {
+      usage[p].sort((a,b)=>a-b);
+    }
+    return usage;
+  }
+
+  function buildPortTimelineMatrix(timeline) {
+
+    const portUsage = timeline.portUsage || getPortUsage(timeline);
+
+    // Determinar número de ciclos
+    const maxCycle = Math.max(
+      ...Object.values(portUsage).flat(),
+      0
+    );
+
+    const cycles = maxCycle + 1;
+    const ports = Object.keys(portUsage).sort((a,b)=>Number(a)-Number(b));
+    const matrix = {};
+
+    for (const p of ports) {
+      matrix[p] = new Array(cycles).fill(0);
+    }
+
+    for (const [port, usedCycles] of Object.entries(portUsage)) {
+      for (const c of usedCycles) {
+        matrix[port][c]++;
+      }
+    }
+
+    return { cycles, ports, matrix };
+    // {  cycles: 4, ports: ["0","1"], matrix: { "0": [0,1,1,0], "1": [0,0,0,1] }
+  }
+
+  function renderPortUsageASCII(portMatrix) {
+    //     0123
+    // P0  .XX.
+    // P1  ...X
+    const { cycles, ports, matrix } = portMatrix;
+    const lines = [];
+    let header = "    ";
+    for (let c = 0; c < cycles; c++) {
+      header += (c % 10);
+    }
+    lines.push(header);
+
+    for (const p of ports) {
+      let row = `P${p}  `;
+      for (let c = 0; c < cycles; c++) {
+        row += matrix[p][c] > 0 ? "X" : ".";
+      }
+      lines.push(row);
+    }
+    return lines.join("\n");
+  }
+
+  function requestTimeline() {
+    if (simState.state >= 3) {
+      console.log('📈🔄 Request timeline from RVCAT')
+      const { name, ROBsize, dispatch, retire, sched, blksize, nBlocks, mPenalty, mIssueTime, instruction_list } = simState.simulatedProcess
+      getTimeline(JSON.stringify( { name, ROBsize, dispatch, retire, sched, blksize, nBlocks, mPenalty, mIssueTime,
+                                    instruction_list: toRaw(instruction_list)}, null, 2),
+                  timelineOptions.iters) // Call Python RVCAT
+    }
+  }
+
+  function addCanvasWrapper () {
+    const wrapper = document.getElementById("canvas-container")
+    let   dragging  = false
+    let   startX, startY
+
+    const observer = new ResizeObserver(() => {
+      togglePorts()  // forces watcher to re-draw canvas
+      togglePorts()  // forces watcher to re-draw canvas
+    })
+
+    observer.observe(wrapper)
+
+    const canvas = timelineCanvas.value
+
+    // canvas.addEventListener("mousemove", onMouseMove)
+    canvas.addEventListener("click", onClick)
+
+    wrapper.addEventListener("mousedown", (e) => {
+      dragging = true
+      startX   = e.clientX
+      startY   = e.clientY
+    })
+
+    window.addEventListener("mouseup", () => {
+      dragging = false
+    })
+
+    wrapper.addEventListener("mousemove", (e) => {
+
+      if (!dragging) {
+        onMouseMove(e)
+        return
+      }
+
+      const dx = e.clientX - startX
+      const dy = e.clientY - startY
+      startX   = e.clientX
+      startY   = e.clientY
+
+      // fire drawTimeline reaction
+      timelineOptions.canvasOffsetX += dx
+      timelineOptions.canvasOffsetY += dy
+    })
+
+    wrapper.addEventListener("wheel", (e) => {
+
+      e.preventDefault()
+      const zoomFactor = 1.1
+
+      // fire drawTimeline reaction
+      if (e.deltaY < 0) {
+        timelineOptions.canvasScale *= zoomFactor
+      } else {
+        timelineOptions.canvasScale /= zoomFactor
+      }
+    }, { passive:false })
+  }
+
+/* ------------------------------------------------------------------
+ * CANVAS: DRAW timeline
+ * ------------------------------------------------------------------ */
+  const hoverInfo        = ref(null)
+  const tooltipRef       = ref(null)
+  const clickedCellInfo  = ref(null)
+  const interactiveCells = []
+  let totalCycles = 0
+  let totalInstr  = 0
+  let cellW       = 14
+  let cellH       = 20
+  let padX        = 10
+  let padY        = 10
+  let fontSize    = 14
+  let fontXOffset = 2
+  let fontYOffset = 3
+  let rafPending  = false
+  let hoverRow    = null
+  let hoverCol    = null
+
+  function scheduleDraw() {
+    if (rafPending) return
+    rafPending = true
+
+    requestAnimationFrame(() => {
+      drawTimeline()
+      rafPending = false
     })
   }
 
-  function closeTutorial() {
-    showTutorial.value = false
-  }
+  function drawTimeline() {
 
-  function getCookie(name) {
-    const re = new RegExp(
-      "(?:^|; )" +
-        name.replace(/([.$?*|{}()[\]\\/+^])/g, "\\$1") +
-        "=([^;]*)"
-    );
-    const match = document.cookie.match(re);
-    return match ? decodeURIComponent(match[1]) : null;
-  }
+    const rect = timelineCanvas.value.getBoundingClientRect()
+    timelineCanvas.value.width  = rect.width
+    timelineCanvas.value.height = rect.height
 
-  function setCookie(name, value, days = 30) {
-    const maxAge = days * 24 * 60 * 60;
-    document.cookie = `${name}=${encodeURIComponent(
-      value
-    )}; max-age=${maxAge}; path=/`;
-  }
+    overlayCanvas.value.width  = rect.width
+    overlayCanvas.value.height = rect.height
 
-  function useBooleanCookie(key, defaultValue = false) {
-    const val = ref(defaultValue);
+    const { cycles, instructions, portUsage } = timeline.value
 
-    onMounted(() => {
-      const c = getCookie(key);
-      if (c !== null) {
-        val.value = c === '1';
-      }
-    });
+    totalCycles = cycles
+    totalInstr  = instructions.length
+    cellW = 14
+    cellH = 20
+    padX  = 10
+    padY  = 10
+    fontSize   = 14
+    fontXOffset = 2
+    fontYOffset = 3
+    hoverRow = null
+    hoverCol = null
+    hoverInfo.value = null
 
-    watch(val, (v) => {
-      setCookie(key, v ? '1' : '0');
-    });
+    const ctxOverlay = overlayCanvas.value.getContext('2d')
+    ctxOverlay.setTransform(1,0,0,1,0,0)
+    ctxOverlay.clearRect(0, 0, overlayCanvas.value.width, overlayCanvas.value.height)
+    ctxOverlay.setTransform(
+      timelineOptions.canvasScale, 0, 0, timelineOptions.canvasScale,
+      timelineOptions.canvasOffsetX, timelineOptions.canvasOffsetY
+    )
 
-    return val;
-  }
+    const ctx = timelineCanvas.value.getContext('2d')
+    ctx.setTransform(1,0,0,1,0,0)
+    ctx.clearRect(0,0,timelineCanvas.value.width,timelineCanvas.value.height)
+    ctx.setTransform(
+      timelineOptions.canvasScale, 0, 0, timelineOptions.canvasScale,
+      timelineOptions.canvasOffsetX, timelineOptions.canvasOffsetY
+    )
 
-  const iterations = ref(parseInt(getCookie("timelineIterations")) || 1);
-  watch(iterations, (v) => setCookie("timelineIterations", v));
-
-  const zoomLevel = ref(parseInt(getCookie("timelineZoom")) || 1);
-  watch(zoomLevel, (v) => {
-    if (timelineData.value) {
-      drawTimeline(timelineData.value);
-    }
-    setCookie("timelineZoom", v);
-  });
-
-  const showPorts = useBooleanCookie('showPorts', true);
-  const showInstructions = useBooleanCookie('showInstructions', true);
-
-  onMounted(() => {
-    nextTick(async () => {
-      const processorsList = document.getElementById("processors-list");
-      if (processorsList) {
-        processorsListHandler = () => {
-          setTimeout(async () => {
-            getTimelineAndDraw()
-          }, 100);
-        };
-        processorsList.addEventListener("change", processorsListHandler);
-      }
-      const programsList = document.getElementById("programs-list");
-      if (programsList) {
-        programsListHandler = () => {
-          setTimeout(async () => {
-            getTimelineAndDraw()
-          }, 100);
-        };
-        programsList.addEventListener("change", programsListHandler);
-      }
-      getTimelineAndDraw()
-    });
-  });
-
-   function changeIterations(delta) {
-    const input = document.getElementById("dependencies-num-iters");
-    const newVal = Math.min(Math.max(iterations.value + delta, 1), 50);
-    iterations.value = newVal;
-    input.value = newVal;
-
-    getTimelineAndDraw();
-  }
-
-  function toggleInstructions() {
-    showInstructions.value = !showInstructions.value;
-    if (timelineData.value) {
-      drawTimeline(timelineData.value);
-    }
-  }
-
-  function togglePorts() {
-    showPorts.value = !showPorts.value;
-    if (timelineData.value) {
-      drawTimeline(timelineData.value);
-    }
-  }
-
-  function drawTimeline(data) {
-    const canvas = timelineCanvas.value;
-    const ctx    = canvas.getContext('2d');
-    const cellW   = 14 * zoomLevel.value;
-    const cellH   = 20 * zoomLevel.value;
-    const padX    = 20 * zoomLevel.value;
-    const padY    = 10 * zoomLevel.value;
-    const fontSize = 14 * zoomLevel.value;
-    const fontYOffset = 3 * zoomLevel.value;
-
-    // Split raw lines and extract port info
-    const rawLines = data.split('\n');
-    const rowPorts = extractRowInfo(rawLines);
-
-    // Parse header (to find headerStart, headerMask, cycleCount)
-    const { headerStart, headerMask, cycleCount } = parseHeader(rawLines);
-    if (headerStart === null) {
-      console.error("drawTimeline: no header line found.");
-      return;
-    }
-    const headerLen = headerMask.length;
-
-    // Produce processed lines
-    const processed = rawLines.map(line =>
-      collapseLine(line, headerStart, headerLen, headerMask)
-    );
-
-    // Filter out port rows, compute visibleRows[]
-    const visibleRows = filterVisibleRows(processed, rowPorts, showPorts.value);
-
-    // Measure & resize canvas based on visibleRows and zoomLevel and show/hide instructions
-    const measured = measureLines(visibleRows, showInstructions.value);
-    canvas.width  = padX * 2 + measured.maxCols * cellW;
-    canvas.height = padY * 2 + visibleRows.length * cellH;
-
-    // Draw each row + build interactiveCells
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.font = `${fontSize}px monospace`;
-    ctx.textBaseline = 'top';
+    ctx.font                  = `${fontSize}px monospace`;
+    ctx.textBaseline          = 'top';
     ctx.imageSmoothingEnabled = false;
 
-    const interactiveCells = [];
-    visibleRows.forEach(({ raw, instrID, portNumber, type }, rowIndex) => {
-    drawOneRow({
-      ctx,
-      raw,
-      port: portNumber,
-      instrType: type,
-      instrID,
-      rowIndex,
-      padX, padY, cellW, cellH,
-      headerStart, cycleCount,
-      fontYOffset,
-      showInstructions: showInstructions.value,
-      interactiveCells
-    });
-  });
+    interactiveCells.length = 0   // empty list
 
-    // Attach mousemove to show hover info
-    attachHover(canvas, interactiveCells, headerStart);
-  }
+    // First line: 0 1 2 3 ...   start on (0,0)
+    let   x = padX
+    const y = padY
+    for (let i = 0; i < cycles; ) {
+      let ch          = String(i % 10)
+      ctx.fillStyle   = "#ffffff"
+      ctx.strokeStyle = "#bbb"
+      ctx.lineWidth   = 1
+      ctx.fillRect    (x, y, cellW, cellH)
+      ctx.strokeRect  (x, y, cellW, cellH)
 
+      ctx.fillStyle = "#000"
+      ctx.fillText    (ch, x + fontXOffset, y + fontYOffset)
 
-  // get the esecution port of each instruction
-  function extractRowInfo(rawLines) {
-    const idToType = {};    // will map instrID → mnemonic string
+      let sequenceOfPorts = Object.keys(portUsage)
+        .filter(p => {
+          const usage = portUsage[p]
+          return Array.isArray(usage)
+            ? usage.includes(i)
+            : i in usage
+        })
+        .map(p => `P${p}`)
+        .join(',')
 
-    return rawLines.map(line => {
-      // Get instruction number
-      const idMatch = line.match(/^\s*\[\s*\d+\s*,\s*(\d+)\s*\]/);
-      const instrID = idMatch ? idMatch[1] : null;
+      sequenceOfPorts = `Ports used: ${sequenceOfPorts || 'none'}`
 
-      // Get port and instruction type
-      const m = line.match(/\(P\.(\d+)\)(?:\s*([A-Za-z0-9_.]+))?/);
-      let portNumber = m ? m[1] : null;
-      let type = (m && m[2]) ? m[2] : null;
+      interactiveCells.push({
+        x, y, colIdx: i, rowIdx: -1,   /* indicates 1st row of cycles */
+        sequenceOfPorts
+      })
 
-      if(line.trim().startsWith("P")){
-        const m = line.match(/^P\.?(\d+)/);
-        portNumber = parseInt(m[1]);
-      }
-
-      // Store type if instruction does have it
-      if (instrID !== null && type !== null) {
-        idToType[instrID] = type;
-      }
-
-      // Reuse type if not in first
-      if (instrID !== null && type === null && idToType[instrID]) {
-        type = idToType[instrID];
-      }
-
-      return { instrID, portNumber, type };
-    });
-  }
-
-
-
-  // Parse header to get its beggining, end and deleted whitespaces
-  function parseHeader(lines) {
-
-    let headerStart = null;
-    let headerMask  = null;
-    let cycleCount  = 0;
-
-    for (const line of lines) {
-      const m = line.match(/^(\s*)([0-9 ]+)(\s*)$/);
-      if (!m) continue;
-
-      headerStart = m[1].length;
-      const digitsSeq = m[2];
-      headerMask = Array.from(digitsSeq, ch => /\d/.test(ch));
-      cycleCount = headerMask.filter(b => b).length;
-      break;
+      i++
+      x += cellW
     }
 
-    return {
-      headerStart,
-      headerMask: headerMask || [],
-      cycleCount
-    };
-  }
+    // ************************************************************************************
+    //   for each inst. & for each cycle, write cell into canvas and push interactive cells
+    // ************************************************************************************
+    for (const [rowIdx, [iter, instrIdx, startCycle, port, states, critical_cycles]] of instructions.entries())
+    {
+      // Compute background color based on iteration number
+      const rowBg = iter >= 0 ? `hsl(${(iter * 80) % 360}, 50%, 90%)` : "#ffffff";
 
+      //  Draw line starting on (x,y)
+      let   x = padX;
+      const y = padY + (rowIdx+1) * cellH;
 
-  // Collapse lines to delete single whitespaces and align graph
-  function collapseLine(origLine, headerStart, headerLen, headerMask) {
-    let line = origLine;
+      for (let i = 0; i < cycles; ) {
+        let ch        = ' '
+        let currColor = "#000"
 
-    // Reposition [] labels to start of line
-    const firstBracket = line.indexOf('[');
-    if (firstBracket !== -1) {
-      const closeBracket = line.indexOf(']', firstBracket);
-      if (closeBracket !== -1) {
-        const pre = line.slice(0, firstBracket);
-        const core = line.slice(firstBracket, closeBracket + 1);
-        const post = line.slice(closeBracket + 1);
-        line = core + pre + post;
-      }
-    }
+        // register interactive cell & check critical
+        if (i >= startCycle && i < startCycle+states.length) {
+          ch  = states[i-startCycle];
+          let critical         = critical_cycles.includes(i - startCycle)
+          let first_exec_stage = (ch == 'E' && states[i-startCycle-1] != 'E')
 
-    // Case A: Header line (remove spaces in between digits)
-    const headerMatch = line.match(/^(\s*)([0-9 ]+)(\s*)$/);
-    if (headerMatch) {
-      const prefix = headerMatch[1];
-      const middle = headerMatch[2].replace(/ /g, "");
-      const suffix = headerMatch[3];
-      return prefix + middle + suffix;
-    }
+          if (critical) currColor = "red"
 
-    // Case B: Port‐usage line (remove spaces in same positions as header)
-    if (line.trim().startsWith("P") || line.trim().startsWith("MM")) {
-      let labelPart = line.slice(0, headerStart);
-      let rest = line.slice(headerStart);
-      if (rest.length < headerLen) {
-        rest += " ".repeat(headerLen - rest.length);
-      }
-      labelPart = labelPart.replace(/\bP\.(\d)\b/, "P$1 ");
-      let collapsed = "";
-      for (let i = 0; i < headerLen; i++) {
-        if (headerMask[i]) {
-          collapsed += rest[i] || " ";
+          interactiveCells.push({
+            x, y,
+            colIdx: i,
+            rowIdx,
+            char: ch,
+            critical,
+            first_exec_stage,
+            port,
+            instrIdx
+          })
         }
-      }
-      if (rest.length > headerLen) {
-        collapsed += rest.slice(headerLen);
-      }
-      return labelPart + collapsed;
-    }
 
-    // Case C: Instruction line (remove spaces in same positions as header(ignoring ANSI labels))
-    const instrMatch = line.match(/^(\s*\[[^\]]+\]\s*)(.*)$/);
-    if (instrMatch) {
-      let labelPart = line.slice(0, headerStart);
-      let rest = line.slice(headerStart);
-      if (rest.length < headerLen) {
-        rest += " ".repeat(headerLen - rest.length);
-      }
-
-      // Find first “R” position (raw index)
-      let retireIdx = rest.indexOf("R");
-      if (retireIdx === -1) retireIdx = rest.length - 1;
-
-      // Advance past any ANSI after the “R”
-      let afterRetire = retireIdx + 1;
-      if (rest.charAt(afterRetire) === "\x1b") {
-        const ansiMatch = rest.slice(afterRetire).match(/^\x1b\[(\d+)m/);
-        if (ansiMatch) afterRetire += ansiMatch[0].length;
-      }
-
-      const timelineRaw = rest.slice(0, afterRetire);
-      let comment = rest.slice(afterRetire).replace(/^\s*/, " ");
-
-      // Collect exactly headerLen visible chars, tracking red ANSI
-      const chars = [];
-      const isRed = [];
-      let idx = 0;
-      let currColor = null;
-      while (idx < timelineRaw.length && chars.length < headerLen) {
-        if (timelineRaw[idx] === "\x1b") {
-          const ansiMatch = timelineRaw.slice(idx).match(/^\x1b\[(\d+)m/);
-          if (ansiMatch) {
-            currColor = (ansiMatch[1] === "91") ? "red" : null;
-            idx += ansiMatch[0].length;
-            continue;
-          }
-          idx++;
-          continue;
-        }
-        chars.push(timelineRaw[idx]);
-        isRed.push(currColor === "red");
-        idx++;
-      }
-      while (chars.length < headerLen) {
-        chars.push(" ");
-        isRed.push(false);
-      }
-
-      // Determine how many false‐columns to drop under headerMask=false
-      const falseCount = headerMask.reduce((s, keep) => s + (keep ? 0 : 1), 0);
-      const keepFlags = new Array(headerLen).fill(true);
-      let toRemove = falseCount;
-      for (let i = 0; i < headerLen && toRemove > 0; i++) {
-        if (!headerMask[i] && chars[i] === " ") {
-          keepFlags[i] = false;
-          toRemove--;
-        }
-      }
-      if (toRemove > 0) {
-        for (let i = 0; i < headerLen && toRemove > 0; i++) {
-          if (!headerMask[i] && keepFlags[i] && chars[i] === " ") {
-            keepFlags[i] = false;
-            toRemove--;
-          }
-        }
-      }
-
-      // Rebuild collapsed timeline (with ANSI for red)
-      let collapsed = "";
-      for (let i = 0; i < headerLen; i++) {
-        if (keepFlags[i]) {
-          const ch = chars[i];
-          collapsed += isRed[i] ? `\x1b[91m${ch}\x1b[0m` : ch;
-        }
-      }
-      const idP = comment.indexOf("(");
-      if (idP !== -1) {
-        comment = comment.slice(0, idP).trimEnd();
-      }
-
-      if (comment.length > 1) {
-        const firstChar = comment.charAt(0);
-        const restChars = comment.slice(1).replace(/ /g, "");
-        comment = firstChar + restChars;
-      }
-
-      const idxBracket = labelPart.indexOf('[');
-      if (idxBracket !== -1 && labelPart[idxBracket + 1] === ' ') {
-        // Remove only the single space immediately after “[”
-        labelPart =
-          labelPart.slice(0, idxBracket + 1) +
-          labelPart.slice(idxBracket + 2);
-      }
-      return labelPart + " " + collapsed + " " + comment;
-    }
-
-    // Case D: Anything else
-    return line;
-  }
-
-
-  function filterVisibleRows(processedLines, rowInfo, showPorts) {
-    const visible = [];
-    for (let i = 0; i < processedLines.length; i++) {
-      const line = processedLines[i];
-      const { instrID, portNumber, type } = rowInfo[i];
-
-      if (!showPorts) {
-        const t = line.trim();
-        if (t.startsWith("P") || t.startsWith("MM") || i === 0) {
-          continue;
-        }
-      }
-      visible.push({
-        raw:        line,
-        instrID,
-        portNumber,
-        type
-      });
-    }
-    return visible;
-  }
-
-
-
-
-  // Remove instructions if necessary and compute canvas size
-  function measureLines(visibleRows, showInstructions) {
-    const cleaned = visibleRows.map(({ raw }) => {
-      let line = raw;
-      if (!showInstructions) {
-        const rIdx = line.indexOf("R");
-        if (rIdx > -1) line = line.slice(0, rIdx + 1);
-      }
-      return line.replace(/\x1b\[91m/g, "").replace(/\x1b\[0m/g, "");
-    });
-    const maxCols = cleaned.reduce((mx, l) => Math.max(mx, l.length), 0);
-    return { maxCols, lines: cleaned };
-  }
-
-
-  // Draw row of timeline canvas element
-  function drawOneRow({
-    ctx, raw, port, instrType, instrID, rowIndex,
-    padX, padY, cellW, cellH,
-    headerStart, cycleCount,fontYOffset,
-    interactiveCells
-  }) {
-    // Compute visible‐column indices of first “D” and first “R”
-    const { dVisIdx, rVisIdx } = computeDandRIdxs(raw);
-
-    // Compute background color based on iteration number
-    let iteration = -1;
-    const m = raw.match(/^\s*\[\s*(\d+),/);
-    if (m) iteration = parseInt(m[1], 10);
-    const rowBg = iteration >= 0 ? `hsl(${(iteration * 80) % 360}, 50%, 90%)` : "#ffffff";
-
-    // Draw each character
-    let visCol = 0;
-    let x = padX;
-    const y = padY + rowIndex * cellH;
-    let currColor = "#000";
-
-    for (let i = 0; i < raw.length; ) {
-      // Handle ANSI sequences to change character color
-      if (raw[i] === "\x1b") {
-        const ansiMatch = raw.slice(i).match(/^\x1b\[(\d+)m/);
-        if (ansiMatch) {
-          currColor = ansiMatch[1] === "91" ? "red" : "#000";
-          i += ansiMatch[0].length;
-          continue;
-        }
-        i++;
-        continue;
-      }
-
-      visCol++;
-      const colIdxVis = visCol - 1;
-      const ch = raw[i];
-
-      // Draw grid
-      if (colIdxVis >= headerStart && colIdxVis < headerStart + cycleCount) {
         ctx.fillStyle   = rowBg;
         ctx.strokeStyle = "#bbb";
         ctx.lineWidth   = 1;
-        ctx.fillRect(x, y, cellW, cellH);
-        ctx.strokeRect(x, y, cellW, cellH);
-        let kind;
-        if(raw.trim().startsWith("P")){
-          kind='port';
-        } else if(raw.trim().startsWith("MM")){
-          kind='mem';
-        } else {
-          kind='instr';
-        }
-        // Register interactive cell
-        if ((colIdxVis >= dVisIdx && colIdxVis <= rVisIdx) || (kind==='port' && ch==="X") || (kind==='mem' && ch==="#")) {
-          interactiveCells.push({
-            kind,
-            x, y,
-            width:      cellW,
-            height:     cellH,
-            char:       ch,
-            rowIndex,
-            colIndexVis: colIdxVis,
-            port,
-            instrType,
-            state:      charToState(ch),
-            instrID
-          });
-        }
-      }
+        ctx.fillRect    (x, y, cellW, cellH);
+        ctx.strokeRect  (x, y, cellW, cellH);
+        ctx.fillStyle = currColor;
+        ctx.fillText    (ch, x + fontXOffset, y + fontYOffset);
 
-      // Draw char
-      ctx.fillStyle = currColor;
-      ctx.fillText(ch, x + 2, y + fontYOffset);
-
-      i++;
-      x += cellW;
-    }
-  }
-
-
-  // Get index of D and R
-  function computeDandRIdxs(raw) {
-    let dVisIdx = Infinity;
-    let rVisIdx = -1;
-    let tmpVis = 0;
-    let i = 0;
-
-    while (i < raw.length) {
-      if (raw[i] === "\x1b") {
-        const ansiMatch = raw.slice(i).match(/^\x1b\[(\d+)m/);
-        if (ansiMatch) {
-          i += ansiMatch[0].length;
-          continue;
-        }
         i++;
-        continue;
+        x += cellW;
       }
-      const ch = raw[i];
-      if (ch === "D" && dVisIdx === Infinity) {
-        dVisIdx = tmpVis;
-      }
-      if (ch === "R" && rVisIdx === -1) {
-        rVisIdx = tmpVis;
-      }
-      tmpVis++;
-      i++;
     }
-
-    return { dVisIdx, rVisIdx };
   }
 
+  function drawHoverOverlay(row, col) {
+    const ctx = overlayCanvas.value.getContext('2d')
+    ctx.clearRect(0, 0, overlayCanvas.value.width, overlayCanvas.value.height)
 
-  // Attach hover and click event to cells
-  function attachHover(canvas, interactiveCells, headerStart) {
-    canvas.onmousemove = e => {
-      const rect   = canvas.getBoundingClientRect();
-      const mouseX = e.clientX - rect.left;
-      const mouseY = e.clientY - rect.top;
+    if (row === null || col === null) return
 
-      let hitCell = null;
-      for (const cell of interactiveCells) {
-        if (
-          mouseX >= cell.x &&
-          mouseX <= cell.x + cell.width &&
-          mouseY >= cell.y &&
-          mouseY <= cell.y + cell.height
-        ) {
-          hitCell = cell;
-          break;
-        }
-      }
+    ctx.strokeStyle = 'red'
+    ctx.lineWidth = 1
+    ctx.strokeRect( padY, padY + (row+1) * cellH, totalCycles*cellW, cellH )
+    ctx.strokeRect( padX + col * cellW, padX, cellW, (totalInstr+1)*cellH)
+  }
 
-      if (!hitCell) {
-        hoverInfo.value = null;
-        return;
-      }
-      let instrType = hitCell.instrType;
-      let instrID   = hitCell.instrID;
-      // If it is a Port cell, find which instruction the X corresponds to
-      if (hitCell.kind === 'port') {
-        if (hitCell.char === 'X') {
-          // find the instr cell in the same cycle & same port, with char 'E'
-          const match = interactiveCells.find(c =>
-            c.kind == 'instr' &&
-            c.port == hitCell.port &&
-            c.colIndexVis == hitCell.colIndexVis &&
-            c.char == 'E' && isFirstE(interactiveCells, c)
-          );
-          if (match){
-            instrType = match.instrType;
-            instrID   = match.instrID;
-          }
-        }
-      }
+  function onMouseMove(e) {
+    const rect = timelineCanvas.value.getBoundingClientRect()
 
-      // For instruction rows, only show port on first 'E'
-      let displayPort = null;
+    const mouseX = e.clientX - rect.left
+    const mouseY = e.clientY - rect.top
 
-      if (hitCell.kind === 'port') {
-        displayPort = hitCell.port;
-      } else if (
-        hitCell.kind === 'instr' &&
-        hitCell.char === 'E' &&
-        isFirstE(interactiveCells, hitCell)
+    const worldX = (mouseX - timelineOptions.canvasOffsetX) / timelineOptions.canvasScale
+    const worldY = (mouseY - timelineOptions.canvasOffsetY) / timelineOptions.canvasScale
+
+    let hitCell = null
+
+    for (const cell of interactiveCells) {
+      if (
+        worldX >= cell.x &&
+        worldX <= cell.x + cellW &&
+        worldY >= cell.y &&
+        worldY <= cell.y + cellH
       ) {
-        displayPort = hitCell.port;
+        hitCell = cell
+        break
       }
+    }
+    if (!hitCell) {
+      hoverInfo.value = null
+      simState.instrHighlightedIdx = -1
+      simState.highlightedPort = -1
+
+      if (hoverRow != null || hoverCol != null) {
+        hoverRow = null
+        hoverCol = null
+        drawHoverOverlay(null, null)
+      }
+      return
+    }
+
+    const { rowIdx: row, colIdx: col, instrIdx, char, port, first_exec_stage, critical, sequenceOfPorts } = hitCell
+
+    if (row === -1) {
+      simState.highlightedPort = -1
+      simState.instrHighlightedIdx = -1
+      hoverInfo.value = {
+        x:        e.clientX + 10,
+        y:        e.clientY + 10,
+        state:    sequenceOfPorts,
+        critical: false
+      }
+      hoverRow = null
+      hoverCol = null
+      drawHoverOverlay(null, null)
+      adjustTooltipPosition(e)
+      return
+    }
+
+    if (hoverRow !== row || hoverCol !== col) {
+
+      if (simState.instrHighlightedIdx !== instrIdx)
+        simState.instrHighlightedIdx = instrIdx
+      if (char !== 'E')
+        simState.highlightedPort = -1
+      else if (simState.highlightedPort !== port)
+        simState.highlightedPort = port
 
       hoverInfo.value = {
-        x: e.clientX + 10,
-        y: e.clientY + 10,
-        cycle: hitCell.colIndexVis - headerStart,
-        port:  displayPort != null ? displayPort : "N/A",
-        state: hitCell.state ?? "N/A",
-        type:  instrType ?? "N/A",
-        instr: instrID ?? "N/A",
-        kind: hitCell.kind,
-      };
+        x:        e.clientX + 10,
+        y:        e.clientY + 10,
+        state:    charToProcessingState(char, first_exec_stage ? port : null),
+        critical: critical
+      }
+      adjustTooltipPosition(e)
 
-      canvas.onclick = e => {
-        const rect = canvas.getBoundingClientRect();
-        const mouseX = e.clientX - rect.left;
-        const mouseY = e.clientY - rect.top;
+      hoverRow = row
+      hoverCol = col
+      drawHoverOverlay(row, col)
+    }
+  }
 
-        for (const cell of interactiveCells) {
-          if (
-            mouseX >= cell.x &&
-            mouseX <= cell.x + cell.width &&
-            mouseY >= cell.y &&
-            mouseY <= cell.y + cell.height
-          ) {
-            handleCellClick(cell.instrID, cell.colIndexVis - headerStart);
-            break;
-          }
-        }
-      };
+  function onClick(e) {
+    const rect = timelineCanvas.value.getBoundingClientRect()
 
-      // Flip tooltip if it overflows screen
-      nextTick(() => {
-        const tt = tooltipRef.value;
-        if (!tt) return;
-        const tr = tt.getBoundingClientRect();
-        const vw = window.innerWidth;
-        const vh = window.innerHeight;
+    const mouseX = e.clientX - rect.left
+    const mouseY = e.clientY - rect.top
 
-        let newX = hoverInfo.value.x;
-        let newY = hoverInfo.value.y;
+    const worldX = (mouseX - timelineOptions.canvasOffsetX) / timelineOptions.canvasScale
+    const worldY = (mouseY - timelineOptions.canvasOffsetY) / timelineOptions.canvasScale
 
-        if (tr.right > vw) {
-          newX = e.clientX - tr.width - 10;
-        }
-        if (tr.bottom > vh) {
-          newY = e.clientY - tr.height - 10;
-        }
+    for (const cell of interactiveCells) {
+      if (
+        worldX >= cell.x &&
+        worldX <= cell.x + cellW &&
+        worldY >= cell.y &&
+        worldY <= cell.y + cellH
+      ) {
+        handleCellClick(cell.rowIdx, cell.colIdx)
+        break
+      }
+    }
+  }
 
-        if (newX !== hoverInfo.value.x || newY !== hoverInfo.value.y) {
-          hoverInfo.value = { ...hoverInfo.value, x: newX, y: newY };
-        }
-      });
-    };
+  function adjustTooltipPosition(e) {
+    nextTick(() => {
+      const tt = tooltipRef.value
+      if (!tt) return
+
+      const tr = tt.getBoundingClientRect()
+      const vw = window.innerWidth
+      const vh = window.innerHeight
+
+      let x = e.clientX + 10
+      let y = e.clientY + 10
+
+      if (tr.right > vw) {
+        x = e.clientX - tr.width - 10
+      }
+
+      if (tr.bottom > vh) {
+        y = e.clientY - tr.height - 10
+      }
+
+      tt.style.left = `${x}px`
+      tt.style.top  = `${y}px`
+    })
   }
 
   async function handleCellClick(instrID, cycle) {
-    const text = await showCellInfo(instrID, cycle);
+    const text = 'To DO';
     clickedCellInfo.value = { instrID, cycle, text };
   }
 
-  function isFirstE(interactiveCells, cell) {
-    return interactiveCells
-      .filter(c => c.rowIndex === cell.rowIndex && c.char === 'E')
-      .every(other => other.colIndexVis >= cell.colIndexVis);
-  }
+/* ------------------------------------------------------------------
+ * Help support
+ * ------------------------------------------------------------------ */
+  const showHelp1 = ref(false);
+  const helpIcon1 = ref(null);
+  const helpPosition = ref({ top: '0%', left: '0%' });
 
-  // Get state from char in cell
-  function charToState(ch) {
-    let msg="";
-    switch (ch) {
-      case "E": msg += "Execution"; break;
-      case "R": msg += "Retire"; break;
-      case "D": msg += "Dispatch"; break;
-      case "-": msg += "Waiting to retire"; break;
-      case "W": msg += "Write back"; break;
-      case ".": msg += "Waiting to execute due to dependencies"; break;
-      case "*": msg += "Waiting to execute due to occupied ports."; break;
-      case "!": msg += "Cache miss"; break;
-      case "2": msg += "Secondary cache miss"; break;
-      default:  msg = "N/A"; break;
-    }
-    return msg;
-  }
-
-
-
-  async function getTimelineAndDraw() {
-    if (typeof getTimeline === "function") {
-      timelineData.value = await getTimeline();
-      drawTimeline(timelineData.value);
-    }
-  }
-
-
-  onUnmounted(() => {
-    const processorsList = document.getElementById("processors-list");
-    if (processorsList && processorsListHandler) {
-      processorsList.removeEventListener("change", processorsListHandler);
-    }
-
-    const programsList = document.getElementById("programs-list");
-    if (programsList && programsListHandler) {
-      programsList.removeEventListener("change", programsListHandler);
-    }
-  });
+  function openHelp1()  { nextTick(() => { showHelp1.value = true }) }
+  function closeHelp1() { showHelp1.value  = false }
 
 </script>
-
 
 <template>
   <div class="main">
     <div class="header">
       <div class="section-title-and-info">
-        <span ref="infoIcon" class="info-icon" @click="openTutorial" title="Show help"><img src="/img/info.png" class="info-img"></span>
-        <h3>Timeline</h3>
-      </div>
-      <div class="timeline-controls">
-        <div class="simulation-results-controls-item">
-          <label for="dependencies-num-iters" style="margin-right: 2px;">
-            Iterations:
-          </label>
-          <div class="iterations-group">
-            <button type="button" class="gray-button" @click="changeIterations(-1)">-</button>
-            <input class="input-simulation-result iterations-input" type="number" id="dependencies-num-iters" name="dependencies-num-iters" min="1" max="50" @change="getTimelineAndDraw" v-model.number="iterations"/>
-            <button type="button" class="gray-button" @click="changeIterations(1)">+</button>
-          </div>
-        </div>
-        <button class="blue-button" @click="zoomLevel = Math.max(0.25, zoomLevel - 0.25)" :disabled="zoomLevel==0.25"><img src="/img/zoom-out.png"></button>
-        <button class="blue-button" @click="zoomLevel = Math.min(2, zoomLevel + 0.25)" :disabled="zoomLevel==2"><img src="/img/zoom-in.png"></button>
-        <button @click="toggleInstructions" class="blue-button">{{ showInstructions ? 'Hide' : 'Show' }} Instructions</button>
-        <button @click="togglePorts" class="blue-button">{{ showPorts ? 'Hide' : 'Show' }} Ports</button>
+        <span ref="helpIcon1" class="info-icon" @click="openHelp1" title="Show help">
+          <img src="/img/info.png" class="info-img">
+        </span>
+        <span class="header-title">Execution Timeline - <strong>{{  simState.programName }}</strong></span>
       </div>
 
+      <div class="timeline-controls">
+        <div class="iters-group">
+          <span class="iters-label">Iterations:</span>
+          <input type="number" min="1" max="9"  v-model.number="timelineOptions.iters"
+            title="# loop iterations (1 to 9)"
+            id="timeline-iterations">
+        </div>
+
+        <div class="iters-group">
+          <button class="blue-button" :class="{ active: timelineOptions.showPorts }" :aria-pressed="timelineOptions.showPorts"
+            title="Show/Hide Resource Usage"
+            id="timeline-show-ports"
+            @click="togglePorts">
+            <span v-if="timelineOptions.showPorts">✔ </span>
+            Port Usage
+          </button>
+        </div>
+      </div>
     </div>
-    <div class="output-block-wrapper" id="simulation-output-container">
-      <section class="simulation-results-controls" id="dependencies-controls">
-      </section>
-      <canvas ref="timelineCanvas" :width="canvasWidth" :height="canvasHeight"></canvas>
-      <div v-if="hoverInfo" ref="tooltipRef" class="tooltip" :style="{ top: hoverInfo.y + 'px', left: hoverInfo.x + 'px' }">
-        <div><strong>Cycle: </strong> {{ hoverInfo.cycle }}</div>
-        <div v-if="hoverInfo.instr!='N/A'"><strong>Instruction:</strong> {{ hoverInfo.instr }}</div>
-        <div v-if="hoverInfo.type!='N/A'"><strong>Type: </strong> {{ hoverInfo.type }}</div>
-        <div v-if="hoverInfo.state!='N/A'"><strong>State: </strong> {{ hoverInfo.state }}</div>
-        <div v-if="hoverInfo.port!='N/A'"><strong>Port: </strong> P{{ hoverInfo.port }}</div>
-        <div v-if="hoverInfo.kind==='mem'">Block read from main memory</div>
+
+    <div class="output-block-wrapper" id="canvas-container">
+      <canvas ref="timelineCanvas"></canvas>
+      <canvas ref="overlayCanvas"></canvas>
+      <div v-if="hoverInfo" ref="tooltipRef" class="tooltip"
+           :style="{ top: hoverInfo.y + 'px', left: hoverInfo.x + 'px' }">
+        <div v-if="hoverInfo.state" :class="{ critical: hoverInfo.critical }">
+            {{ hoverInfo.state }}
+            <span v-if="hoverInfo.critical"> (in Critical Path)</span>
+        </div>
       </div>
     </div>
   </div>
-  <TutorialComponent v-if="showTutorial" :position="tutorialPosition"
-  text="The Timeline section shows the program execution over time. The iterations displayed can be
-  selected on the top-right section, as well as hiding or showing extra information and zooming in or out.
-  Hover over the grid to see basic info about the selected cell, such as the cycle, the instruction type
-  or the port it is being executed in. You can also click on timeline cells to obtain more detailed
-  information."
-  title="Timeline"
-  @close="closeTutorial"
-  />
+
+  <Teleport to="body">
+    <HelpComponent v-if="showHelp1" :position="helpPosition" title="Timeline"
+       text= "<p>The <strong>Timeline</strong> section shows the program execution over time.
+                The number of <em>loop iterations</em> can be modified, and the timeline can be <strong>zoomed in/out</strong>.</p>
+             <p><strong>Click</strong> on the timeline to activate it, then use the <strong>arrow keys</strong> to move left/right and up/down. Hover over the grid to see basic info about the selected cell, and <em>click</em> to obtain more detailed information.</p>"
+       @close="closeHelp1" />
+  </Teleport>
+
   <div v-if="clickedCellInfo" class="modal-overlay" @click.self="clickedCellInfo = null">
     <div class="modal">
       <div class="modal-header">
-        <h3>Cell Info</h3>
+        Cell Info
         <button class="close-btn" @click="clickedCellInfo = null">x</button>
       </div>
       <p><strong>Instruction:</strong> {{ clickedCellInfo.instrID }}</p>
-      <p><strong>Cycle:</strong> {{ clickedCellInfo.cycle }}</p>
+      <p><strong>Cycle:</strong>       {{ clickedCellInfo.cycle }}</p>
       <p>{{ clickedCellInfo.text }}</p>
     </div>
   </div>
+
 </template>
 
-
 <style scoped>
-  .main{
-    height:100%;
-    width:100%;
-    background: white;
-    overflow:auto;
-    padding:5px;
-    border-radius: 10px;
+  .output-block-wrapper {
+    overflow:        auto;
+    width:           100%;
+    height:          100%;
+    position:        relative;
+    cursor:          default;
+    scrollbar-width: none;  /* Firefox */
+    user-select:     none;
   }
-  .header{
-    position:sticky;
-    padding-top:2px;
-    top:-5px;
-    background:white;
-    width:100%;
-    left:0;
-    padding-bottom:5px;
+  .output-block-wrapper::-webkit-scrollbar {
+    display: none;  /* Chrome / Safari */
   }
-  h3 {
-  margin: 0;
-  }
-  .tooltip {
-    position: fixed;
-    background: #f9f9f9;
-    border: 1px solid #ccc;
-    padding: 8px;
-    border-radius: 4px;
-    pointer-events: none;
-    z-index: 10;
-    font-size: 2vh;
-    width: 10%;
+  .output-block-wrapper:active {
+    cursor: grabbing;
   }
 
-  .header{
-    position:sticky;
-    top:-5px;
-    background:white;
-    width:100%;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+  #canvas-container {
+    position: relative;
+    width:    100%;
+    height:   100%;
+  }
+  #canvas-container canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width:    100%;
+    height:   100%;
+    aspect-ratio: auto;
+  }
+  #canvas-container canvas:last-child {
+    pointer-events: none; /* 👈 importante */
+  }
+
+  .tooltip {
+    position:   fixed;
+    padding:    4px 8px;
+    z-index:    10;
+    font-size:  medium;
+    display:    inline-block;
+    width:      max-content;
+    max-width:  250px;       /* avoids tooltips too wide */
+    text-align: center;
+
+    background:     #f9f9f9;
+    border:         1px solid #ccc;
+    border-radius:  4px;
+    pointer-events: none;
   }
 
   .timeline-controls {
-    display:flex;
-    gap:5px;
-  }
-
-  .iterations-group {
-    display: inline-flex;
+    display:     flex;
     align-items: center;
-    gap: 4px;
-    margin-right:5px;
+    gap:         8px;
+    margin-left: auto;
+    min-width:   0;
   }
-
-  .iterations-input {
-    width: 5vh;
-    padding: 2px;
-    text-align: center;
-    -moz-appearance: textfield;
-  }
-  .iterations-input::-webkit-outer-spin-button,
-  .iterations-input::-webkit-inner-spin-button {
-    -webkit-appearance: none;
-    margin: 0;
-  }
+  .iters-group input[type="number"] { width: 4ch; }
 
   .modal-header {
-    display: flex;
-    justify-content: space-between;
+    display:     flex;
     align-items: center;
+    justify-content: space-between;
   }
 
   .close-btn {
-    align-self: flex-end;
     background: none;
-    border: none;
-    font-size: 3vh;
-    cursor: pointer;
-    margin-bottom: 8px;
+    border:     none;
+    color:    white;
+    font-size:  24px;
+    line-height: 1;
+    cursor:      pointer;
+    padding:     0 8px;
+    opacity:     0.8;
+  }
+  .close-btn:hover {
+    opacity: 1;
+  }
+  .critical {
+    color: red;
   }
 </style>

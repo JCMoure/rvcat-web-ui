@@ -1,5 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import SimulatorView from '../views/SimulatorView.vue'
+import SimulatorView                      from '../views/SimulatorView.vue'
 
 const router = createRouter({
   history: createWebHistory('#'),

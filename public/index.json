@@ -1,0 +1,15 @@
+{
+  "processor": [
+    "B1",
+    "B2",
+    "B4"
+  ],
+  "program": [
+    "Base",
+    "V1",
+    "V2"
+  ],
+   "tutorial": [
+    "navigation-tour"
+  ]
+}
