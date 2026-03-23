@@ -13,5 +13,5 @@ export default defineConfig({
       '@': fileURLToPath(new URL('./src', import.meta.url))
     },
   },
-  base:'https://JCMoure.github.io/JCMoure-rvcat-web/'
+  base:'https://JCMoure.github.io/rvcat-web-ui/'
 })
