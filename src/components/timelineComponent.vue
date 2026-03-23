@@ -427,8 +427,8 @@
   function drawHoverOverlay(row, col) {
     const ctx = overlayCanvas.value.getContext('2d')
     ctx.clearRect(0, 0,
-                  Math.max(overlayCanvas.value.width, padX+totalCycles*cellW),
-                  Math.max(overlayCanvas.value.height,padY+(totalInstr+1)*cellH))
+                  Math.max(overlayCanvas.value.width, 1+padX+totalCycles*cellW),
+                  Math.max(overlayCanvas.value.height,1+padY+(totalInstr+1)*cellH))
 
     if (row === null || col === null) return
 
