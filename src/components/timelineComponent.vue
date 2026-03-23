@@ -41,14 +41,6 @@
     }
   }
 
-  /* function createDefaultTimeline() {
-    return {
-      cycles:       4,
-      instructions: [ [0, 0, 0, "0", "DEWR", [0,1,2,3]]],
-      portUsage:    { "0": [1], "1": [] }
-    };
-  } */
-
   const timeline       = ref(null)
   const timelineCanvas = ref(null)
   const overlayCanvas  = ref(null)
@@ -434,7 +426,9 @@
 
   function drawHoverOverlay(row, col) {
     const ctx = overlayCanvas.value.getContext('2d')
-    ctx.clearRect(0, 0, overlayCanvas.value.width, overlayCanvas.value.height)
+    ctx.clearRect(0, 0,
+                  Math.max(overlayCanvas.value.width, totalCycles*cellW),
+                  Math.max(overlayCanvas.value.height,(totalInstr+1)*cellH))
 
     if (row === null || col === null) return
 
