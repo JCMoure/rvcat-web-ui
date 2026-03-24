@@ -43,7 +43,7 @@ const { importRVCAT }               = useRVCAT_Api();
     }
     localStorage.clear()
     localStorage.setItem(STORAGE_KEY, JSON.stringify(rvcatOptions))
-    console.alert('💻 New version of RVCAT has been released: Clearing localStorage')
+    alert('💻 New version of RVCAT has been released: Clearing localStorage')
   }
 
 
