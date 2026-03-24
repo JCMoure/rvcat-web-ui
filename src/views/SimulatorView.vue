@@ -175,7 +175,6 @@ onUnmounted(() => {
        <h1>RVCAT-WEB</h1>
        <nav>
         <ul>
-          <!--
           <li>
             <button class="blue-button" :class="{ 'active': isProcessorFullscreen }"
                id="processor-button"
@@ -202,7 +201,6 @@ onUnmounted(() => {
           </li>
 
           <li class="separator"></li>
-          -->
 
           <li>
             <button class="blue-button" :class="{ active: currentKey === 'simulationComponent' }"
@@ -212,7 +210,6 @@ onUnmounted(() => {
                 Simulation
             </button>
           </li>
-          <!--
           <li>
             <button class="blue-button" :class="{ active: currentKey === 'staticAnalysisComponent' }"
                id="analysis-button"
@@ -221,7 +218,6 @@ onUnmounted(() => {
                 Static Analysis
             </button>
           </li>
-          -->
           <li>
             <button class="blue-button" :class="{ active: currentKey === 'timelineComponent' }"
                id="timeline-button"
