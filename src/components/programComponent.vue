@@ -134,8 +134,7 @@ function loadEditedProgram() {
       return {
         text:    inst.text    || '', type:    inst.type    || '',  oper:     inst.oper     || '',
         size:    inst.size    || '', destin:  inst.destin  || '',  source1:  inst.source1  || '',
-        source2: inst.source2 || '', source3: inst.source3 || '',  constant: inst.constant || '',
-        percentage: null
+        source2: inst.source2 || '', source3: inst.source3 || '',  constant: inst.constant || ''
       };
     });
   } catch (e) {
