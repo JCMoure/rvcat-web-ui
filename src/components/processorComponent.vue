@@ -776,7 +776,6 @@
             </option>
             <option value="_add_new_">Add new</option>
           </select>
-          <!--
           <button class="blue-button small-btn" @click="editProcessor"
             id="edit-processor-button"
             title="Edit current processor on full-screen as a new program">
@@ -787,7 +786,6 @@
             title="Remove processor configuration from list (and local storage)">
           🧹
           </button>
-          -->
           <div class="iters-group rob-group">
             <span class="iters-label" title="Number of ROB entries (1 to 200)">ROB:</span>
             <input type="number" min="1" max="200" id="rob-size" title="Number of ROB entries (1 to 200)"
@@ -796,7 +794,6 @@
         </div>
       </div>
 
-      <!--    Processor Graph with visual usage  -->
       <div class="graph-section">
         <div class="processor-container">
           <div class="processor-img" v-html="simulatedSvg" v-if="simulatedSvg"></div>
@@ -918,7 +915,6 @@
             <span class="header-title">Instruction Latencies and Execution Ports</span>
           </div>
 
-          <!-- Ports toolbar -->
           <div class="ports-toolbar">
             <span v-for="port in portList" :key="port" class="port-tag">
               P{{ port }}
@@ -959,7 +955,6 @@
                         <span class="type-name">{{ type }}</span>
                       </button>
 
-                      <!-- Tipo SIN operaciones (ej. BRANCH) -->
                       <span
                         v-else
                         class="type-label no-ops"
