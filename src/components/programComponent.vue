@@ -341,8 +341,7 @@ function addInstruction( index ) {
       source1: '',
       source2: '',
       source3: '',
-      constant: '',
-      percentage: null
+      constant: ''
     }
   );
 }
@@ -379,8 +378,7 @@ function normalizeInstruction(inst) {
     source1:  (inst.source1  || '').trim(),
     source2:  (inst.source2  || '').trim(),
     source3:  (inst.source3  || '').trim(),
-    constant: (inst.constant || '').trim(),
-    percentage: inst.percentage
+    constant: (inst.constant || '').trim()
   };
 }
 
