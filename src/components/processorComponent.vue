@@ -189,6 +189,15 @@
   },
   { deep: true, immediate: true })
 
+  function validateROB() {
+    let v = simState.simulatedProcess.ROBsize;
+
+    if (v === "" || v == null) return;
+
+    v = Math.max(Math.min(v, 200), 1);
+    simState.simulatedProcess.ROBsize = v;
+  }
+
 // ============================================================================
 // LIFECYCLE:  Mount/unMount
 // ============================================================================
@@ -788,8 +797,13 @@
           </button>
           <div class="iters-group rob-group">
             <span class="iters-label" title="Number of ROB entries (1 to 200)">ROB:</span>
-            <input type="number" min="1" max="200" id="rob-size" title="Number of ROB entries (1 to 200)"
-                 v-model.number="simState.simulatedProcess.ROBsize">
+            <input
+              type="number"
+              min="1"
+              max="200"
+              v-model="simState.simulatedProcess.ROBsize"
+              @blur="validateROB"
+            />
           </div>
         </div>
       </div>
