@@ -178,10 +178,10 @@
 
   watch(() => simState.simulatedProcess, () => {
     // be sure ROBsize is between 1 and 200, even if the loaded processor has an invalid value
-    const oldROBsize = simState.simulatedProcess.ROBsize;
-    const newROBsize = Math.max(Math.min(oldROBsize, 200), 1);
-    if (newROBsize !== oldROBsize)
-      simState.simulatedProcess.ROBsize = newROBsize;
+    //const oldROBsize = simState.simulatedProcess.ROBsize;
+    //const newROBsize = Math.max(Math.min(oldROBsize, 200), 1);
+    //if (newROBsize !== oldROBsize)
+    //  simState.simulatedProcess.ROBsize = newROBsize;
 
     if (simState.state > 1) {
       drawProcessor()
