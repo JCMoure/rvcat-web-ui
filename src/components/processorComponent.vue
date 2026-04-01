@@ -454,8 +454,6 @@
       <TD ROWSPAN="${total_rows+4}" BGCOLOR="#f0f0f0" HREF="#" ID="rob" TITLE="Edit ROB size" ALIGN="CENTER" VALIGN="MIDDLE"><FONT POINT-SIZE="20"><B>ROB</B><BR/><BR/><B>${ROBsize}</B></FONT><BR/><FONT POINT-SIZE="16">entries</FONT></TD>
     </TR>`
 
-
-
     // ---- Waiting Buffer ----
     let wb_row = `<TR>
       <TD COLSPAN="${port_ids.length}" BGCOLOR="#eeeeee" HREF="#" ID="sched" TITLE="Edit scheduler"><FONT POINT-SIZE="20"><B>Waiting Buffer</B></FONT>&nbsp;&nbsp;&nbsp;<FONT POINT-SIZE="16">Scheduler:</FONT><FONT POINT-SIZE="18"><B>${sched}</B></FONT></TD>
@@ -541,6 +539,7 @@
       removeClickListeners();
 
       svg.querySelectorAll('a').forEach(a => {
+        console.log('💻Add click action', a);
         a.addEventListener('click', (e) => {
           e.preventDefault()
 
@@ -571,22 +570,22 @@
     });
   };
 
-const removeClickListeners = () => {
-  return
-  clickListeners.push({
-    node,
-    click: handleClick,
-    enter: handleMouseEnter,
-    leave: handleMouseLeave
-  });
+  const removeClickListeners = () => {
+    return
+    clickListeners.push({
+      node,
+      click: handleClick,
+      enter: handleMouseEnter,
+      leave: handleMouseLeave
+    });
 
-  clickListeners.forEach(({ node, click, enter, leave }) => {
-    node.removeEventListener('click', click);
-    node.removeEventListener('mouseenter', enter);
-    node.removeEventListener('mouseleave', leave);
-  });
-  clickListeners = [];
-};
+    clickListeners.forEach(({ node, click, enter, leave }) => {
+      node.removeEventListener('click', click);
+      node.removeEventListener('mouseenter', enter);
+      node.removeEventListener('mouseleave', leave);
+    });
+    clickListeners = [];
+  };
 
 
 // ============================================================================
