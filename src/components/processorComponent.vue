@@ -235,6 +235,10 @@
   },
   { deep: true, immediate: true })
 
+  watch(() => simulatedSvg.value, () => {
+    addClickListenersToSvg();
+  });
+
 // ============================================================================
 // LIFECYCLE:  Mount/unMount
 // ============================================================================
@@ -257,6 +261,7 @@
   onUnmounted(() => {
     console.log('💻👋 ProcessorComponent unmounted')
     localStorage.removeItem('processorTemp')
+    removeClickListeners()
   });
 
 // ============================================================================
@@ -359,7 +364,7 @@
     }
   }
 
-  function get_processor_dot(process, highlightPort= -1) {
+  function get_processor_dot(process, highlightPort = -1) {
 
     const ports    = process.ports
     const lat      = process.latencies
@@ -406,30 +411,22 @@
     }
 
     function compress_ops(ops) {
-
       const grouped = {}
-
       for (let op of ops) {
-
         const [type, sub] = op.split(".")
-
         if (!grouped[type]) grouped[type] = new Set()
         if (sub) grouped[type].add(sub)
       }
 
       const result = []
-
       for (let type in grouped) {
-
         const all_ops = typeOperations[type] || []
-
         if (all_ops.length === 0 || grouped[type].size === all_ops.length) {
           result.push({
             label: type,
             big: true
           })
         } else {
-
           for (let sub of grouped[type]) {
             result.push({
               label: `${type}.${sub}`,
@@ -438,13 +435,7 @@
           }
         }
       }
-
       return result
-    }
-
-    function highlightStyle(isHighlighted) {
-      if (!isHighlighted) return ''
-      return ' BGCOLOR="#ffcccc" BORDER="3" COLOR="red"'
     }
 
     const highlight = highlightPort !== null && highlightPort !== undefined
@@ -452,21 +443,20 @@
       : null
 
     const port_ops = {}
-
     for (let p of port_ids)
       port_ops[p] = compress_ops(ports[p])
 
-    const total_rows  = Math.max(...Object.values(port_ops).map(o => o.length))
+    const total_rows = Math.max(...Object.values(port_ops).map(o => o.length))
 
-    // ---- Decode ----
+    // ---- Dispatch + ROB ----
     let decode_row = `<TR>
-      <TD COLSPAN="${port_ids.length}" BGCOLOR="#eeeeee"><FONT POINT-SIZE="20"><B>Dispatch:&nbsp;</B>&nbsp;${dispatch}/cycle</FONT></TD>
-      <TD ROWSPAN="${total_rows+4}"  BGCOLOR="#f0f0f0" ALIGN="CENTER" VALIGN="MIDDLE"><FONT POINT-SIZE="20"><B>ROB</B><BR/><BR/><B>${ROBsize}</B></FONT><BR/><FONT POINT-SIZE="16">entries</FONT></TD>
+      <TD COLSPAN="${port_ids.length}" BGCOLOR="#eeeeee" HREF="action:dispatch" TITLE="Edit dispatch width"><FONT POINT-SIZE="20"><B>Dispatch:</B> ${dispatch}/cycle</FONT></TD>
+      <TD ROWSPAN="${total_rows+4}" BGCOLOR="#f0f0f0" HREF="action:rob" TITLE="Edit ROB size" ALIGN="CENTER" VALIGN="MIDDLE"><FONT POINT-SIZE="20"><B>ROB</B><BR/><BR/><B>${ROBsize}</B></FONT><BR/><FONT POINT-SIZE="16">entries</FONT></TD>
     </TR>`
 
     // ---- Waiting Buffer ----
     let wb_row = `<TR>
-      <TD COLSPAN="${port_ids.length}" BGCOLOR="#eeeeee"><FONT POINT-SIZE="20"><B>Waiting Buffer</B></FONT>&nbsp;&nbsp;&nbsp;<FONT POINT-SIZE="16">Scheduler:&nbsp;</FONT><FONT POINT-SIZE="18"><B>${sched}</B></FONT></TD>
+      <TD COLSPAN="${port_ids.length}" BGCOLOR="#eeeeee" HREF="action:sched" TITLE="Edit scheduler"><FONT POINT-SIZE="20"><B>Waiting Buffer</B></FONT>&nbsp;&nbsp;&nbsp;<FONT POINT-SIZE="16">Scheduler:</FONT><FONT POINT-SIZE="18"><B>${sched}</B></FONT></TD>
     </TR>`
 
     // ---- Port headers ----
@@ -478,13 +468,13 @@
         ? ' BGCOLOR="#ffcccc" BORDER="3" COLOR="red"'
         : ' BGCOLOR="#f5f5f5"'
 
-      port_header += `<TD${style}><FONT POINT-SIZE="20"><B>P${p}</B></FONT></TD>`
+      port_header += `
+        <TD ${style} HREF="action:port:${p}" TITLE="Select port ${p}"><FONT POINT-SIZE="20"><B>P${p}</B></FONT></TD>`
     }
 
     port_header += "</TR>"
 
     // ---- Operation rows ----
-
     let op_rows = ""
 
     for (let i = 0; i < total_rows; i++) {
@@ -500,29 +490,24 @@
         const op = port_ops[p][i]
 
         if (!op) {
-          op_rows += `<TD${highlightAttr}></TD>`
+          op_rows += `<TD ${highlightAttr}></TD>`
           continue
         }
 
         const type  = op_type(op.label)
         const color = type_color(type)
+        const tooltip = latency_tooltip(op.label)
 
-        if (op.big) {
-          const tooltip = latency_tooltip(op.label)
-          op_rows += `
-            <TD BGCOLOR="${color}" TITLE="${tooltip}"${highlightAttr}><FONT POINT-SIZE="16"><B>${op.label}</B></FONT></TD>`
-        } else {
-          const tooltip = latency_tooltip(op.label)
-          op_rows += `
-            <TD BGCOLOR="${color}" TITLE="${tooltip}"${highlightAttr}><FONT POINT-SIZE="14">${op.label}</FONT></TD>`
-        }
+        op_rows += `
+          <TD BGCOLOR="${color}" TITLE="${tooltip}" HREF="action:op:${p}:${i}:${op.label}" ${highlightAttr}><FONT POINT-SIZE="${op.big ? 16 : 14}">${op.big ? `<B>${op.label}</B>` : op.label}</FONT></TD>`
       }
+
       op_rows += "</TR>"
     }
 
-    // ---- Registers & Retire ----
+    // ---- Retire ----
     let reg_row = `<TR>
-      <TD WIDTH="538" COLSPAN="${port_ids.length}" BGCOLOR="#eeeeee"><FONT POINT-SIZE="20"><B>Retire:</B>&nbsp;${retire}/cycle&nbsp;&nbsp;(<B>Architected Registers</B>)</FONT></TD>
+      <TD COLSPAN="${port_ids.length}" BGCOLOR="#eeeeee" HREF="action:retire" TITLE="Edit retire width"><FONT POINT-SIZE="20"><B>Retire:</B> ${retire}/cycle&nbsp;&nbsp;<B>(Architected Registers)</B></FONT></TD>
     </TR>`
 
     const dot = `
@@ -539,9 +524,72 @@
             </TABLE>
           >
         ]
-      }  `
+      }`
+
     return dot
   }
+
+  let clickListeners = [];     // To clean listeners
+
+  const addClickListenersToSvg = () => {
+    nextTick(() => {
+      const svgElement = document.querySelector('.simProcessor-img svg');
+      if (!svgElement) return;
+
+      removeClickListeners();
+
+      svg.querySelectorAll('a').forEach(a => {
+        a.addEventListener('click', (e) => {
+          e.preventDefault()
+
+          const href = a.getAttribute('xlink:href')
+
+          if (!href?.startsWith('action:')) return
+
+          const parts = href.split(':')
+
+          const action = parts[1]
+
+          switch (action) {
+            case 'dispatch':
+            case 'rob':
+            case 'retire':
+            case 'sched':
+              activeField.value = action
+              break
+
+            case 'port':
+              const port = parts[2]
+              console.log('Port clicked:', port)
+              break
+
+            case 'op':
+              const [_, __, p, row, label] = parts
+              console.log('Op:', p, row, label)
+              break
+          }
+        })
+      })
+    });
+  };
+
+const removeClickListeners = () => {
+  return
+  clickListeners.push({
+    node,
+    click: handleClick,
+    enter: handleMouseEnter,
+    leave: handleMouseLeave
+  });
+
+  clickListeners.forEach(({ node, click, enter, leave }) => {
+    node.removeEventListener('click', click);
+    node.removeEventListener('mouseenter', enter);
+    node.removeEventListener('mouseleave', leave);
+  });
+  clickListeners = [];
+};
+
 
 // ============================================================================
 // Processor Edition LOGIC:      addPort, removePort, toggleTypeExpand,
@@ -844,15 +892,12 @@
               @blur="validateField"
             />
           </div>
-          <td @click="activeField = 'dispatch'">D</td>
-          <td @click="activeField = 'retire'">R</td>
-          <td @click="activeField = 'rob'">rob</td>
         </div>
       </div>
 
       <div class="graph-section">
         <div class="processor-container">
-          <div class="processor-img" v-html="simulatedSvg" v-if="simulatedSvg"></div>
+          <div class="simProcessor-img" v-html="simulatedSvg" v-if="simulatedSvg"></div>
         </div>
       </div>
     </div>
@@ -1356,13 +1401,51 @@
   }
 
   .processor-img svg text {
-    font-size:   12px !important;
-    font-family: Arial, sans-serif !important;
+    font-size:   12px;
+    font-family: Arial, sans-serif;
   }
 
   .processor-img svg polygon,
   .processor-img svg path {
+    stroke-width: 2px;
+  }
+
+  .simProcessor-img {
+    width:        100%;
+    height:       100%;
+    max-width:    150%;
+    max-height:   150%;
+    align-items:  center;
+    object-fit:   contain;
+    transform-box: fill-box;
+  }
+
+  .simProcessor-img svg text {
+    font-size:   12px;
+    font-family: Arial, sans-serif;
+  }
+
+  .simProcessor-img svg polygon,
+  .simProcessor-img svg path {
+    stroke-width: 2px;
+  }
+
+  .simProcessor-img svg[viewBox] {
+    width:    100%;
+    height:   100%;
+    overflow: hidden;
+  }
+
+  .simProcessor-img g.node.selected polygon {
+    stroke-width: 3px !important;
+    stroke:       #0066ff !important;
+    filter:       drop-shadow(0 0 5px rgba(0, 100, 255, 0.5));
+  }
+
+  .simProcessor-img g.node:hover polygon {
     stroke-width: 2px !important;
+    stroke:       #444444 !important;
+    cursor:       pointer;
   }
 
   .table-container {
