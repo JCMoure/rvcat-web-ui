@@ -342,9 +342,9 @@
   const drawProcessor = async () => {
     try {
       const dotCode      = get_processor_dot (simState.simulatedProcess, simState.highlightedPort, simState.executionResults)
-      // console.log('💻🔄Redrawing simulated processor', dotCode);
+      console.log('💻🔄Redrawing simulated processor', dotCode);
       const svg          = await createGraphVizGraph(dotCode);
-      // console.log('💻🔄Redrawing SVG', svg);
+      console.log('💻🔄Redrawing SVG', svg);
       simulatedSvg.value = svg.outerHTML;
     } catch (error) {
       console.error('💻❌ Failed to draw processor:', error)
@@ -450,15 +450,15 @@
 
     // ---- Dispatch + ROB ----
     let decode_row = `<TR>
-      <TD COLSPAN="${port_ids.length}" BGCOLOR="#eeeeee" HREF="#" DATA-ACTION="dispatch"TITLE="Edit dispatch width"><FONT POINT-SIZE="20"><B>Dispatch:</B> ${dispatch}/cycle</FONT></TD>
-      <TD ROWSPAN="${total_rows+4}" BGCOLOR="#f0f0f0" HREF="#" DATA-ACTION="rob" TITLE="Edit ROB size" ALIGN="CENTER" VALIGN="MIDDLE"><FONT POINT-SIZE="20"><B>ROB</B><BR/><BR/><B>${ROBsize}</B></FONT><BR/><FONT POINT-SIZE="16">entries</FONT></TD>
+      <TD COLSPAN="${port_ids.length}" BGCOLOR="#eeeeee" HREF="#" ID="dispatch"TITLE="Edit dispatch width"><FONT POINT-SIZE="20"><B>Dispatch:</B> ${dispatch}/cycle</FONT></TD>
+      <TD ROWSPAN="${total_rows+4}" BGCOLOR="#f0f0f0" HREF="#" ID="rob" TITLE="Edit ROB size" ALIGN="CENTER" VALIGN="MIDDLE"><FONT POINT-SIZE="20"><B>ROB</B><BR/><BR/><B>${ROBsize}</B></FONT><BR/><FONT POINT-SIZE="16">entries</FONT></TD>
     </TR>`
 
 
 
     // ---- Waiting Buffer ----
     let wb_row = `<TR>
-      <TD COLSPAN="${port_ids.length}" BGCOLOR="#eeeeee" HREF="#" DATA-ACTION="sched" TITLE="Edit scheduler"><FONT POINT-SIZE="20"><B>Waiting Buffer</B></FONT>&nbsp;&nbsp;&nbsp;<FONT POINT-SIZE="16">Scheduler:</FONT><FONT POINT-SIZE="18"><B>${sched}</B></FONT></TD>
+      <TD COLSPAN="${port_ids.length}" BGCOLOR="#eeeeee" HREF="#" ID="sched" TITLE="Edit scheduler"><FONT POINT-SIZE="20"><B>Waiting Buffer</B></FONT>&nbsp;&nbsp;&nbsp;<FONT POINT-SIZE="16">Scheduler:</FONT><FONT POINT-SIZE="18"><B>${sched}</B></FONT></TD>
     </TR>`
 
     // ---- Port headers ----
@@ -471,7 +471,7 @@
         : ' BGCOLOR="#f5f5f5"'
 
       port_header += `
-        <TD ${style} HREF="action:port:${p}" TITLE="Select port ${p}"><FONT POINT-SIZE="20"><B>P${p}</B></FONT></TD>`
+        <TD ${style} HREF="#" ID="port:${p}" TITLE="Select port ${p}"><FONT POINT-SIZE="20"><B>P${p}</B></FONT></TD>`
     }
 
     port_header += "</TR>"
@@ -501,7 +501,7 @@
         const tooltip = latency_tooltip(op.label)
 
         op_rows += `
-          <TD BGCOLOR="${color}" TITLE="${tooltip}" HREF="action:op:${p}:${i}:${op.label}" ${highlightAttr}><FONT POINT-SIZE="${op.big ? 16 : 14}">${op.big ? `<B>${op.label}</B>` : op.label}</FONT></TD>`
+          <TD BGCOLOR="${color}" TITLE="${tooltip}" HREF="#" ID="op:${p}:${i}:${op.label}" ${highlightAttr}><FONT POINT-SIZE="${op.big ? 16 : 14}">${op.big ? `<B>${op.label}</B>` : op.label}</FONT></TD>`
       }
 
       op_rows += "</TR>"
@@ -509,7 +509,7 @@
 
     // ---- Retire ----
     let reg_row = `<TR>
-      <TD COLSPAN="${port_ids.length}" BGCOLOR="#eeeeee" HREF="#" DATA-ACTION="retire" TITLE="Edit retire width"><FONT POINT-SIZE="20"><B>Retire:</B> ${retire}/cycle&nbsp;&nbsp;<B>(Architected Registers)</B></FONT></TD>
+      <TD COLSPAN="${port_ids.length}" BGCOLOR="#eeeeee" HREF="#" ID="retire" TITLE="Edit retire width"><FONT POINT-SIZE="20"><B>Retire:</B> ${retire}/cycle&nbsp;&nbsp;<B>(Architected Registers)</B></FONT></TD>
     </TR>`
 
     const dot = `
