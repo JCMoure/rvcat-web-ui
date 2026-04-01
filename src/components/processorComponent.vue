@@ -92,9 +92,24 @@
       return simState.simulatedProcess[currentConfig.value.model];
     },
     set(val) {
+      if (val === "" || val == null) return;
       simState.simulatedProcess[currentConfig.value.model] = val;
     }
   });
+
+   function validateField() {
+    let v = currentValue.value;
+
+    if (v === "" || v == null) return;
+
+    v = Number(v);
+    if (isNaN(v)) return;
+
+    const { min, max } = currentConfig.value;
+    v = Math.max(Math.min(v, max), min);
+
+    currentValue.value = v;
+  }
 
 // ============================================================================
 // Temporal in-edition processor:  createDefaultConfig, updateProcessorSettings
@@ -219,20 +234,6 @@
     }
   },
   { deep: true, immediate: true })
-
-  function validateField() {
-    let v = currentValue.value;
-
-    if (v === "" || v == null) return;
-
-    v = Number(v);
-    if (isNaN(v)) return;
-
-    const { min, max } = currentConfig.value;
-    v = Math.max(Math.min(v, max), min);
-
-    currentValue.value = v;
-  }
 
 // ============================================================================
 // LIFECYCLE:  Mount/unMount
