@@ -450,13 +450,15 @@
 
     // ---- Dispatch + ROB ----
     let decode_row = `<TR>
-      <TD COLSPAN="${port_ids.length}" BGCOLOR="#eeeeee" HREF="action:dispatch" TITLE="Edit dispatch width"><FONT POINT-SIZE="20"><B>Dispatch:</B> ${dispatch}/cycle</FONT></TD>
-      <TD ROWSPAN="${total_rows+4}" BGCOLOR="#f0f0f0" HREF="action:rob" TITLE="Edit ROB size" ALIGN="CENTER" VALIGN="MIDDLE"><FONT POINT-SIZE="20"><B>ROB</B><BR/><BR/><B>${ROBsize}</B></FONT><BR/><FONT POINT-SIZE="16">entries</FONT></TD>
+      <TD COLSPAN="${port_ids.length}" BGCOLOR="#eeeeee" HREF="#" DATA-ACTION="dispatch"TITLE="Edit dispatch width"><FONT POINT-SIZE="20"><B>Dispatch:</B> ${dispatch}/cycle</FONT></TD>
+      <TD ROWSPAN="${total_rows+4}" BGCOLOR="#f0f0f0" HREF="#" DATA-ACTION="rob" TITLE="Edit ROB size" ALIGN="CENTER" VALIGN="MIDDLE"><FONT POINT-SIZE="20"><B>ROB</B><BR/><BR/><B>${ROBsize}</B></FONT><BR/><FONT POINT-SIZE="16">entries</FONT></TD>
     </TR>`
+
+
 
     // ---- Waiting Buffer ----
     let wb_row = `<TR>
-      <TD COLSPAN="${port_ids.length}" BGCOLOR="#eeeeee" HREF="action:sched" TITLE="Edit scheduler"><FONT POINT-SIZE="20"><B>Waiting Buffer</B></FONT>&nbsp;&nbsp;&nbsp;<FONT POINT-SIZE="16">Scheduler:</FONT><FONT POINT-SIZE="18"><B>${sched}</B></FONT></TD>
+      <TD COLSPAN="${port_ids.length}" BGCOLOR="#eeeeee" HREF="#" DATA-ACTION="sched" TITLE="Edit scheduler"><FONT POINT-SIZE="20"><B>Waiting Buffer</B></FONT>&nbsp;&nbsp;&nbsp;<FONT POINT-SIZE="16">Scheduler:</FONT><FONT POINT-SIZE="18"><B>${sched}</B></FONT></TD>
     </TR>`
 
     // ---- Port headers ----
@@ -507,7 +509,7 @@
 
     // ---- Retire ----
     let reg_row = `<TR>
-      <TD COLSPAN="${port_ids.length}" BGCOLOR="#eeeeee" HREF="action:retire" TITLE="Edit retire width"><FONT POINT-SIZE="20"><B>Retire:</B> ${retire}/cycle&nbsp;&nbsp;<B>(Architected Registers)</B></FONT></TD>
+      <TD COLSPAN="${port_ids.length}" BGCOLOR="#eeeeee" HREF="#" DATA-ACTION="retire" TITLE="Edit retire width"><FONT POINT-SIZE="20"><B>Retire:</B> ${retire}/cycle&nbsp;&nbsp;<B>(Architected Registers)</B></FONT></TD>
     </TR>`
 
     const dot = `
@@ -542,15 +544,11 @@
         a.addEventListener('click', (e) => {
           e.preventDefault()
 
-          const href = a.getAttribute('xlink:href')
+          const action = a.getAttribute('data-action') || a.id
 
-          if (!href?.startsWith('action:')) return
+          console.log("Action:", action)
 
-          const parts = href.split(':')
-
-          const action = parts[1]
-
-          switch (action) {
+           switch (action) {
             case 'dispatch':
             case 'rob':
             case 'retire':
