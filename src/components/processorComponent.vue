@@ -522,7 +522,7 @@
 
     // ---- Registers & Retire ----
     let reg_row = `<TR>
-      <TD WIDTH="538" COLSPAN="${port_ids.length}" BGCOLOR="#eeeeee"><FONT POINT-SIZE="20"><B>Retire:</B>&nbsp;${retire}/cycle&nbsp;&nbsp;<B>Architected Registers</B></FONT></TD>
+      <TD WIDTH="538" COLSPAN="${port_ids.length}" BGCOLOR="#eeeeee"><FONT POINT-SIZE="20"><B>Retire:</B>&nbsp;${retire}/cycle&nbsp;&nbsp;(<B>Architected Registers</B>)</FONT></TD>
     </TR>`
 
     const dot = `
@@ -844,9 +844,9 @@
               @blur="validateField"
             />
           </div>
-          <td @click="activeField = 'dispatch'">Dispatch</td>
-          <td @click="activeField = 'retire'">Retire</td>
-          <td @click="activeField = 'rob'">ROB</td>
+          <td @click="activeField = 'dispatch'">D</td>
+          <td @click="activeField = 'retire'">R</td>
+          <td @click="activeField = 'rob'">rob</td>
         </div>
       </div>
 
