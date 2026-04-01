@@ -365,8 +365,8 @@
     const port_ids = Object.keys(ports)
     const ROBsize  = process.ROBsize || 20
     const sched    = process.sched
-    const dispatch = process.dispatch
-    const retire   = process.retire
+    const dispatch = process.dispatch || 1
+    const retire   = process.retire || 1
 
     function type_color(type) {
       if (type === "INT")    return "#d6e4ff"
