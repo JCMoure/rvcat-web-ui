@@ -59,6 +59,43 @@
     }
   }
 
+  const activeField = ref("rob");
+
+  const FIELD_CONFIG = {
+    rob: {
+      label: "ROB:",
+      title: "Number of ROB entries (1 to 200)",
+      min: 1,
+      max: 200,
+      model: "ROBsize"
+    },
+    dispatch: {
+      label: "Dispatch:",
+      title: "Dispatch width (1 to 9)",
+      min: 1,
+      max: 9,
+      model: "dispatch"
+    },
+    retire: {
+      label: "Retire:",
+      title: "Retire width (1 to 9)",
+      min: 1,
+      max: 9,
+      model: "retire"
+    }
+  };
+
+  const currentConfig = computed(() => FIELD_CONFIG[activeField.value]);
+
+  const currentValue = computed({
+    get() {
+      return simState.simulatedProcess[currentConfig.value.model];
+    },
+    set(val) {
+      simState.simulatedProcess[currentConfig.value.model] = val;
+    }
+  });
+
 // ============================================================================
 // Temporal in-edition processor:  createDefaultConfig, updateProcessorSettings
 // ============================================================================
@@ -177,25 +214,24 @@
   )
 
   watch(() => simState.simulatedProcess, () => {
-    // be sure ROBsize is between 1 and 200, even if the loaded processor has an invalid value
-    //const oldROBsize = simState.simulatedProcess.ROBsize;
-    //const newROBsize = Math.max(Math.min(oldROBsize, 200), 1);
-    //if (newROBsize !== oldROBsize)
-    //  simState.simulatedProcess.ROBsize = newROBsize;
-
     if (simState.state > 1) {
       drawProcessor()
     }
   },
   { deep: true, immediate: true })
 
-  function validateROB() {
-    let v = simState.simulatedProcess.ROBsize;
+  function validateField() {
+    let v = currentValue.value;
 
     if (v === "" || v == null) return;
 
-    v = Math.max(Math.min(v, 200), 1);
-    simState.simulatedProcess.ROBsize = v;
+    v = Number(v);
+    if (isNaN(v)) return;
+
+    const { min, max } = currentConfig.value;
+    v = Math.max(Math.min(v, max), min);
+
+    currentValue.value = v;
   }
 
 // ============================================================================
@@ -796,15 +832,20 @@
           🧹
           </button>
           <div class="iters-group rob-group">
-            <span class="iters-label" title="Number of ROB entries (1 to 200)">ROB:</span>
+            <span class="iters-label" :title="currentConfig.title">
+              {{ currentConfig.label }}
+            </span>
             <input
               type="number"
-              min="1"
-              max="200"
-              v-model="simState.simulatedProcess.ROBsize"
-              @blur="validateROB"
+              :min="currentConfig.min"
+              :max="currentConfig.max"
+              v-model="currentValue"
+              @blur="validateField"
             />
           </div>
+          <td @click="activeField = 'dispatch'">Dispatch</td>
+          <td @click="activeField = 'retire'">Retire</td>
+          <td @click="activeField = 'rob'">ROB</td>
         </div>
       </div>
 
