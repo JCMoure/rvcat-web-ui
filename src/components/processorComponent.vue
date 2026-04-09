@@ -551,8 +551,15 @@
               case 'dispatch':
               case 'rob':
               case 'retire':
-              case 'sched':
                 activeField.value = action
+                break
+
+              case 'sched':
+                if (simState.simulatedProcess.sched === 'greedy') {
+                  simState.simulatedProcess.sched = 'optimal'
+                } else {
+                  simState.simulatedProcess.sched = 'greedy'
+                }
                 break
 
               case 'port':
