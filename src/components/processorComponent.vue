@@ -342,9 +342,9 @@
   const drawProcessor = async () => {
     try {
       const dotCode      = get_processor_dot (simState.simulatedProcess, simState.highlightedPort, simState.executionResults)
-      console.log('💻🔄Redrawing simulated processor', dotCode);
+      // console.log('💻🔄Redrawing simulated processor', dotCode);
       const svg          = await createGraphVizGraph(dotCode);
-      console.log('💻🔄Redrawing SVG', svg);
+      // console.log('💻🔄Redrawing SVG', svg);
       simulatedSvg.value = svg.outerHTML;
     } catch (error) {
       console.error('💻❌ Failed to draw processor:', error)
@@ -540,7 +540,7 @@
       svgElement.querySelectorAll('g').forEach(g => {
         if (typeof g.id === 'string' && g.id.startsWith("a_")) {
 
-          console.log('💻Add click action', g.id.slice(2));
+          // console.log('💻Add click action', g.id.slice(2));
           g.addEventListener('click', (e) => {
             e.preventDefault()
 
