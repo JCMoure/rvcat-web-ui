@@ -807,15 +807,20 @@
       const data = await uploadJSON(null, 'processor');
       if (data) {
         if (processorOptions.availableProcessors.includes(data.name)) {
-          alert(`A processor with name: "${data.name}" has been already loaded.`)
+          if (confirm(`A processor with name: "${data.name}" already exist. Do you want to overwrite it?`)) {
+            removeFromLocalStorage('processor', data.name, processorOptions.availableProcessors);
+          }
+          else {
+            alert('Upload cancelled.')
+            processorOptions.processorName = oldProcessor;
+            return;
+          }
         }
-        else {
-          saveToLocalStorage('processor', data.name, data, processorOptions.availableProcessors)
-          Object.assign(simState.simulatedProcess, data)
-          simState.processorName = data.name
-          processorOptions.processorName = data.name;
-          return;
-        }
+        saveToLocalStorage('processor', data.name, data, processorOptions.availableProcessors)
+        Object.assign(simState.simulatedProcess, data)
+        simState.processorName = data.name
+        processorOptions.processorName = data.name;
+        return
       }
       processorOptions.processorName = oldProcessor;
     } catch (error) {
