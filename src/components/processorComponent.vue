@@ -804,29 +804,25 @@
 
   const uploadProcessor = async (oldProcessor) => {
     try {
-      const data = await uploadJSON(null, 'processor');
+      const data = await uploadJSON(null, 'processor')
       if (data) {
-        if (processorOptions.availableProcessors.includes(data.name)) {
-          if (confirm(`A processor with name: "${data.name}" already exist. Do you want to overwrite it?`)) {
-            removeFromLocalStorage('processor', data.name, processorOptions.availableProcessors);
-          }
-          else {
-            alert('Upload cancelled.')
-            processorOptions.processorName = oldProcessor;
-            return;
-          }
+        const exists = processorOptions.availableProcessors.includes(data.name)
+        if (exists && !confirm(`A processor with the name "${data.name}" is already loaded. Do you want to overwrite it?`)) {
+          alert('Upload cancelled.')
+          processorOptions.processorName = oldProcessor
+          return
         }
         saveToLocalStorage('processor', data.name, data, processorOptions.availableProcessors)
         Object.assign(simState.simulatedProcess, data)
         simState.processorName = data.name
-        processorOptions.processorName = data.name;
+        processorOptions.processorName = data.name
         return
       }
-      processorOptions.processorName = oldProcessor;
     } catch (error) {
-      processorOptions.processorName = oldProcessor;
+      console.error('💻❌ Failed to upload processor:', error)
     }
-  };
+    processorOptions.processorName = oldProcessor
+  }
 
   function clearProcessor() {
     updateProcessorSettings(createDefaultConfig())
