@@ -450,13 +450,13 @@
 
     // ---- Dispatch + ROB ----
     let decode_row = `<TR>
-      <TD COLSPAN="${port_ids.length}" BGCOLOR="#eeeeee" HREF="#" ID="dispatch" TITLE="Edit dispatch width"><FONT POINT-SIZE="20"><B>Dispatch:</B> ${dispatch}/cycle</FONT></TD>
+      <TD COLSPAN="${port_ids.length}" BGCOLOR="#eeeeee" HREF="#" ID="dispatch" TITLE="Edit dispatch width"><FONT POINT-SIZE="20"><B>Dispatch:&nbsp;</B>&nbsp;${dispatch}/cycle</FONT></TD>
       <TD ROWSPAN="${total_rows+4}" BGCOLOR="#f0f0f0" HREF="#" ID="rob" TITLE="Edit ROB size" ALIGN="CENTER" VALIGN="MIDDLE"><FONT POINT-SIZE="20"><B>ROB</B><BR/><BR/><B>${ROBsize}</B></FONT><BR/><FONT POINT-SIZE="16">entries</FONT></TD>
     </TR>`
 
     // ---- Waiting Buffer ----
     let wb_row = `<TR>
-      <TD COLSPAN="${port_ids.length}" BGCOLOR="#eeeeee" HREF="#" ID="sched" TITLE="Edit scheduler"><FONT POINT-SIZE="20"><B>Waiting Buffer</B></FONT>&nbsp;&nbsp;&nbsp;<FONT POINT-SIZE="16">Scheduler:</FONT><FONT POINT-SIZE="18"><B>${sched}</B></FONT></TD>
+      <TD COLSPAN="${port_ids.length}" BGCOLOR="#eeeeee" HREF="#" ID="sched" TITLE="Edit scheduler"><FONT POINT-SIZE="20"><B>Waiting Buffer</B></FONT>&nbsp;&nbsp;&nbsp;<FONT POINT-SIZE="16">Scheduler:&nbsp;</FONT><FONT POINT-SIZE="18"><B>${sched}</B></FONT></TD>
     </TR>`
 
     // ---- Port headers ----
@@ -468,8 +468,7 @@
         ? ' BGCOLOR="#ffcccc" BORDER="3" COLOR="red"'
         : ' BGCOLOR="#f5f5f5"'
 
-      port_header += `
-        <TD ${style} HREF="#" ID="port:${p}" TITLE="Select port ${p}"><FONT POINT-SIZE="20"><B>P${p}</B></FONT></TD>`
+      port_header += `<TD ${style} HREF="#" ID="port:${p}" TITLE="Select port ${p}"><FONT POINT-SIZE="20"><B>P${p}</B></FONT></TD>`
     }
 
     port_header += "</TR>"
@@ -494,8 +493,8 @@
           continue
         }
 
-        const type  = op_type(op.label)
-        const color = type_color(type)
+        const type    = op_type(op.label)
+        const color   = type_color(type)
         const tooltip = latency_tooltip(op.label)
 
         op_rows += `
@@ -507,7 +506,7 @@
 
     // ---- Retire ----
     let reg_row = `<TR>
-      <TD COLSPAN="${port_ids.length}" BGCOLOR="#eeeeee" HREF="#" ID="retire" TITLE="Edit retire width"><FONT POINT-SIZE="20"><B>Retire:</B> ${retire}/cycle&nbsp;&nbsp;<B>(Architected Registers)</B></FONT></TD>
+      <TD WIDTH="538" COLSPAN="${port_ids.length}" BGCOLOR="#eeeeee" HREF="#" ID="retire" TITLE="Edit retire width"><FONT POINT-SIZE="20"><B>Retire:</B>&nbsp;${retire}/cycle&nbsp;&nbsp;<B>(Architected Registers)</B></FONT></TD>
     </TR>`
 
     const dot = `
@@ -1229,7 +1228,7 @@
       <div v-if="nameError" class="error">{{ nameError }}</div>
       <div class="modal-actions">
         <button class="blue-button" title="Accept Download" @click="confirmDownload"> Yes </button>
-        <button class="blue-button" title="Cancel Download"   @click="showModalDownload=false">  Cancel </button>
+        <button class="blue-button" title="Cancel Download" @click="showModalDownload=false">  Cancel </button>
       </div>
     </div>
   </div>
@@ -1356,7 +1355,6 @@
     font-weight:      bold;
     background-color: #f0f5ff;
   }
-
 
   .latency-input {
     width:     40px !important; /* Más estrecho */
@@ -1595,17 +1593,14 @@
     font-weight:    bold;
     cursor:         pointer;
   }
-
   .op-row {
     background: #f9fbff;
   }
-
   .op-cell {
     padding-left:   2px;
     font-size:      smaller;
     font-style:     italic;
   }
-
   .type-cell {
     white-space: nowrap;
   }
@@ -1630,14 +1625,12 @@
   .type-name {
     font-weight: 600;
   }
-
   .type-label.no-ops {
     font-weight:  600;
     color:     #261515;
     cursor:     default;
     opacity:      0.9;
   }
-
   .op-name {
     font-weight: 600;
   }
