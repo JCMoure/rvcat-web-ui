@@ -450,8 +450,8 @@
 
     // ---- Dispatch + ROB ----
     let decode_row = `<TR>
-      <TD COLSPAN="${port_ids.length}" BGCOLOR="#eeeeee" HREF="dispatch" TITLE="Edit dispatch width"><FONT POINT-SIZE="20"><B>Dispatch:&nbsp;</B>&nbsp;${dispatch}/cycle</FONT></TD>
-      <TD ROWSPAN="${total_rows+4}" BGCOLOR="#f0f0f0" HREF="rob" TITLE="Edit ROB size" ALIGN="CENTER" VALIGN="MIDDLE"><FONT POINT-SIZE="20"><B>ROB</B><BR/><BR/><B>${ROBsize}</B></FONT><BR/><FONT POINT-SIZE="16">entries</FONT></TD>
+      <TD COLSPAN="${port_ids.length}" BGCOLOR="#eeeeee" HREF="dispatch" ID="dispatch" TITLE="Edit dispatch width"><FONT POINT-SIZE="20"><B>Dispatch:&nbsp;</B>&nbsp;${dispatch}/cycle</FONT></TD>
+      <TD ROWSPAN="${total_rows+4}" BGCOLOR="#f0f0f0" HREF="rob" ID="rob" TITLE="Edit ROB size" ALIGN="CENTER" VALIGN="MIDDLE"><FONT POINT-SIZE="20"><B>ROB</B><BR/><BR/><B>${ROBsize}</B></FONT><BR/><FONT POINT-SIZE="16">entries</FONT></TD>
     </TR>`
 
     // ---- Waiting Buffer ----
@@ -537,12 +537,12 @@
 
       removeClickListeners();
 
-      svgElement.querySelectorAll('a').forEach(a => {
-        console.log('💻Add click action', a);
-        a.addEventListener('click', (e) => {
+      svgElement.querySelectorAll('g').forEach(g => {
+        console.log('💻Add click action', g.id, g);
+        g.addEventListener('click', (e) => {
           e.preventDefault()
 
-          const action = a.getAttribute('data-action') || a.id
+          const action = g.getAttribute('data-action') || g.id
 
           console.log("Action:", action)
 
