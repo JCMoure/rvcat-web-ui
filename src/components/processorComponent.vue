@@ -535,36 +535,38 @@
       const svgElement = document.querySelector('.simProcessor-img svg');
       if (!svgElement) return;
 
-      removeClickListeners();
+      // removeClickListeners();
 
       svgElement.querySelectorAll('g').forEach(g => {
-        console.log('💻Add click action', g.id, g);
-        g.addEventListener('click', (e) => {
-          e.preventDefault()
+        if (typeof g.id === 'string' && g.id.startsWith("a_")) {
 
-          const action = g.getAttribute('data-action') || g.id
+          console.log('💻Add click action', g.id.slice(2));
+          g.addEventListener('click', (e) => {
+            e.preventDefault()
 
-          console.log("Action:", action)
+            const action = g.id.slice(2)
+            console.log("Action:", action)
 
-           switch (action) {
-            case 'dispatch':
-            case 'rob':
-            case 'retire':
-            case 'sched':
-              activeField.value = action
-              break
+            switch (action) {
+              case 'dispatch':
+              case 'rob':
+              case 'retire':
+              case 'sched':
+                activeField.value = action
+                break
 
-            case 'port':
-              const port = parts[2]
-              console.log('Port clicked:', port)
-              break
+              case 'port':
+                const port = parts[2]
+                console.log('Port clicked:', port)
+                break
 
-            case 'op':
-              const [_, __, p, row, label] = parts
-              console.log('Op:', p, row, label)
-              break
-          }
-        })
+              case 'op':
+                const [_, __, p, row, label] = parts
+                console.log('Op:', p, row, label)
+                break
+            }
+          })
+        }
       })
     });
   };
