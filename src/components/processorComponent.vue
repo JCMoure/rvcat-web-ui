@@ -537,7 +537,7 @@
 
       removeClickListeners();
 
-      svg.querySelectorAll('a').forEach(a => {
+      svgElement.querySelectorAll('a').forEach(a => {
         console.log('💻Add click action', a);
         a.addEventListener('click', (e) => {
           e.preventDefault()
