@@ -1,5 +1,5 @@
 <script setup>
-  import { ref, watchEffect, onMounted, onUnmounted, nextTick, inject, computed, reactive, watch } from 'vue'
+  import { ref, watch, watchEffect, onMounted, onUnmounted, nextTick, inject, computed, reactive } from 'vue'
   import HelpComponent                                                  from '@/components/helpComponent.vue'
   import { downloadJSON, uploadJSON, saveToLocalStorage, removeFromLocalStorage, initResource,
             createGraphVizGraph, instructionTypes, typeOperations, typeSizes                } from '@/common'
@@ -97,7 +97,7 @@
     }
   });
 
-   function validateField() {
+  function validateField() {
     let v = currentValue.value;
 
     if (v === "" || v == null) return;
@@ -110,6 +110,17 @@
 
     currentValue.value = v;
   }
+
+  const labelHighlighted = ref(false);
+
+  const highlightLabel = () => {
+    labelHighlighted.value = true;
+
+    setTimeout(() => {
+      labelHighlighted.value = false;
+    }, 3000); // 3000ms
+  };
+
 
 // ============================================================================
 // Temporal in-edition processor:  createDefaultConfig, updateProcessorSettings
@@ -246,6 +257,12 @@
     }
   })
 
+  watch(() => currentConfig.value?.label, (newLabel, oldLabel) => {
+    if (newLabel && newLabel !== oldLabel) {
+      highlightLabel()
+    }
+  })
+
 // ============================================================================
 // LIFECYCLE:  Mount/unMount
 // ============================================================================
@@ -263,6 +280,7 @@
         console.error('📄❌ Failed to load edited processor from localStorage:', e);
       }
     }
+    if (currentConfig.value?.label) highlightLabel()
   });
 
   onUnmounted(() => {
@@ -543,11 +561,10 @@
       if (!svgElement) return;
 
       removeClickListeners()
+      console.log('💻Add click listeners to processor table');
 
       svgElement.querySelectorAll('g').forEach(g => {
         if (typeof g.id === 'string' && g.id.startsWith("a_")) {
-
-          // console.log('💻Add click action', g.id.slice(2));
           const clickHandler = (e) => {
             e.preventDefault()
 
@@ -873,7 +890,7 @@
         </div>
         <div class="settings-container">
           <select v-model="processorOptions.processorName" class="form-select"
-              id="processors-list" title="Select Processor">
+              id="processors-list" title="Select Processor Configuration">
             <option value="" disabled>Select</option>
             <option v-for="processor in processorOptions.availableProcessors" :key="processor" :value="processor" >
               {{ processor }}
@@ -882,7 +899,7 @@
           </select>
           <button class="blue-button small-btn" @click="editProcessor"
             id="edit-processor-button"
-            title="Edit current processor on full-screen as a new program">
+            title="Edit current processor on full-screen">
           📝
           </button>
           <button class="blue-button small-btn" @click="removeProcessor"
@@ -891,7 +908,9 @@
           🧹
           </button>
           <div class="iters-group rob-group">
-            <span class="iters-label" :title="currentConfig.title">
+            <span class="iters-label"
+             :class="{ 'highlight': isHighlighted }"
+             :title="currentConfig.title">
               {{ currentConfig.label }}
             </span>
             <input
@@ -1322,8 +1341,13 @@
     display: flex;
     align-items: center;
     gap: 3px;
+    flex: 1;
+    justify-content: center;
   }
-
+  .settings-container select,
+  .settings-container button {
+    flex-shrink: 0;
+  }
   .fullscreen-settings {
     display: flex;
     align-items: center;
