@@ -235,9 +235,13 @@
   },
   { deep: true, immediate: true })
 
-  watch(() => simulatedSvg.value, () => {
+  watch(() => simulatedSvg.value, (newSvg, oldSvg) => {
+    if (oldSvg) {
+      removeClickListeners(); // Limpiar antes de que el DOM cambie
+    }
     addClickListenersToSvg();
-  });
+  })
+
 
 // ============================================================================
 // LIFECYCLE:  Mount/unMount
@@ -450,8 +454,8 @@
 
     // ---- Dispatch + ROB ----
     let decode_row = `<TR>
-      <TD COLSPAN="${port_ids.length}" BGCOLOR="#eeeeee" HREF="dispatch" ID="dispatch" TITLE="Edit dispatch width"><FONT POINT-SIZE="20"><B>Dispatch:&nbsp;</B>&nbsp;${dispatch}/cycle</FONT></TD>
-      <TD ROWSPAN="${total_rows+4}" BGCOLOR="#f0f0f0" HREF="rob" ID="rob" TITLE="Edit ROB size" ALIGN="CENTER" VALIGN="MIDDLE"><FONT POINT-SIZE="20"><B>ROB</B><BR/><BR/><B>${ROBsize}</B></FONT><BR/><FONT POINT-SIZE="16">entries</FONT></TD>
+      <TD COLSPAN="${port_ids.length}" BGCOLOR="#eeeeee" HREF="#" ID="dispatch" TITLE="Edit dispatch width"><FONT POINT-SIZE="20"><B>Dispatch:&nbsp;</B>&nbsp;${dispatch}/cycle</FONT></TD>
+      <TD ROWSPAN="${total_rows+4}" BGCOLOR="#f0f0f0" HREF="#" ID="rob" TITLE="Edit ROB size" ALIGN="CENTER" VALIGN="MIDDLE"><FONT POINT-SIZE="20"><B>ROB</B><BR/><BR/><B>${ROBsize}</B></FONT><BR/><FONT POINT-SIZE="16">entries</FONT></TD>
     </TR>`
 
     // ---- Waiting Buffer ----
@@ -535,13 +539,13 @@
       const svgElement = document.querySelector('.simProcessor-img svg');
       if (!svgElement) return;
 
-      // removeClickListeners();
+      removeClickListeners()
 
       svgElement.querySelectorAll('g').forEach(g => {
         if (typeof g.id === 'string' && g.id.startsWith("a_")) {
 
           // console.log('💻Add click action', g.id.slice(2));
-          g.addEventListener('click', (e) => {
+          const clickHandler = (e) => {
             e.preventDefault()
 
             const action = g.id.slice(2)
@@ -563,37 +567,34 @@
                 break
 
               case 'port':
-                const port = parts[2]
+                const port = g.id.slice(2)
                 console.log('Port clicked:', port)
                 break
 
               case 'op':
-                const [_, __, p, row, label] = parts
-                console.log('Op:', p, row, label)
+                // const [_, __, p, row, label] = parts
+                // console.log('Op:', p, row, label)
                 break
             }
+          }
+          // Guardar referencia para poder removerlo después
+          clickListeners.push({
+            node: g,
+            handler: clickHandler
           })
+
+          g.addEventListener('click', clickHandler)
         }
       })
-    });
-  };
+    })
+  }
 
   const removeClickListeners = () => {
-    return
-    clickListeners.push({
-      node,
-      click: handleClick,
-      enter: handleMouseEnter,
-      leave: handleMouseLeave
-    });
-
-    clickListeners.forEach(({ node, click, enter, leave }) => {
-      node.removeEventListener('click', click);
-      node.removeEventListener('mouseenter', enter);
-      node.removeEventListener('mouseleave', leave);
-    });
-    clickListeners = [];
-  };
+    clickListeners.forEach(({ node, handler }) => {
+      node.removeEventListener('click', handler);
+    })
+    clickListeners = []
+  }
 
 
 // ============================================================================

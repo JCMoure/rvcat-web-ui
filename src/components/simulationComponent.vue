@@ -2,7 +2,7 @@
   import { ref, toRaw, onMounted, onUnmounted, nextTick, inject, watch, reactive } from "vue"
   import HelpComponent                                   from '@/components/helpComponent.vue'
   import { useRVCAT_Api }                                                    from '@/rvcatAPI'
-  import { createGraphVizGraph, typeOperations   }                             from '@/common'
+  import { createGraphVizGraph  }                                              from '@/common'
 
   const { getExecutionResults } = useRVCAT_Api();
   const { registerHandler }     = inject('worker');
@@ -160,9 +160,7 @@
   const drawProcessorResults = async () => {
     try {
       const dotCode      = get_proc_results_dot (simState.simulatedProcess, simState.executionResults)
-      // console.log('💻🔄Redrawing simulated processor with usage info', dotCode);
       const svg          = await createGraphVizGraph(dotCode);
-      // console.log('💻🔄Redrawing SVG of processor with usage info', svg);
       resultsSvg.value = svg.outerHTML;
     } catch (error) {
       console.error('💻❌ Failed to draw results+processor:', error)
@@ -357,19 +355,17 @@
       <em>instructions</em>, total clock <em>cycles</em>, cycles <em>per loop iteration</em>,
       and <em>Instructions Per Cycle</em> (IPC). To obtain meaningful results, ensure that you simulate a representative
       number of loop iterations.
-      <p>The sections below provide detailed statistics on the critical execution path and
-      the utilization of core processor resources.</p>"
+      <p>The table below provides detailed statistics of the utilization of core processor resources.</p>"
     title="Overall Simulation Results"
     @close="closeHelp1"/>
   </Teleport>
 
   <Teleport to="body">
     <HelpComponent v-if="showHelp2" :position="helpPosition"
-    text="Open this tab to visualize the <strong>performance results</strong> from previous simulations,
-      along with the <em>dispatch</em> and <em>retire</em> stages, on the <strong>critical execution path</strong>.
-      <p>You can also explore the critical execution path in a detailed timeline view for a limited number
-      of loop iterations in the <strong>Timeline</strong> tab.</p>"
-    title="Critical execution path breakdown"
+    text="Open this tab to visualize the <strong>performance results</strong> from previous simulations.
+      <p>For a detailed analysis of the critical execution path  for a limited number of loop iterations you must use the <strong>Timeline</strong> tab.</p>
+      "
+    title="Previous Performance Results"
     @close="closeHelp2"/>
   </Teleport>
 
