@@ -350,12 +350,13 @@
 
   <Teleport to="body">
     <HelpComponent v-if="showHelp1" :position="helpPosition"
-    text="<strong>Simulate</strong> the execution of a specified number of program
-      loop iterations and view aggregate performance metrics, including the total number of executed
-      <em>instructions</em>, total clock <em>cycles</em>, cycles <em>per loop iteration</em>,
-      and <em>Instructions Per Cycle</em> (IPC). To obtain meaningful results, ensure that you simulate a representative
-      number of loop iterations.
-      <p>The table below provides detailed statistics of the utilization of core processor resources.</p>"
+    text="<strong>Simulate</strong> the execution of a specified number of program loop iterations and view aggregate performance metrics,
+      including the total number of executed <em>instructions</em>, total clock <em>cycles</em>, cycles <em>per loop iteration</em>,
+      and <em>Instructions Per Cycle</em> (IPC). To obtain meaningful results, ensure a representative number of loop iterations is selected,
+      as very low iteration counts may not fully capture the program's behavior and performance characteristics.
+      <p>The table below provides statistics of the utilization of core processor resources: dispatch and retire widths, and usage of execution ports.
+        These metrics are crucial for identifying potential performance bottlenecks in the simulated execution.</p>
+    "
     title="Overall Simulation Results"
     @close="closeHelp1"/>
   </Teleport>
@@ -363,7 +364,7 @@
   <Teleport to="body">
     <HelpComponent v-if="showHelp2" :position="helpPosition"
     text="Open this tab to visualize the <strong>performance results</strong> from previous simulations.
-      <p>For a detailed analysis of the critical execution path  for a limited number of loop iterations you must use the <strong>Timeline</strong> tab.</p>
+      <p>For a detailed analysis of the critical execution path for a limited number of loop iterations you must use the <strong>Timeline</strong> tab.</p>
       "
     title="Previous Performance Results"
     @close="closeHelp2"/>

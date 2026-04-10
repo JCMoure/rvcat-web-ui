@@ -1,8 +1,8 @@
 <script setup>
-  import { ref, onMounted, onUnmounted, nextTick, inject, computed, reactive, watch } from 'vue'
-  import HelpComponent                                     from '@/components/helpComponent.vue'
+  import { ref, watchEffect, onMounted, onUnmounted, nextTick, inject, computed, reactive, watch } from 'vue'
+  import HelpComponent                                                  from '@/components/helpComponent.vue'
   import { downloadJSON, uploadJSON, saveToLocalStorage, removeFromLocalStorage, initResource,
-            createGraphVizGraph, instructionTypes, typeOperations, typeSizes   } from '@/common'
+            createGraphVizGraph, instructionTypes, typeOperations, typeSizes                } from '@/common'
 
   const simState = inject('simulationState');
 
@@ -235,13 +235,16 @@
   },
   { deep: true, immediate: true })
 
-  watch(() => simulatedSvg.value, (newSvg, oldSvg) => {
-    if (oldSvg) {
-      removeClickListeners(); // Limpiar antes de que el DOM cambie
-    }
-    addClickListenersToSvg();
-  })
+  watchEffect(() => { // Dependences: re-evaluated when they change
+    const svg        = simulatedSvg.value;
+    const fullscreen = props.isFullscreen;
 
+    if (svg) { // available SVG
+      nextTick(() => {
+        addClickListenersToSvg()
+      })
+    }
+  })
 
 // ============================================================================
 // LIFECYCLE:  Mount/unMount
@@ -579,7 +582,7 @@
           }
           // Guardar referencia para poder removerlo después
           clickListeners.push({
-            node: g,
+            node:    g,
             handler: clickHandler
           })
 
@@ -1186,19 +1189,21 @@
 
   <Teleport to="body">
     <HelpComponent v-if="showHelp" :position="helpPosition"
-    text="Provides graphical visualization of the <strong>processor microarchitecture</strong> (pipeline) characteristics.
-        <p>Modify the size of the <strong>ROB</strong> (ReOrder Buffer) or select a new <em>processor configuration</em> file from the list.
-        Pin the <strong>Edit Processor</strong> tab to modify the microarchitectural parameters.</p>
-        <p>After simulating the execution of a program, the graphical view of the processor provides utilization information:
-        hover over the <em>execution ports</em> to inspect their individual <em>utilization</em>.
-        <strong>Red</strong> indicates a potential performance bottleneck in execution.</p>"
-    title="Processor MicroArchitecture and Usage"
+    text="The table describes the <strong>processor microarchitecture</strong> (pipeline) characteristics.
+        <p>Click on the table to modify the <strong>Dispatch</strong> and/or <strong>Retire</strong> widths
+          (maximum number of instructions dispatched into or retired from the <strong>Execution Engine</strong> per clock cycle),
+          or the <strong>ROB</strong> (ReOrder Buffer) size (maximum number of instructions on the <strong>Execution Engine</strong>).
+          All of them may impose a <strong><em>throughput-bound</em></strong> performace limit.</p>
+        <p>A new <em>processor configuration</em> can be selected from the list (referring to a JSON file description stored in local storage).
+         Click on the buttons on the right to <strong>edit</strong> the microarchitectural parameters or to remove the file from local storage.</p>
+        "
+    title="Processor MicroArchitecture Description"
     @close="closeHelp" />
 
     <HelpComponent v-if="showHelp1" :position="helpPosition"
     text="Modify the simulated processor’s <strong>configuration settings</strong>, including: (1) <em>Dispatch & Retire</em> Widths;
-      (2) <em>Cache Memory</em>; (3) <em>Execution Ports</em> (Add or remove execution ports, up to a maximum of 10); and
-      (4) <em>Execution Latencies</em>"
+      (2) <em>ROB</em> size; (3) <em>Cache Memory</em>; (4) <em>Execution Ports</em> (Add or remove execution ports, up to a maximum of 10); and
+      (5) <em>Execution Latencies</em>"
     title="Processor Settings"
     @close="closeHelp1"/>
 
