@@ -353,12 +353,12 @@
           <span id="instructions-output" title="Total executed instructions">{{ formattedResults.instructions }}</span>
         </div>
         <div class="simulation-inline-item">
-          <label for="cycles">Cycles:</label>
+          <label for="cycles">ClockCycles:</label>
           <span id="cycles-output" title="Total clock cycles">{{ formattedResults.cycles }}</span>
         </div>
         <div class="simulation-inline-item">
           <label for="cycles-per-iteration">Cycles per iteration:</label>
-          <span id="cycles-per-iteration-output" title="Cycles per loop iteration">{{ formattedResults.cpi }}</span>
+          <span id="cycles-per-iteration-output" title="Clock cycles per loop iteration">{{ formattedResults.cpi }}</span>
         </div>
       </div>
       <div class="row">
