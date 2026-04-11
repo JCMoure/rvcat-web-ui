@@ -116,6 +116,7 @@
     cleanupHandleResults  = registerHandler('get_execution_results', handleResults);
     console.log('🕐🎯 SimulationComponent mounted')
     simState.executionResults = null
+
     try {    // Load from localStorage
       const saved = localStorage.getItem(STORAGE_KEY)
       if (saved) {
@@ -124,6 +125,8 @@
     } catch (error) {
       console.error('🕐❌ Failed to load:', error)
     }
+    if (simState.state >= 3 && simulationOptions.autorun)
+      reloadExecutionResults()
   });
 
   // Clean up on unmount
