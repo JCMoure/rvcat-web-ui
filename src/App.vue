@@ -54,7 +54,6 @@
     align-items: center;
     gap:         3px;
     flex-wrap:   wrap;
-    flex-shrink: 0;
   }
 
   .header-title {
@@ -103,7 +102,7 @@
     gap:         6px;
     margin-top:  3px;
     margin-left: auto;
-    flex-shrink: 0;
+    /* flex-shrink: 0; */
   }
 
   .iters-label {

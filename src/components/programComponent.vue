@@ -600,7 +600,7 @@ function snapshotMemory() {
       </div>
 
       <div class="settings-container">
-        <button class="blue-button add-prev-margin" :class="{ active: programOptions.showLat }"
+        <button class="blue-button" :class="{ active: programOptions.showLat }"
             title="Show/Hide instruction Input/Output operands"
             id="show-inout-operands"
           @click="toggleLatency">
@@ -1038,9 +1038,11 @@ function snapshotMemory() {
   }
 
   .settings-container {
-    display:     flex;
+    display: flex;
     align-items: center;
-    gap:         3px;
+    gap: 3px;
+    flex: 1;
+    justify-content: center;
   }
 
   .fullscreen-settings {

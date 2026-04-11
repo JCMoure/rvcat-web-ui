@@ -1346,7 +1346,7 @@
   }
   .settings-container select,
   .settings-container button {
-    flex-shrink: 0;
+    flex-shrink: initial;
   }
   .fullscreen-settings {
     display: flex;
