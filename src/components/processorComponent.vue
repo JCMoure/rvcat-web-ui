@@ -99,19 +99,72 @@
     }
   });
 
-  function validateField() {
-    let v = currentValue.value;
+  const inputValue   = ref('');
+  const isInvalid    = ref(false);
+  let   errorTimeout = null;
 
-    if (v === "" || v == null) return;
+  const validateField = () => {
+    const min = currentConfig.value.min;
+    const max = currentConfig.value.max;
+    let rawValue = inputValue.value;
 
-    v = Number(v);
-    if (isNaN(v)) return;
+    if (errorTimeout) clearTimeout(errorTimeout);
 
-    const { min, max } = currentConfig.value;
-    v = Math.max(Math.min(v, max), min);
+    if (rawValue === '' || rawValue === null || rawValue === undefined) {
+      const lastValidValue = simState.simulatedProcess[currentConfig.value.model];
+      inputValue.value = lastValidValue ?? min;
+      isInvalid.value = false;
+      return;
+    }
 
-    currentValue.value = v;
+    let numValue = Number(rawValue);
+
+    if (isNaN(numValue)) {
+      const lastValidValue = simState.simulatedProcess[currentConfig.value.model];
+      inputValue.value = lastValidValue ?? min;
+      isInvalid.value = false;
+      return;
+    }
+
+    if (numValue < min) {
+      numValue = min;
+      inputValue.value = numValue;
+      showTemporaryError(`El valor mínimo es ${min}`);
+    } else if (numValue > max) {
+      numValue = max;
+      inputValue.value = numValue;
+      showTemporaryError(`El valor máximo es ${max}`);
+    }
+
+    if (simState.simulatedProcess[currentConfig.value.model] !== numValue) {
+      simState.simulatedProcess[currentConfig.value.model] = numValue;
+    }
   }
+
+  const showTemporaryError = (message) => {
+    isInvalid.value = true;
+    errorTimeout = setTimeout(() => {
+      isInvalid.value = false;
+    }, 2000);
+    console.warn(message);
+  };
+
+  const handleKeyPress = (event) => {
+    if (event.key === 'Enter') {
+      event.target.blur();
+    }
+  };
+
+  const handleInput = (event) => {
+    if (isInvalid.value) {
+      isInvalid.value = false;
+    }
+    let value = event.target.value;
+    if (value !== '' && !/^\d*$/.test(value)) {
+      event.target.value = value.replace(/\D/g, '');
+      inputValue.value = event.target.value;
+    }
+  };
 
   const labelHighlighted = ref(false);
 
@@ -241,13 +294,6 @@
     }
   )
 
-  watch(() => simState.simulatedProcess, () => {
-    if (simState.state > 1) {
-      drawProcessor()
-    }
-  },
-  { deep: true, immediate: true })
-
   watchEffect(() => { // Dependences: re-evaluated when they change
     const svg        = simulatedSvg.value;
     const fullscreen = props.isFullscreen;
@@ -264,6 +310,23 @@
       highlightLabel()
     }
   })
+
+  watch(() => simState.simulatedProcess, () => {
+    if (simState.state > 1) {
+      drawProcessor()
+    }
+  },
+  { deep: true, immediate: true })
+
+  watch(() => simState.simulatedProcess[currentConfig.value.model],
+    (newVal) => {
+      if (String(inputValue.value) !== String(newVal)) {
+        inputValue.value = newVal ?? '';
+        isInvalid.value = false;
+      }
+    },
+    { immediate: true }
+  )
 
 // ============================================================================
 // LIFECYCLE:  Mount/unMount
@@ -915,16 +978,21 @@
           </button>
           <div class="iters-group rob-group">
             <span class="iters-label"
-             :class="{ 'highlight': labelHighlighted }"
-             :title="currentConfig.title">
+              :class="{ 'highlight': labelHighlighted }"
+              :title="currentConfig.title">
               {{ currentConfig.label }}
             </span>
             <input
-              type="number"
-              :min="currentConfig.min"
-              :max="currentConfig.max"
-              v-model="currentValue"
+              type="text"
+              inputmode="numeric"
+              pattern="[0-9]*"
+              :placeholder="currentConfig.min.toString()"
+              v-model="inputValue"
               @blur="validateField"
+              @keypress="handleKeyPress"
+              @input="handleInput"
+              :class="{ 'invalid': isInvalid }"
+              :title="`Rango: ${currentConfig.min} - ${currentConfig.max}`"
             />
           </div>
         </div>
@@ -1300,6 +1368,32 @@
 
   .iters-group rob-group {
         gap:         0px;
+  }
+
+  .iters-group input {
+    width: 80px;
+    padding: 4px 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+  }
+
+  .iters-group input:focus {
+    outline: none;
+    border-color: #4a90e2;
+    box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.2);
+  }
+
+  .iters-group input.invalid {
+    border-color: #ff4444;
+    background-color: #fff0f0;
+    animation: shake 0.3s ease-in-out;
+  }
+
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    75% { transform: translateX(5px); }
   }
 
   .settings-group {
