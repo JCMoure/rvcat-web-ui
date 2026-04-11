@@ -14,7 +14,8 @@
   const STORAGE_KEY = 'simulationOptions'
 
   const defaultOptions = {
-    iters:  1,
+    iters:        1,
+    autorun:      false,
     showPrevious: false
   }
 
@@ -75,7 +76,7 @@
           return
         }
         saveOptions()
-        if (simState.state >= 3) {
+        if (simState.state >= 3 && simulationOptions.autorun) {
           reloadExecutionResults()
         }
         console.log('🕐✅ Modified simulation iters')
@@ -86,7 +87,7 @@
   )
 
   watch( () => simState.simulatedProcess, () => {
-      if (simState.state >= 3 && simState.simulatedProcess) {
+      if (simState.state >= 3 && simState.simulatedProcess && simulationOptions.autorun) {
         console.log('🕐🔄 Re-execute simulation');
         reloadExecutionResults()
       }
@@ -131,6 +132,8 @@
   * ------------------------------------------------------------------ */
 
   function togglePrevious() { simulationOptions.showPrevious = !simulationOptions.showPrevious }
+
+  function toggleAutorun()  { simulationOptions.autorun      = !simulationOptions.autorun }
 
   const reloadExecutionResults = async () => {
     clearTimeout(resultsTimeout)
@@ -277,15 +280,24 @@
         <span class="header-title">Simulate Execution of <strong>{{ simState.programName }}</strong></span>
       </div>
       <div class="iters-run">
+        <button class="blue-button" @click="reloadExecutionResults"
+          title="Run Simulation"  id="run-simulation-button" >
+          Run Simulation
+        </button>
+        <span>Schedule Opt.:</span>
+        <input type="checkbox"
+              title="Set to run the simulation every time the processor/program/#iterations is modified"
+              id="automatic-simulation-check"
+              :checked="simulationOptions.autorun"
+              @change="toggleAutorun"
+          />
+
         <div class="iters-group">
           <span class="iters-label">Iterations:</span>
           <input type="number" min="1" max="5000" v-model.number="simulationOptions.iters"
                  title="# loop iterations (1 to 5000)" id="simulation-iterations" >
         </div>
-        <button class="blue-button" @click="reloadExecutionResults"
-                title="Run Simulation"  id="run-simulation-button" >
-           Run
-        </button>
+
       </div>
     </div>
 
