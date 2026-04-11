@@ -58,7 +58,8 @@
 
   .header-title {
     font-size:    large;
-    font-weight:  600
+    font-weight:  600;
+    margin-right: 5px;
   }
 
   .dropdown-wrapper {
