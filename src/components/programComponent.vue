@@ -617,7 +617,7 @@ function snapshotMemory() {
         </select>
         <button class="blue-button small-btn" @click="editProgram"
             id="edit-program-button"
-            title="Edit current program on full-screen as a new program">
+            title="Edit current program on full-screen editor">
           📝
         </button>
         <button class="blue-button small-btn" @click="removeProgram"
