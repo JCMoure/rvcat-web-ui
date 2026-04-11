@@ -475,8 +475,8 @@
 
     // ---- Dispatch + ROB ----
     let decode_row = `<TR>
-      <TD COLSPAN="${port_ids.length}" BGCOLOR="#eeeeee" HREF="#" ID="dispatch" TITLE="Edit dispatch width"><FONT POINT-SIZE="20">🔄<B>Dispatch:&nbsp;</B>&nbsp;${dispatch}/cycle</FONT></TD>
-      <TD ROWSPAN="${total_rows+4}" BGCOLOR="#f0f0f0" HREF="#" ID="rob" TITLE="Edit ROB size" ALIGN="CENTER" VALIGN="MIDDLE"><FONT POINT-SIZE="20"><B>ROB</B><BR/>🔄<BR/><B>${ROBsize}</B></FONT><BR/><FONT POINT-SIZE="16">entries</FONT></TD>
+      <TD COLSPAN="${port_ids.length}" BGCOLOR="#eeeeee" HREF="#" ID="dispatch" TITLE="Edit dispatch width"><FONT POINT-SIZE="20">🔄&nbsp;<B>Dispatch:&nbsp;</B>&nbsp;${dispatch}/cycle</FONT></TD>
+      <TD ROWSPAN="${total_rows+4}" BGCOLOR="#f0f0f0" HREF="#" ID="rob" TITLE="Edit ROB size" ALIGN="CENTER" VALIGN="MIDDLE"><FONT POINT-SIZE="20">🔄<BR/><B>ROB</B><BR/><BR/><B>${ROBsize}</B></FONT><BR/><FONT POINT-SIZE="16">entries</FONT></TD>
     </TR>`
 
     // ---- Waiting Buffer ----
@@ -535,7 +535,7 @@
 
     // ---- Retire ----
     let reg_row = `<TR>
-      <TD WIDTH="538" COLSPAN="${port_ids.length}" BGCOLOR="#eeeeee" HREF="#" ID="retire" TITLE="Edit retire width"><FONT POINT-SIZE="20">🔄<B>Retire:</B>&nbsp;${retire}/cycle&nbsp;&nbsp;<B>(Architected Registers)</B></FONT></TD>
+      <TD WIDTH="538" COLSPAN="${port_ids.length}" BGCOLOR="#eeeeee" HREF="#" ID="retire" TITLE="Edit retire width"><FONT POINT-SIZE="20">🔄&nbsp;<B>Retire:</B>&nbsp;${retire}/cycle&nbsp;&nbsp;<B>(Architected Registers)</B></FONT></TD>
     </TR>`
 
     const dot = `
@@ -1213,12 +1213,16 @@
   <Teleport to="body">
     <HelpComponent v-if="showHelp" :position="helpPosition"
     text="The table describes the <strong>processor microarchitecture</strong> (pipeline) characteristics.
-        <p>Click on the table to modify the <strong>Dispatch</strong> and/or <strong>Retire</strong> widths
+        <p>Click on the corresponding table cells to modify the <strong>Dispatch</strong> and/or <strong>Retire</strong> widths
           (maximum number of instructions dispatched into or retired from the <strong>Execution Engine</strong> per clock cycle),
           or the <strong>ROB</strong> (ReOrder Buffer) size (maximum number of instructions on the <strong>Execution Engine</strong>).
           All of them may impose a <strong><em>throughput-bound</em></strong> performace limit.</p>
+        <p>Click on the <strong>Waiting Buffer</strong> row to toggle between a greedy scheduler
+          (which issues ready instructions as soon as possible) and an optimal scheduler
+          (which always issues the best combination of ready instructions to maximize performance).</p>
         <p>A new <em>processor configuration</em> can be selected from the list (referring to a JSON file description stored in local storage).
-         Click on the buttons on the right to <strong>edit</strong> the microarchitectural parameters or to remove the file from local storage.</p>
+         Click on the buttons on the right to <strong>edit</strong> the microarchitectural parameters or
+         to <strong>remove</strong> the file from local storage.</p>
         "
     title="Processor MicroArchitecture Description"
     @close="closeHelp" />
