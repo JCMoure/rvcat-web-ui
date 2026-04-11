@@ -1,5 +1,5 @@
 <script setup>
-  import { ref, toRaw, onMounted, onUnmounted, nextTick, inject, watch, reactive } from "vue"
+  import { ref, toRaw, computed, onMounted, onUnmounted, nextTick, inject, watch, reactive } from "vue"
   import HelpComponent                                   from '@/components/helpComponent.vue'
   import { useRVCAT_Api }                                                    from '@/rvcatAPI'
   import { createGraphVizGraph  }                                              from '@/common'
