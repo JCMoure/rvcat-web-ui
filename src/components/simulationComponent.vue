@@ -150,7 +150,7 @@
   watch( () => simState.simulatedProcess, () => {
       if (simState.state >= 3 && simState.simulatedProcess && simulationOptions.autorun) {
         console.log('🕐🔄 Re-execute simulation');
-        reloadExecutionResults()
+        // reloadExecutionResults()
       }
     },
     { deep: true, immediate: false }
