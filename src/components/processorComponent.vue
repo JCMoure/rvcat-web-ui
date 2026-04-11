@@ -1371,11 +1371,11 @@
   }
 
   .iters-group input {
-    width: 80px;
-    padding: 4px 8px;
-    border: 1px solid #ccc;
+    width:         30px;
+    padding:       2px 4px;
+    border:        1px solid #ccc;
     border-radius: 4px;
-    transition: all 0.2s ease;
+    transition:    all 0.2s ease;
   }
 
   .iters-group input:focus {
@@ -1385,15 +1385,15 @@
   }
 
   .iters-group input.invalid {
-    border-color: #ff4444;
+    border-color:     #ff4444;
     background-color: #fff0f0;
-    animation: shake 0.3s ease-in-out;
+    animation:        shake 0.3s ease-in-out;
   }
 
   @keyframes shake {
     0%, 100% { transform: translateX(0); }
-    25% { transform: translateX(-5px); }
-    75% { transform: translateX(5px); }
+    25%      { transform: translateX(-5px); }
+    75%      { transform: translateX(5px); }
   }
 
   .settings-group {
