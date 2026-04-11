@@ -141,7 +141,7 @@
     return {
       instructions: results["total_instructions"]?.toLocaleString() ?? '0',
       cycles:       results["total_cycles"]?.toLocaleString() ?? '0',
-      cpi:          results["cpi"]?.toFixed(2) ?? '0',
+      cpi:          results["cycles_per_iteration"]?.toFixed(2) ?? '0',
       ipc:          results["ipc"]?.toFixed(3) ?? '0',
       loads:        results["total_loads"]?.toLocaleString() ?? '0'
     };
@@ -155,14 +155,14 @@
 
     const ratio = ipc / dw;
 
-    // Cerca del máximo (>= 80% del dispatch width) -> Verde
+    // close to maximum (>= 80% of dispatch width) -> Green
     if (ratio >= 0.8) return '#00cc44';
 
-    // Muy bajo (<= 10% del dispatch width) -> Rojo
+    // Very low (<= 10% of dispatch width) -> Red
     if (ratio <= 0.1) return '#ff3333';
 
-    // Intermedio: degradado de rojo a verde
-    const t     = (ratio - 0.1) / 0.7; // Normalizar 0.1-0.8 a 0-1
+    // Intermediate: gradient from red to green
+    const t     = (ratio - 0.1) / 0.7; // Normalize 0.1-0.8 to 0-1
     const red   = Math.floor(255 * (1 - t));
     const green = Math.floor(255 * t);
 
@@ -183,7 +183,7 @@
     const ipc = simState.executionResults?.["ipc"] ?? 0;
     const dw  = simState.simulatedProcess?.dispatch || 1;
     const efficiency = ((ipc / dw) * 100).toFixed(1);
-    return `IPC: ${ipc.toFixed(3)} | Dispatch Width: ${dw}\nEficiencia: ${efficiency}% del máximo posible`;
+    return `IPC: ${ipc.toFixed(3)} | Dispatch Width: ${dw}\nEfficiency: ${efficiency}% of maximum possible IPC`;
   });
 
   const reloadExecutionResults = async () => {
@@ -350,15 +350,15 @@
       <div class="row">
         <div class="simulation-inline-item">
           <label for="instructions">Instructions:</label>
-          <span id="instructions-output">{{ formattedResults.instructions }}</span>
+          <span id="instructions-output" title="Total executed instructions">{{ formattedResults.instructions }}</span>
         </div>
         <div class="simulation-inline-item">
           <label for="cycles">Cycles:</label>
-          <span id="cycles-output">{{ formattedResults.cycles }}</span>
+          <span id="cycles-output" title="Total clock cycles">{{ formattedResults.cycles }}</span>
         </div>
         <div class="simulation-inline-item">
           <label for="cycles-per-iteration">Cycles per iteration:</label>
-          <span id="cycles-per-iteration-output">{{ formattedResults.cpi }}</span>
+          <span id="cycles-per-iteration-output" title="Cycles per loop iteration">{{ formattedResults.cpi }}</span>
         </div>
       </div>
       <div class="row">
@@ -374,7 +374,7 @@
         </div>
         <div class="simulation-inline-item">
           <label for="Loads">Loads:</label>
-          <span id="Loads-output">{{ formattedResults.loads }}</span>
+          <span id="Loads-output" title="Total executed LOADs">{{ formattedResults.loads }}</span>
         </div>
       </div>
     </div>
@@ -442,16 +442,6 @@
     gap:         12px;
   }
 
-  /* .results-info {
-    width: 100%;
-  }
-  .results-info .row {
-    gap:             20px;
-    display:         flex;
-    justify-content: space-between;
-    margin-bottom:   5px;
-  }*/
-
   .results-info {
     font-size: 16px; /* Tamaño base más grande */
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -464,20 +454,6 @@
     flex-wrap:     wrap;
     justify-content: space-between;
   }
-
-  /* .simulation-inline-item {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
- */
-
-  /*
-  .simulation-inline-item span {
-    font-weight: bold;
-    font-size: 1.1em;
-    transition: color 0.3s ease;
-  } */
 
   .simulation-inline-item {
     flex:            1;
@@ -498,6 +474,9 @@
   .simulation-inline-item span {
     text-align:  right;
     flex-shrink: 0;
+    font-weight: bold;
+    font-size: 1.1em;
+    transition: color 0.3s ease;
   }
 
   #IPC-output {
