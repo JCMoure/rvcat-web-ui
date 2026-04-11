@@ -113,10 +113,11 @@
           document.getElementById('run-simulation-button').disabled       = false;
           return;
       }
-      document.getElementById('instructions-output').innerHTML         = simState.executionResults["total_instructions"]
-      document.getElementById('cycles-output').innerHTML               = simState.executionResults["total_cycles"];
-      document.getElementById('IPC-output').innerHTML                  = simState.executionResults["ipc"].toFixed(2);
-      document.getElementById('cycles-per-iteration-output').innerHTML = simState.executionResults["cycles_per_iteration"].toFixed(2);
+      props.results.instructions= simState.executionResults["total_instructions"];
+      props.results.cycles      = simState.executionResults["total_cycles"];
+      props.results.cpi         = simState.executionResults["cpi"];
+      props.results.ipc         = simState.executionResults["ipc"];
+      props.results.loads       = simState.executionResults["total_loads"];
 
       document.getElementById('run-simulation-spinner').style.display = 'none';
       document.getElementById('simulation-running').style.display     = 'none';
@@ -132,17 +133,90 @@
   * ------------------------------------------------------------------ */
 
   function togglePrevious() { simulationOptions.showPrevious = !simulationOptions.showPrevious }
-
   function toggleAutorun()  { simulationOptions.autorun      = !simulationOptions.autorun }
+
+  const props = defineProps({
+    results: {
+      type: Object,
+      default: () => ({
+        instructions: 0,
+        cycles: 0,
+        cpi: 0,
+        ipc: 0,
+        loads: 0
+      })
+    }
+  });
+
+  const formattedInstructions = computed(() =>
+    props.results.instructions?.toLocaleString() || '0'
+  );
+
+  const formattedCycles = computed(() =>
+    props.results.cycles?.toLocaleString() || '0'
+  );
+
+  const cpiFormatted = computed(() =>
+    props.results.cpi?.toFixed(2) || '0'
+  );
+
+  const ipcFormatted = computed(() =>
+    props.results.ipc?.toFixed(3) || '0'
+  );
+
+  const formattedLoads = computed(() =>
+    props.results.loads?.toLocaleString() || '0'
+  );
+
+  const ipcColor = computed(() => {
+    const ipc = props.results.ipc;
+    const dw  = simState.simulatedProcess?.dispatch || 1;
+
+    if (!ipc || !dw || dw === 0) return '#666';
+
+    const ratio = ipc / dw;
+
+    // Cerca del máximo (>= 80% del dispatch width) -> Verde
+    if (ratio >= 0.8) return '#00cc44';
+
+    // Muy bajo (<= 10% del dispatch width) -> Rojo
+    if (ratio <= 0.1) return '#ff3333';
+
+    // Intermedio: degradado de rojo a verde
+    const t     = (ratio - 0.1) / 0.7; // Normalizar 0.1-0.8 a 0-1
+    const red   = Math.floor(255 * (1 - t));
+    const green = Math.floor(255 * t);
+
+    return `rgb(${red}, ${green}, 0)`;
+  });
+
+  const ipcStyle = computed(() => ({
+    color:      ipcColor.value,
+    fontWeight: 'bold',
+    fontSize:   '1.2em',
+    backgroundColor: `${ipcColor.value}10`,
+    padding:    '2px 6px',
+    borderRadius: '4px',
+    transition: 'all 0.3s ease'
+  }));
+
+  const ipcTooltip = computed(() => {
+    const ipc = props.results.ipc;
+    const dw  = simState.simulatedProcess?.dispatch || 1;
+    const efficiency = ((ipc / dw) * 100).toFixed(1);
+    return `IPC: ${ipc.toFixed(3)} | Dispatch Width: ${dw}\nEficiencia: ${efficiency}% del máximo posible`;
+  });
+
 
   const reloadExecutionResults = async () => {
     clearTimeout(resultsTimeout)
     try {
       resultsTimeout = setTimeout(() => {
-        document.getElementById('instructions-output').innerHTML         = '?';
-        document.getElementById('cycles-output').innerHTML               = '?';
-        document.getElementById('IPC-output').innerHTML                  = '?';
-        document.getElementById('cycles-per-iteration-output').innerHTML = '?';
+        props.results.instructions= 0;
+        props.results.cycles      = 0;
+        props.results.cpi         = 0;
+        props.results.ipc         = 0;
+        props.results.loads       = 0;
 
         document.getElementById('run-simulation-spinner').style.display = 'block';
         document.getElementById('simulation-running').style.display     = 'block';
@@ -255,7 +329,6 @@
     return dot
   }
 
-
 /* ------------------------------------------------------------------
  * Help support
  * ------------------------------------------------------------------ */
@@ -281,10 +354,10 @@
       </div>
       <div class="iters-run">
         <button class="blue-button" @click="reloadExecutionResults"
-          title="Run Simulation"  id="run-simulation-button" >
+          title="Run Simulation" id="run-simulation-button" >
           Run Simulation
         </button>
-        <span>Schedule Opt.:</span>
+        <span>AutoRun:</span>
         <input type="checkbox"
               title="Set to run the simulation every time the processor/program/#iterations is modified"
               id="automatic-simulation-check"
@@ -305,25 +378,31 @@
       <div class="row">
         <div class="simulation-inline-item">
           <label for="instructions">Instructions:</label>
-          <span id="instructions-output">?</span>
+          <span id="instructions-output">{{ formattedInstructions }}</span>
         </div>
         <div class="simulation-inline-item">
           <label for="cycles">Cycles:</label>
-          <span id="cycles-output">?</span>
+          <span id="cycles-output">{{ formattedCycles }}</span>
         </div>
         <div class="simulation-inline-item">
           <label for="cycles-per-iteration">Cycles per iteration:</label>
-          <span id="cycles-per-iteration-output">?</span>
+          <span id="cycles-per-iteration-output">{{ cpiFormatted }}</span>
         </div>
       </div>
       <div class="row">
         <div class="simulation-inline-item">
           <label for="IPC">IPC:</label>
-          <span id="IPC-output">?</span>
+          <span
+            id="IPC-output"
+            :style="ipcStyle"
+            :data-tooltip="ipcTooltip"
+          >
+            {{ ipcFormatted }}
+          </span>
         </div>
         <div class="simulation-inline-item">
           <label for="Loads">Loads:</label>
-          <span id="Loads-output">?</span>
+          <span id="Loads-output">{{ formattedLoads }}</span>
         </div>
       </div>
     </div>
@@ -391,7 +470,7 @@
     gap:         12px;
   }
 
-  .results-info {
+  /* .results-info {
     width: 100%;
   }
   .results-info .row {
@@ -399,7 +478,39 @@
     display:         flex;
     justify-content: space-between;
     margin-bottom:   5px;
+  }*/
+
+  .results-info {
+    font-size: 16px; /* Tamaño base más grande */
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   }
+
+  .results-info .row {
+    display:       flex;
+    gap:           20px;
+    margin-bottom: 8px;
+    flex-wrap:     wrap;
+    justify-content: space-between;
+  }
+
+  /* .simulation-inline-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+ */
+  /* .simulation-inline-item label {
+    font-weight: 600;
+    color: #333;
+    font-size: 1.1em;
+  }*/
+
+  /*
+  .simulation-inline-item span {
+    font-weight: bold;
+    font-size: 1.1em;
+    transition: color 0.3s ease;
+  } */
 
   .simulation-inline-item {
     flex:            1;
@@ -417,6 +528,38 @@
   .simulation-inline-item span {
     text-align:  right;
     flex-shrink: 0;
+  }
+
+  #IPC-output {
+    font-weight: bold;
+    font-size: 1.2em;
+    padding: 2px 6px;
+    border-radius: 4px;
+    transition: all 0.3s ease;
+    display: inline-block;
+    min-width: 60px;
+    text-align: center;
+  }
+
+  #IPC-output {
+    cursor: help;
+    position: relative;
+  }
+
+  #IPC-output:hover::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0,0,0,0.8);
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    white-space: nowrap;
+    z-index: 1000;
+    pointer-events: none;
   }
 
   .sim-running-msg {
