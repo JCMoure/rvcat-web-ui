@@ -909,7 +909,7 @@
           </button>
           <div class="iters-group rob-group">
             <span class="iters-label"
-             :class="{ 'highlight': isHighlighted }"
+             :class="{ 'highlight': labelHighlighted }"
              :title="currentConfig.title">
               {{ currentConfig.label }}
             </span>
