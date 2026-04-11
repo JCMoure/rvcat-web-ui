@@ -1286,9 +1286,9 @@
         <p>Click on the corresponding table cells to modify the <strong>Dispatch</strong> and/or <strong>Retire</strong> widths
           (maximum number of instructions dispatched into or retired from the <strong>Execution Engine</strong> per clock cycle),
           or the <strong>ROB</strong> (ReOrder Buffer) size (maximum number of instructions on the <strong>Execution Engine</strong>).
-          All of them may impose a <strong><em>throughput-bound</em></strong> performace limit.</p>
+          All of them may impose a <strong><em>throughput-bound</em></strong> performance limit.</p>
         <p>Click on the <strong>Waiting Buffer</strong> row to toggle between a <em>greedy</em> scheduler
-          (which issues ready instructions as soon as possible) and an <em>optimal</em> scheduler
+          (which issues older ready instructions as soon as possible) and an <em>optimal</em> scheduler
           (which always issues the best combination of ready instructions to maximize performance).</p>
         <p>A new <em>processor configuration</em> can be selected from the list (referring to a JSON file description stored in local storage).
          Click on the buttons on the right to <strong>edit</strong> the microarchitectural parameters or
