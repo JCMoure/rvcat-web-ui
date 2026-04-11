@@ -87,18 +87,6 @@
 
   const currentConfig = computed(() => FIELD_CONFIG[activeField.value]);
 
-  /* const currentValue = computed({
-    get() {
-      return simState.simulatedProcess[currentConfig.value.model];
-    },
-    set(val) {
-      if (val === "" || val == null) return;
-      if (val >= currentConfig.value.min && val <= currentConfig.value.max) {
-        simState.simulatedProcess[currentConfig.value.model] = val;
-      }
-    }
-  }); */
-
   const inputValue   = ref('');
   const isInvalid    = ref(false);
   let   errorTimeout = null;
@@ -992,7 +980,7 @@
               @keypress="handleKeyPress"
               @input="handleInput"
               :class="{ 'invalid': isInvalid }"
-              :title="`Rango: ${currentConfig.min} - ${currentConfig.max}`"
+              :title="`Rang: ${currentConfig.min} - ${currentConfig.max}`"
             />
           </div>
         </div>

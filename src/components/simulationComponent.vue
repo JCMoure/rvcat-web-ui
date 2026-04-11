@@ -36,7 +36,6 @@
   let   cleanupHandleResults  = null
   let   resultsTimeout        = null
 
-  // Save on changes
   const saveOptions = () => {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(simulationOptions))
@@ -44,19 +43,6 @@
       console.error('🕐❌ Failed to save:', error)
     }
   }
-
-  /*
-  const currentValue = computed({
-    get() {
-      return simState.simulatedProcess[currentConfig.value.model];
-    },
-    set(val) {
-      if (val === "" || val == null) return;
-      if (val >= currentConfig.value.min && val <= currentConfig.value.max) {
-        simState.simulatedProcess[currentConfig.value.model] = val;
-      }
-    }
-  }); */
 
   const inputValue   = ref('');
   const isInvalid    = ref(false);
@@ -150,13 +136,12 @@
 
   watch(() => simulationOptions.iters,
     (newVal) => {
-      if (String(inputValue.value) !== String(newVal)) {
-        inputValue.value = newVal ?? '';
-        isInvalid.value = false;
-        saveOptions()
-        if (simState.state >= 3 && simulationOptions.autorun) {
-          reloadExecutionResults()
-        }
+      console.log('🕐🔄 modify number of iterations', newVal);
+      inputValue.value = newVal ?? '';
+      isInvalid.value  = false;
+      saveOptions()
+      if (simState.state >= 3 && simulationOptions.autorun) {
+        reloadExecutionResults()
       }
     },
     { immediate: true }
@@ -406,22 +391,23 @@
           />
 
         <div class="iters-group">
-          <span class="iters-label">Iterations:</span>
+          <span class="iters-label" :title="`Rang: 1 - ${MAX_ITERS} iters`">
+            Iterations:
+          </span>
           <input
-            type="text"
-            inputmode="numeric"
-            pattern="[0-9]*"
+            type=      "text"
+            inputmode= "numeric"
+            pattern=   "[0-9]*"
             :placeholder="100"
-            v-model="inputValue"
-            @blur="validateField"
+            v-model=  "inputValue"
+            @blur=    "validateField"
             @keypress="handleKeyPress"
-            @input="handleInput"
-            id="simulation-iterations"
-            :class="{ 'invalid': isInvalid }"
-            :title="`Rango: ${1} - ${5000} iters`"
+            @input=   "handleInput"
+            id=       "simulation-iterations"
+            :class=   "{ 'invalid': isInvalid }"
+            :title=   "`Rang: 1 - ${MAX_ITERS} iters`"
           />
         </div>
-
       </div>
     </div>
 
