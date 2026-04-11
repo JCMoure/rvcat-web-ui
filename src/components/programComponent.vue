@@ -207,7 +207,13 @@ function loadEditedMemory() {
     }
   )
 
+  let updateCritical= false
+
   watch( () => simState.simulatedProcess, () => {
+      if (updateCritical) {
+        updateCritical = false;
+        return
+      }
       if (simState.state > 2) {
         console.log('📄🔄 Refreshing program latencies & ports on simulated process');
         updateProcess(simState.simulatedProcess) // recompute instruction latencies & ports
@@ -428,11 +434,12 @@ function snapshotMemory() {
   }
 
   function updateCriticalInfo() {
-    const res = simState.executionResults?.critical_path?.instructions
+    const res        = simState.executionResults?.critical_path?.instructions
     const instr_list = simState.simulatedProcess?.instruction_list
 
     if (!instr_list) return
 
+    updateCritical = true;
     if (!res) {
       instr_list.forEach((inst, index) => {
         delete inst.percentage

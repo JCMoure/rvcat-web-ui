@@ -182,7 +182,6 @@
         document.getElementById('simulation-running').style.display     = 'none';
         document.getElementById('previous-simulations-section').style.display  = 'block';
         document.getElementById('run-simulation-button').disabled       = false;
-        drawProcessorResults()
       }, 500)
     } catch (error) {
       console.error('🕐❌Failed to obtain execution results:', error)
