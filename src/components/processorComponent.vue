@@ -87,7 +87,7 @@
 
   const currentConfig = computed(() => FIELD_CONFIG[activeField.value]);
 
-  const currentValue = computed({
+  /* const currentValue = computed({
     get() {
       return simState.simulatedProcess[currentConfig.value.model];
     },
@@ -97,7 +97,7 @@
         simState.simulatedProcess[currentConfig.value.model] = val;
       }
     }
-  });
+  }); */
 
   const inputValue   = ref('');
   const isInvalid    = ref(false);

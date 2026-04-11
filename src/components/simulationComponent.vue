@@ -12,6 +12,7 @@
    * Simulation Results options (persistent in localStorage)
    * ------------------------------------------------------------------ */
   const STORAGE_KEY = 'simulationOptions'
+  const MAX_ITERS    = 5000
 
   const defaultOptions = {
     iters:        1,
@@ -44,6 +45,86 @@
     }
   }
 
+  /*
+  const currentValue = computed({
+    get() {
+      return simState.simulatedProcess[currentConfig.value.model];
+    },
+    set(val) {
+      if (val === "" || val == null) return;
+      if (val >= currentConfig.value.min && val <= currentConfig.value.max) {
+        simState.simulatedProcess[currentConfig.value.model] = val;
+      }
+    }
+  }); */
+
+  const inputValue   = ref('');
+  const isInvalid    = ref(false);
+  let   errorTimeout = null;
+
+  const validateField = () => {
+    const min = 1;
+    const max = MAX_ITERS;
+    let rawValue = inputValue.value;
+
+    if (errorTimeout) clearTimeout(errorTimeout);
+
+    if (rawValue === '' || rawValue === null || rawValue === undefined) {
+      const lastValidValue = simulationOptions.iters;
+      inputValue.value = lastValidValue ?? min;
+      isInvalid.value = false;
+      return;
+    }
+
+    let numValue = Number(rawValue);
+
+    if (isNaN(numValue)) {
+      const lastValidValue = simulationOptions.iters;
+      inputValue.value = lastValidValue ?? min;
+      isInvalid.value = false;
+      return;
+    }
+
+    if (numValue < min) {
+      numValue = min;
+      inputValue.value = numValue;
+      showTemporaryError(`Minimum is ${min}`);
+    } else if (numValue > max) {
+      numValue = max;
+      inputValue.value = numValue;
+      showTemporaryError(`Maximum is ${max}`);
+    }
+
+    if (simulationOptions.iters !== numValue) {
+      simulationOptions.iters = numValue;
+    }
+  }
+
+  const showTemporaryError = (message) => {
+    isInvalid.value = true;
+    errorTimeout = setTimeout(() => {
+      isInvalid.value = false;
+    }, 2000);
+    console.warn(message);
+  };
+
+  const handleKeyPress = (event) => {
+    if (event.key === 'Enter') {
+      event.target.blur();
+    }
+  };
+
+  const handleInput = (event) => {
+    if (isInvalid.value) {
+      isInvalid.value = false;
+    }
+    let value = event.target.value;
+    if (value !== '' && !/^\d*$/.test(value)) {
+      event.target.value = value.replace(/\D/g, '');
+      inputValue.value = event.target.value;
+    }
+  };
+
   // Load from localStorage
   onMounted(() => {
     cleanupHandleResults  = registerHandler('get_execution_results', handleResults);
@@ -67,23 +148,18 @@
      }
     })
 
-  watch( () => simulationOptions.iters, (newIters, oldIters) => {
-      if (newIters === oldIters) return
-      try {
-        const clamped = Math.min(Math.max(newIters, 1), 2000)
-        if (clamped !== newIters) {
-          simulationOptions.iters = clamped
-          return
-        }
+  watch(() => simulationOptions.iters,
+    (newVal) => {
+      if (String(inputValue.value) !== String(newVal)) {
+        inputValue.value = newVal ?? '';
+        isInvalid.value = false;
         saveOptions()
         if (simState.state >= 3 && simulationOptions.autorun) {
           reloadExecutionResults()
         }
-        console.log('🕐✅ Modified simulation iters')
-      } catch (error) {
-        console.error('🕐❌Failed when modifying simulation options:', error)
       }
-    }
+    },
+    { immediate: true }
   )
 
   watch( () => simState.simulatedProcess, () => {
@@ -222,7 +298,6 @@
     const ports    = process.ports
     const port_ids = Object.keys(ports)
     const ROBsize  = process.ROBsize || 20
-    const sched    = process.sched
     const dispatch = process.dispatch
     const retire   = process.retire
 
@@ -238,25 +313,20 @@
     let dispatch_color = color[Math.floor(usage/5)]
 
     let message =  usage !== 0
-      ? `<B>&nbsp;&nbsp;&nbsp;Usage:<FONT COLOR="${dispatch_color}">${usage.toFixed(1)}%</FONT></B>`
+      ? `&nbsp;&nbsp;&nbsp;Usage:<B><FONT COLOR="${dispatch_color}">${usage.toFixed(1)}%</FONT></B>`
       : ""
 
     // ---- Decode ----
     let decode_row = `<TR>
-      <TD COLSPAN="${port_ids.length}" BGCOLOR="#eeeeee"><FONT POINT-SIZE="20"><B>Dispatch:&nbsp;</B>&nbsp;${dispatch}/cycle${message}</FONT></TD>
-      <TD ROWSPAN="4" BGCOLOR="#f0f0f0" ALIGN="CENTER" VALIGN="MIDDLE"><FONT POINT-SIZE="20"><B>ROB</B><BR/><BR/><B>${ROBsize}</B></FONT><BR/><FONT POINT-SIZE="16">entries</FONT></TD>
-    </TR>`
-
-    // ---- Waiting Buffer ----
-    let wb_row = `<TR>
-      <TD COLSPAN="${port_ids.length}" BGCOLOR="#eeeeee"><FONT POINT-SIZE="20"><B>Waiting Buffer</B></FONT>&nbsp;&nbsp;&nbsp;<FONT POINT-SIZE="16">Scheduler:&nbsp;</FONT><FONT POINT-SIZE="18"><B>${sched}</B></FONT></TD>
+      <TD COLSPAN="${port_ids.length}" BGCOLOR="#eeeeee" TITLE="Usage of dispatch capacity"><FONT POINT-SIZE="20"><B>Dispatch:&nbsp;</B>&nbsp;${dispatch}/cycle${message}</FONT></TD>
+      <TD ROWSPAN="3" BGCOLOR="#f0f0f0" ALIGN="CENTER" VALIGN="MIDDLE"><FONT POINT-SIZE="20"><B>ROB</B><BR/><BR/><B>${ROBsize}</B></FONT><BR/><FONT POINT-SIZE="16">entries</FONT></TD>
     </TR>`
 
     // ---- Port headers ----
     let port_header = "<TR>"
 
     for (let p of port_ids) {
-      const style = ' BGCOLOR="#f5f5f5"'
+      const style = ` BGCOLOR="#f5f5f5" TITLE="Usage of port ${p}"`
       usage = 0
       if (results?.ports?.[p] != null)
         usage = results.ports[p]
@@ -264,7 +334,6 @@
       let message = usage !== 0
         ? `<FONT COLOR="${port_color}">${usage.toFixed(0)}%</FONT>`
         : ""
-
       port_header += `<TD${style}><FONT POINT-SIZE="20"><B>P${p} ${message}</B></FONT></TD>`
     }
 
@@ -277,11 +346,11 @@
     let retire_color = color[Math.floor(usage/5)]
 
     message = usage !== 0
-      ? `<B>&nbsp;Usage:<FONT COLOR="${retire_color}">${usage.toFixed(1)}%</FONT></B>`
+      ? `&nbsp;<B>Usage:<FONT COLOR="${retire_color}">${usage.toFixed(1)}%</FONT></B>`
       : ""
 
     let reg_row = `<TR>
-      <TD WIDTH="538" COLSPAN="${port_ids.length}" BGCOLOR="#eeeeee"><FONT POINT-SIZE="20"><B>Retire:</B>&nbsp;${retire}/cycle${message}&nbsp;<B>Architected Registers</B></FONT></TD>
+      <TD WIDTH="538" COLSPAN="${port_ids.length}" BGCOLOR="#eeeeee" TITLE="Usage of retire capacity"><FONT POINT-SIZE="20"><B>Retire:</B>&nbsp;${retire}/cycle${message}</FONT></TD>
     </TR>`
 
     const dot = `
@@ -291,7 +360,6 @@
           label=<
             <TABLE WIDTH="600" BORDER="2" CELLBORDER="1" CELLSPACING="2" CELLPADDING="1">
               ${decode_row}
-              ${wb_row}
               ${port_header}
               ${reg_row}
             </TABLE>
@@ -339,8 +407,19 @@
 
         <div class="iters-group">
           <span class="iters-label">Iterations:</span>
-          <input type="number" min="1" max="5000" v-model.number="simulationOptions.iters"
-                 title="# loop iterations (1 to 5000)" id="simulation-iterations" >
+          <input
+            type="text"
+            inputmode="numeric"
+            pattern="[0-9]*"
+            :placeholder="100"
+            v-model="inputValue"
+            @blur="validateField"
+            @keypress="handleKeyPress"
+            @input="handleInput"
+            id="simulation-iterations"
+            :class="{ 'invalid': isInvalid }"
+            :title="`Rango: ${1} - ${5000} iters`"
+          />
         </div>
 
       </div>
