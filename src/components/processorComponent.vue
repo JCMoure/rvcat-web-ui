@@ -93,7 +93,9 @@
     },
     set(val) {
       if (val === "" || val == null) return;
-      simState.simulatedProcess[currentConfig.value.model] = val;
+      if (val >= currentConfig.value.min && val <= currentConfig.value.max) {
+        simState.simulatedProcess[currentConfig.value.model] = val;
+      }
     }
   });
 
