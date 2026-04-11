@@ -399,6 +399,12 @@
     const dispatch = process.dispatch || 1
     const retire   = process.retire || 1
 
+    if (sched === "optimal"){
+      sched = "✅optimal ❌greedy"
+    } else {
+      sched = "❌optimal ✅greedy"
+    }
+
     function type_color(type) {
       if (type === "INT")    return "#d6e4ff"
       if (type === "MEM")    return "#d6ffd6"
@@ -475,13 +481,13 @@
 
     // ---- Dispatch + ROB ----
     let decode_row = `<TR>
-      <TD COLSPAN="${port_ids.length}" BGCOLOR="#eeeeee" HREF="#" ID="dispatch" TITLE="Edit dispatch width"><FONT POINT-SIZE="20"><B>Dispatch:&nbsp;</B>&nbsp;${dispatch}/cycle</FONT></TD>
-      <TD ROWSPAN="${total_rows+4}" BGCOLOR="#f0f0f0" HREF="#" ID="rob" TITLE="Edit ROB size" ALIGN="CENTER" VALIGN="MIDDLE"><FONT POINT-SIZE="20"><B>ROB</B><BR/><BR/><B>${ROBsize}</B></FONT><BR/><FONT POINT-SIZE="16">entries</FONT></TD>
+      <TD COLSPAN="${port_ids.length}" BGCOLOR="#eeeeee" HREF="#" ID="dispatch" TITLE="Edit dispatch width"><FONT POINT-SIZE="20">🔄<B>Dispatch:&nbsp;</B>&nbsp;${dispatch}/cycle</FONT></TD>
+      <TD ROWSPAN="${total_rows+4}" BGCOLOR="#f0f0f0" HREF="#" ID="rob" TITLE="Edit ROB size" ALIGN="CENTER" VALIGN="MIDDLE"><FONT POINT-SIZE="20"><B>ROB</B><BR/>🔄<BR/><B>${ROBsize}</B></FONT><BR/><FONT POINT-SIZE="16">entries</FONT></TD>
     </TR>`
 
     // ---- Waiting Buffer ----
     let wb_row = `<TR>
-      <TD COLSPAN="${port_ids.length}" BGCOLOR="#eeeeee" HREF="#" ID="sched" TITLE="Edit scheduler"><FONT POINT-SIZE="20"><B>Waiting Buffer</B></FONT>&nbsp;&nbsp;&nbsp;<FONT POINT-SIZE="16">Scheduler:&nbsp;</FONT><FONT POINT-SIZE="18"><B>${sched}</B></FONT></TD>
+      <TD COLSPAN="${port_ids.length}" BGCOLOR="#eeeeee" HREF="#" ID="sched" TITLE="Toggle scheduler"><FONT POINT-SIZE="20"><B>Waiting Buffer</B></FONT>&nbsp;&nbsp;&nbsp;<FONT POINT-SIZE="16">Scheduler:&nbsp;</FONT><FONT POINT-SIZE="18"><B>${sched}</B></FONT></TD>
     </TR>`
 
     // ---- Port headers ----
@@ -531,7 +537,7 @@
 
     // ---- Retire ----
     let reg_row = `<TR>
-      <TD WIDTH="538" COLSPAN="${port_ids.length}" BGCOLOR="#eeeeee" HREF="#" ID="retire" TITLE="Edit retire width"><FONT POINT-SIZE="20"><B>Retire:</B>&nbsp;${retire}/cycle&nbsp;&nbsp;<B>(Architected Registers)</B></FONT></TD>
+      <TD WIDTH="538" COLSPAN="${port_ids.length}" BGCOLOR="#eeeeee" HREF="#" ID="retire" TITLE="Edit retire width"><FONT POINT-SIZE="20">🔄<B>Retire:</B>&nbsp;${retire}/cycle&nbsp;&nbsp;<B>(Architected Registers)</B></FONT></TD>
     </TR>`
 
     const dot = `
