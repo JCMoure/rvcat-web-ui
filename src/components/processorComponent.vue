@@ -399,12 +399,6 @@
     const dispatch = process.dispatch || 1
     const retire   = process.retire || 1
 
-    if (sched === "optimal"){
-      sched = "✅optimal ❌greedy"
-    } else {
-      sched = "❌optimal ✅greedy"
-    }
-
     function type_color(type) {
       if (type === "INT")    return "#d6e4ff"
       if (type === "MEM")    return "#d6ffd6"
@@ -486,8 +480,12 @@
     </TR>`
 
     // ---- Waiting Buffer ----
+    let schedLabel = "❌optimal ✅greedy"
+    if (sched !== "greedy"){
+      schedLabel = "✅optimal ❌greedy"
+    }
     let wb_row = `<TR>
-      <TD COLSPAN="${port_ids.length}" BGCOLOR="#eeeeee" HREF="#" ID="sched" TITLE="Toggle scheduler"><FONT POINT-SIZE="20"><B>Waiting Buffer</B></FONT>&nbsp;&nbsp;&nbsp;<FONT POINT-SIZE="16">Scheduler:&nbsp;</FONT><FONT POINT-SIZE="18"><B>${sched}</B></FONT></TD>
+      <TD COLSPAN="${port_ids.length}" BGCOLOR="#eeeeee" HREF="#" ID="sched" TITLE="Toggle scheduler"><FONT POINT-SIZE="20"><B>Waiting Buffer</B></FONT>&nbsp;&nbsp;&nbsp;<FONT POINT-SIZE="16">Scheduler:&nbsp;</FONT><FONT POINT-SIZE="18"><B>${schedLabel}</B></FONT></TD>
     </TR>`
 
     // ---- Port headers ----
