@@ -1,8 +1,8 @@
 <script setup>
   import { ref, toRaw, computed, onMounted, onUnmounted, nextTick, inject, watch, reactive } from "vue"
-  import HelpComponent                                   from '@/components/helpComponent.vue'
-  import { useRVCAT_Api }                                                    from '@/rvcatAPI'
-  import { createGraphVizGraph  }                                              from '@/common'
+  import HelpComponent                                            from '@/components/helpComponent.vue'
+  import { useRVCAT_Api }                                                             from '@/rvcatAPI'
+  import { createGraphVizGraph  }                                                       from '@/common'
 
   const { getExecutionResults } = useRVCAT_Api();
   const { registerHandler }     = inject('worker');
@@ -95,7 +95,7 @@
     { deep: true, immediate: false }
   )
 
- // Handler for 'get_execution_results' message (fired by RVCAT getPerformanceAnalysis function)
+  // Handler for 'get_execution_results' message (fired by RVCAT getPerformanceAnalysis function)
   const handleResults = async (data, dataType) => {
     if (dataType === 'error') {
       console.error('🕐❌Failed to get execution results:', data);
@@ -104,7 +104,7 @@
     try {
       console.log('🕐✅ Execution Results received')
       simState.executionResults = JSON.parse(data)
-      drawProcessorResults()
+
       if (simState.executionResults['data_type'] === 'error') {
           alert('Error running simulation');
           document.getElementById('run-simulation-spinner').style.display = 'none';
@@ -113,16 +113,16 @@
           document.getElementById('run-simulation-button').disabled       = false;
           return;
       }
-      props.results.instructions= simState.executionResults["total_instructions"];
-      props.results.cycles      = simState.executionResults["total_cycles"];
-      props.results.cpi         = simState.executionResults["cpi"];
-      props.results.ipc         = simState.executionResults["ipc"];
-      props.results.loads       = simState.executionResults["total_loads"];
-
-      document.getElementById('run-simulation-spinner').style.display = 'none';
-      document.getElementById('simulation-running').style.display     = 'none';
-      document.getElementById('previous-simulations-section').style.display  = 'block';
-      document.getElementById('run-simulation-button').disabled       = false;
+      // Hide spinner and show results after a short delay to ensure UI updates
+      if (resultsTimeout) clearTimeout(resultsTimeout)
+      resultsTimeout = setTimeout(() => {
+        drawProcessorResults()
+        document.getElementById('run-simulation-spinner').style.display = 'none';
+        document.getElementById('simulation-running').style.display     = 'none';
+        document.getElementById('previous-simulations-section').style.display  = 'block';
+        document.getElementById('run-simulation-button').disabled       = false;
+        drawProcessorResults()
+      }, 500)
     } catch (error) {
       console.error('🕐❌Failed to obtain execution results:', error)
     }
@@ -135,42 +135,21 @@
   function togglePrevious() { simulationOptions.showPrevious = !simulationOptions.showPrevious }
   function toggleAutorun()  { simulationOptions.autorun      = !simulationOptions.autorun }
 
-  const props = defineProps({
-    results: {
-      type: Object,
-      default: () => ({
-        instructions: 0,
-        cycles: 0,
-        cpi: 0,
-        ipc: 0,
-        loads: 0
-      })
-    }
+  const formattedResults = computed(() => {
+    const results = simState.executionResults || {};
+
+    return {
+      instructions: results["total_instructions"]?.toLocaleString() ?? '0',
+      cycles:       results["total_cycles"]?.toLocaleString() ?? '0',
+      cpi:          results["cpi"]?.toFixed(2) ?? '0',
+      ipc:          results["ipc"]?.toFixed(3) ?? '0',
+      loads:        results["total_loads"]?.toLocaleString() ?? '0'
+    };
   });
 
-  const formattedInstructions = computed(() =>
-    props.results.instructions?.toLocaleString() || '0'
-  );
-
-  const formattedCycles = computed(() =>
-    props.results.cycles?.toLocaleString() || '0'
-  );
-
-  const cpiFormatted = computed(() =>
-    props.results.cpi?.toFixed(2) || '0'
-  );
-
-  const ipcFormatted = computed(() =>
-    props.results.ipc?.toFixed(3) || '0'
-  );
-
-  const formattedLoads = computed(() =>
-    props.results.loads?.toLocaleString() || '0'
-  );
-
   const ipcColor = computed(() => {
-    const ipc = props.results.ipc;
-    const dw  = simState.simulatedProcess?.dispatch || 1;
+    const ipc = simState.executionResults?.["ipc"] ?? 0
+    const dw  = simState.simulatedProcess?.dispatch || 1
 
     if (!ipc || !dw || dw === 0) return '#666';
 
@@ -201,23 +180,16 @@
   }));
 
   const ipcTooltip = computed(() => {
-    const ipc = props.results.ipc;
+    const ipc = simState.executionResults?.["ipc"] ?? 0;
     const dw  = simState.simulatedProcess?.dispatch || 1;
     const efficiency = ((ipc / dw) * 100).toFixed(1);
     return `IPC: ${ipc.toFixed(3)} | Dispatch Width: ${dw}\nEficiencia: ${efficiency}% del máximo posible`;
   });
 
-
   const reloadExecutionResults = async () => {
     clearTimeout(resultsTimeout)
     try {
       resultsTimeout = setTimeout(() => {
-        props.results.instructions= 0;
-        props.results.cycles      = 0;
-        props.results.cpi         = 0;
-        props.results.ipc         = 0;
-        props.results.loads       = 0;
-
         document.getElementById('run-simulation-spinner').style.display = 'block';
         document.getElementById('simulation-running').style.display     = 'block';
         document.getElementById('previous-simulations-section').style.display  = 'none';
@@ -378,15 +350,15 @@
       <div class="row">
         <div class="simulation-inline-item">
           <label for="instructions">Instructions:</label>
-          <span id="instructions-output">{{ formattedInstructions }}</span>
+          <span id="instructions-output">{{ formattedResults.instructions }}</span>
         </div>
         <div class="simulation-inline-item">
           <label for="cycles">Cycles:</label>
-          <span id="cycles-output">{{ formattedCycles }}</span>
+          <span id="cycles-output">{{ formattedResults.cycles }}</span>
         </div>
         <div class="simulation-inline-item">
           <label for="cycles-per-iteration">Cycles per iteration:</label>
-          <span id="cycles-per-iteration-output">{{ cpiFormatted }}</span>
+          <span id="cycles-per-iteration-output">{{ formattedResults.cpi }}</span>
         </div>
       </div>
       <div class="row">
@@ -397,12 +369,12 @@
             :style="ipcStyle"
             :data-tooltip="ipcTooltip"
           >
-            {{ ipcFormatted }}
+            {{ formattedResults.ipc }}
           </span>
         </div>
         <div class="simulation-inline-item">
           <label for="Loads">Loads:</label>
-          <span id="Loads-output">{{ formattedLoads }}</span>
+          <span id="Loads-output">{{ formattedResults.loads }}</span>
         </div>
       </div>
     </div>
@@ -499,11 +471,6 @@
     gap: 8px;
   }
  */
-  /* .simulation-inline-item label {
-    font-weight: 600;
-    color: #333;
-    font-size: 1.1em;
-  }*/
 
   /*
   .simulation-inline-item span {
@@ -524,6 +491,9 @@
   .simulation-inline-item label {
     flex:         1;
     margin-right: 10px;
+    font-weight:  600;
+    color:       #333;
+    font-size:    1.2em;
   }
   .simulation-inline-item span {
     text-align:  right;
