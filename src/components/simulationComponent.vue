@@ -495,7 +495,11 @@
         <div id="simulation-running"><p>Simulation on course...</p></div>
       </div>
     </div>
-
+    <div class="graph-section">
+      <div class="processor-container">
+        <div class="processor-img" v-html="resultsSvg" v-if="resultsSvg"></div>
+      </div>
+    </div>
     <div class="dropdown-wrapper" id="previous-simulations-section">
       <span ref="helpIcon2" class="info-icon" @click="openHelp2" title="Show help">
          <img src="/img/info.png" class="info-img">
@@ -508,12 +512,6 @@
         </span>
         <span class="dropdown-title">Previous simulation results</span>
       </button>
-    </div>
-
-    <div class="graph-section">
-      <div class="processor-container">
-        <div class="processor-img" v-html="resultsSvg" v-if="resultsSvg"></div>
-      </div>
     </div>
 
     <Transition name="fold" appear>
@@ -537,8 +535,10 @@
   <Teleport to="body">
     <HelpComponent v-if="showHelp2" :position="helpPosition"
     text="Open this tab to visualize the <strong>performance results</strong> from previous simulations.
-      <p>For a detailed analysis of the critical execution path for a limited number of loop iterations you must use the <strong>Timeline</strong> tab.</p>
-      "
+      This section allows you to compare the current simulation results with those from previous runs,
+      enabling you to track performance changes over time or after modifications to the processor configuration
+      or program.
+      <p>Use this feature to analyze trends, identify regressions, or confirm improvements in your simulations.</p>"
     title="Previous Performance Results"
     @close="closeHelp2"/>
   </Teleport>
