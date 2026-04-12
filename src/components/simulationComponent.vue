@@ -126,10 +126,10 @@
     }
     if (simState.state >= 3 && simulationOptions.autorun) {
       if (simulationOptions.iters === simState.executionResults?.total_iterations) {
-        console.log('🕐✅ Iteration count matches previous results, no need to re-run simulation');
+        console.log('🕐✅ Mount: no need to re-run simulation');
         drawProcessorResults()
       } else {
-        console.log('🕐🔄 Previous execution results outdated at mount, re-running simulation');
+        console.log('🕐🔄 Mount: re-running simulation');
         reloadExecutionResults()
       }
     }
@@ -154,7 +154,7 @@
       }
       if (simState.state >= 3 && simulationOptions.autorun) {
         if (simulationOptions.iters === simState.executionResults?.total_iterations) {
-          console.log('🕐✅ Iteration count matches previous results, no need to re-run simulation');
+          console.log('🕐✅ No need to re-run simulation');
           drawProcessorResults();
         } else {
           console.log('🕐🔄 Re-running simulation');
@@ -168,9 +168,13 @@
 
   watch( () => simState.simulatedProcess, () => {
       if (simState.state >= 3 && simState.simulatedProcess && simulationOptions.autorun) {
-        console.log('🕐🔄 Re-execute simulation');
-        // reloadExecutionResults()
-        drawProcessorResults()
+        if (simulationOptions.iters === simState.executionResults?.total_iterations) {
+          console.log('🕐✅ Process changed, but no need to re-run simulation');
+          drawProcessorResults();
+        } else {
+          console.log('🕐🔄 Process changed: re-running simulation');
+          reloadExecutionResults();
+        }
       }
     },
     { deep: true, immediate: false }
