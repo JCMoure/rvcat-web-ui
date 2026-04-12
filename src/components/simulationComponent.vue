@@ -548,7 +548,6 @@
 <style scoped>
 
   .iters-run span {
-    font-size:    14px;
     white-space: nowrap;
   }
 
@@ -561,7 +560,6 @@
 
   .iters-run input[type="checkbox"] {
     width: 22px;
-    height: 22px;
     cursor: pointer;
     accent-color: #4a90e2;
     margin: 0;
@@ -574,7 +572,6 @@
   }
 
   .iters-group .iters-label {
-    font-size: 14px;
     white-space: nowrap;
   }
 
@@ -583,7 +580,6 @@
     padding: 6px 8px;
     border: 1px solid #ccc;
     border-radius: 4px;
-    font-size: 14px;
     text-align: center;
     transition: all 0.2s ease;
   }
