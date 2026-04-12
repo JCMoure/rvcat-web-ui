@@ -194,13 +194,8 @@
 
   watch( () => simState.simulatedProcess, () => {
       if (simState.state >= 3 && simState.simulatedProcess && simulationOptions.autorun) {
-        if (simulationOptions.iters === simState.executionResults?.total_iterations) {
-          console.log('🕐✅ Process changed, but no need to re-run simulation');
-          drawProcessorResults();
-        } else {
-          console.log('🕐🔄 Process changed: re-running simulation');
-          reloadExecutionResults();
-        }
+        console.log('🕐🔄 Process changed: re-running simulation')
+        reloadExecutionResults()
       }
     },
     { deep: true, immediate: false }
@@ -216,7 +211,6 @@
       console.log('🕐✅ Execution Results received')
       simState.executionResults = JSON.parse(data)
 
-      // Hide spinner and show results after a short delay to ensure UI updates
       if (resultsTimeout) clearTimeout(resultsTimeout)
       resultsTimeout = setTimeout(() => {
         drawProcessorResults()
