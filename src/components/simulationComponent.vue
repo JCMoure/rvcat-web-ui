@@ -560,6 +560,7 @@
 
   .iters-run input[type="checkbox"] {
     width: 22px;
+    height: 22px;
     cursor: pointer;
     accent-color: #4a90e2;
     margin: 0;
@@ -577,9 +578,8 @@
 
   .iters-group input {
     width: 70px;
-    padding: 6px 8px;
     border: 1px solid #ccc;
-    border-radius: 4px;
+    border-radius: 4px;-
     text-align: center;
     transition: all 0.2s ease;
   }
