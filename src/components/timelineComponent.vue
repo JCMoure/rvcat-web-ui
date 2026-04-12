@@ -105,7 +105,6 @@
 // ============================================================================
   let cleanupHandleTimeline = null
 
-  // Load from localStorage
   onMounted(() => {
     cleanupHandleTimeline = registerHandler('get_timeline', handleTimeline)
     addCanvasWrapper()
@@ -113,12 +112,12 @@
     console.log('📈🎯 Timeline Component mounted')
   });
 
-  // Clean up on unmount
   onUnmounted(() => {
     if (cleanupHandleTimeline) {
       cleanupHandleTimeline()
       cleanupHandleTimeline = null
     }
+    console.log('📈👋 Timeline Component unMounted')
   })
 
 /* ------------------------------------------------------------------

@@ -1,8 +1,9 @@
 <script setup>
-  import { ref, toRaw, computed, onMounted, onUnmounted, nextTick, inject, watch, reactive } from "vue"
-  import HelpComponent                                            from '@/components/helpComponent.vue'
-  import { useRVCAT_Api }                                                             from '@/rvcatAPI'
-  import { createGraphVizGraph  }                                                       from '@/common'
+  import { ref, toRaw, computed, onMounted, onUnmounted, onBeforeUnmount,
+           nextTick, inject, watch, reactive }                       from "vue"
+  import HelpComponent                    from '@/components/helpComponent.vue'
+  import { useRVCAT_Api }                                     from '@/rvcatAPI'
+  import { createGraphVizGraph  }                               from '@/common'
 
   const { getExecutionResults } = useRVCAT_Api();
   const { registerHandler }     = inject('worker');
@@ -111,11 +112,43 @@
     }
   };
 
-  // Load from localStorage
+  let unwatch = null;
+  let isComponentMounted = false;
+
+  const handleOptionsChange = (newVal, oldVal) => {
+    // Verify that component is mounted and necessary data is available before executing the watch logic
+    if (!isComponentMounted || !simulationOptions || !simState) {
+      console.log('🕐 Component not ready, skipping watch execution')
+      return
+    }
+    try {
+      console.log('🕐🔄 Options changed', newVal);
+
+      if (newVal.iters !== oldVal?.iters) {
+        console.log('  → Iterations changed:', newVal.iters);
+        if (inputValue) inputValue.value = newVal.iters ?? '';
+        if (typeof isInvalid !== 'undefined') isInvalid.value = false;
+      }
+
+      if (simState.state >= 3 && simulationOptions.autorun) {
+        const currentIters = simState.executionResults?.total_iterations;
+        if (simulationOptions.iters === currentIters) {
+          console.log('🕐✅ No need to re-run simulation');
+          drawProcessorResults();
+        } else {
+          console.log('🕐🔄 Re-running simulation');
+          reloadExecutionResults();
+        }
+      }
+
+      saveOptions();
+    } catch (error) {
+      console.error('Error in options watch handler:', error);
+    }
+  };
+
   onMounted(() => {
     cleanupHandleResults  = registerHandler('get_execution_results', handleResults);
-    console.log('🕐🎯 SimulationComponent mounted')
-
     try {    // Load from localStorage
       const saved = localStorage.getItem(STORAGE_KEY)
       if (saved) {
@@ -124,47 +157,39 @@
     } catch (error) {
       console.error('🕐❌ Failed to load:', error)
     }
-    if (simState.state >= 3 && simulationOptions.autorun) {
-      if (simulationOptions.iters === simState.executionResults?.total_iterations) {
-        console.log('🕐✅ Mount: no need to re-run simulation');
-        drawProcessorResults()
-      } else {
-        console.log('🕐🔄 Mount: re-running simulation');
-        reloadExecutionResults()
-      }
-    }
-  });
+    nextTick(() => {
+      isComponentMounted = true;
+      unwatch = watch(
+        () => ({
+          iters: simulationOptions?.iters,
+          autorun: simulationOptions?.autorun,
+          showPrevious: simulationOptions?.showPrevious
+        }),
+        handleOptionsChange,
+        {
+          immediate: true,
+          deep: false
+        }
+      )
+      console.log('🕐🎯 SimulationComponent mounted')
+    })
+  })
 
-  // Clean up on unmount
+  onBeforeUnmount(() => {
+    isComponentMounted = false;
+    if (unwatch) {
+      unwatch();
+      unwatch = null;
+    }
+  })
+
   onUnmounted(() => {
      if (cleanupHandleResults) {
         cleanupHandleResults();
         cleanupHandleResults = null
      }
-    })
-
-  watch( () => ({ iters: simulationOptions.iters, autorun: simulationOptions.autorun, showPrevious: simulationOptions.showPrevious}),
-    (newVal, oldVal) => {
-      console.log('🕐🔄 Options changed', newVal);
-
-      if (newVal.iters !== oldVal?.iters) {
-        console.log('  → Iterations changed:', newVal.iters);
-        inputValue.value = newVal.iters ?? '';
-        isInvalid.value = false;
-      }
-      if (simState.state >= 3 && simulationOptions.autorun) {
-        if (simulationOptions.iters === simState.executionResults?.total_iterations) {
-          console.log('🕐✅ No need to re-run simulation');
-          drawProcessorResults();
-        } else {
-          console.log('🕐🔄 Re-running simulation');
-          reloadExecutionResults();
-        }
-      }
-      saveOptions()
-    },
-    { immediate: true }
-  );
+    console.log('🕐👋 SimulationComponent unMounted')
+  })
 
   watch( () => simState.simulatedProcess, () => {
       if (simState.state >= 3 && simState.simulatedProcess && simulationOptions.autorun) {
