@@ -467,7 +467,7 @@
           <span id="cycles-output" title="Total clock cycles">{{ formattedResults.cycles }}</span>
         </div>
         <div class="simulation-inline-item">
-          <label for="cycles-per-iteration">Cycles per iteration:</label>
+          <label for="cycles-per-iteration">Cycles/iteration:</label>
           <span id="cycles-per-iteration-output" title="Clock cycles per loop iteration">{{ formattedResults.cpi }}</span>
         </div>
       </div>
@@ -550,10 +550,11 @@
     display:     flex;
     align-items: center;
     gap:         12px;
+    font-size: larger;
   }
 
   .results-info {
-    font-size: 16px; /* Tamaño base más grande */
+    font-size: 16px;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   }
 
