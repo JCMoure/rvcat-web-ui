@@ -125,7 +125,7 @@
       console.error('🕐❌ Failed to load:', error)
     }
     if (simState.state >= 3 && simulationOptions.autorun) {
-      if (simulationOptions.iters === simState.executionResults?.iterations) {
+      if (simulationOptions.iters === simState.executionResults?.total_iterations) {
         console.log('🕐✅ Iteration count matches previous results, no need to re-run simulation');
         drawProcessorResults()
       } else {
@@ -153,7 +153,7 @@
         isInvalid.value = false;
       }
       if (simState.state >= 3 && simulationOptions.autorun) {
-        if (simulationOptions.iters === simState.executionResults?.iterations) {
+        if (simulationOptions.iters === simState.executionResults?.total_iterations) {
           console.log('🕐✅ Iteration count matches previous results, no need to re-run simulation');
           drawProcessorResults();
         } else {
@@ -168,7 +168,7 @@
 
   watch( () => simState.simulatedProcess, () => {
       if (simState.state >= 3 && simState.simulatedProcess && simulationOptions.autorun) {
-        console.log('🕐🔄 Re-execute simulation ()');
+        console.log('🕐🔄 Re-execute simulation');
         // reloadExecutionResults()
         drawProcessorResults()
       }
