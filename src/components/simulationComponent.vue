@@ -579,7 +579,7 @@
   .iters-group input {
     width: 70px;
     border: 1px solid #ccc;
-    border-radius: 4px;-
+    border-radius: 4px;
     text-align: center;
     transition: all 0.2s ease;
   }
