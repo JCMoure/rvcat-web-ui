@@ -115,7 +115,6 @@
   onMounted(() => {
     cleanupHandleResults  = registerHandler('get_execution_results', handleResults);
     console.log('🕐🎯 SimulationComponent mounted')
-    simState.executionResults = null
 
     try {    // Load from localStorage
       const saved = localStorage.getItem(STORAGE_KEY)
@@ -125,8 +124,15 @@
     } catch (error) {
       console.error('🕐❌ Failed to load:', error)
     }
-    if (simState.state >= 3 && simulationOptions.autorun)
-      reloadExecutionResults()
+    if (simState.state >= 3 && simulationOptions.autorun) {
+      if (simulationOptions.iters === simState.executionResults?.iterations) {
+        console.log('🕐✅ Iteration count matches previous results, no need to re-run simulation');
+        drawProcessorResults()
+      } else {
+        console.log('🕐🔄 Previous execution results outdated at mount, re-running simulation');
+        reloadExecutionResults()
+      }
+    }
   });
 
   // Clean up on unmount
@@ -144,7 +150,13 @@
       isInvalid.value  = false;
       saveOptions()
       if (simState.state >= 3 && simulationOptions.autorun) {
-        reloadExecutionResults()
+        if (simulationOptions.iters === simState.executionResults?.iterations) {
+          console.log('🕐✅ Iteration count matches previous results, no need to re-run simulation');
+          drawProcessorResults()
+        } else {
+          console.log('🕐🔄 Iteration count changed, re-running simulation');
+          reloadExecutionResults()
+        }
       }
     },
     { immediate: true }
@@ -169,14 +181,6 @@
       console.log('🕐✅ Execution Results received')
       simState.executionResults = JSON.parse(data)
 
-      if (simState.executionResults['data_type'] === 'error') {
-          alert('Error running simulation');
-          document.getElementById('run-simulation-spinner').style.display = 'none';
-          document.getElementById('simulation-running').style.display     = 'none';
-          document.getElementById('previous-simulations-section').style.display  = 'block';
-          document.getElementById('run-simulation-button').disabled       = false;
-          return;
-      }
       // Hide spinner and show results after a short delay to ensure UI updates
       if (resultsTimeout) clearTimeout(resultsTimeout)
       resultsTimeout = setTimeout(() => {
