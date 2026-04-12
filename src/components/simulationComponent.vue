@@ -143,29 +143,34 @@
      }
     })
 
-  watch(() => simulationOptions.iters,
-    (newVal) => {
-      console.log('🕐🔄 modify number of iterations', newVal);
-      inputValue.value = newVal ?? '';
-      isInvalid.value  = false;
-      saveOptions()
+  watch( () => ({ iters: simulationOptions.iters, autorun: simulationOptions.autorun, showPrevious: simulationOptions.showPrevious}),
+    (newVal, oldVal) => {
+      console.log('🕐🔄 Options changed', newVal);
+
+      if (newVal.iters !== oldVal?.iters) {
+        console.log('  → Iterations changed:', newVal.iters);
+        inputValue.value = newVal.iters ?? '';
+        isInvalid.value = false;
+      }
       if (simState.state >= 3 && simulationOptions.autorun) {
         if (simulationOptions.iters === simState.executionResults?.iterations) {
           console.log('🕐✅ Iteration count matches previous results, no need to re-run simulation');
-          drawProcessorResults()
+          drawProcessorResults();
         } else {
-          console.log('🕐🔄 Iteration count changed, re-running simulation');
-          reloadExecutionResults()
+          console.log('🕐🔄 Re-running simulation');
+          reloadExecutionResults();
         }
       }
+      saveOptions()
     },
     { immediate: true }
-  )
+  );
 
   watch( () => simState.simulatedProcess, () => {
       if (simState.state >= 3 && simState.simulatedProcess && simulationOptions.autorun) {
-        console.log('🕐🔄 Re-execute simulation');
+        console.log('🕐🔄 Re-execute simulation ()');
         // reloadExecutionResults()
+        drawProcessorResults()
       }
     },
     { deep: true, immediate: false }
