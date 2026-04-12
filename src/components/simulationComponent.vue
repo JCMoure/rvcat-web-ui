@@ -149,6 +149,7 @@
 
   onMounted(() => {
     cleanupHandleResults  = registerHandler('get_execution_results', handleResults);
+    document.getElementById('simulation-running').style.display = 'none';
     try {    // Load from localStorage
       const saved = localStorage.getItem(STORAGE_KEY)
       if (saved) {
