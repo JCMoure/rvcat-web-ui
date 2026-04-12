@@ -546,11 +546,57 @@
 </template>
 
 <style scoped>
+
+  .iters-run span {
+    font-size:    14px;
+    white-space: nowrap;
+  }
+
   .iters-run {
-    display:     flex;
+    display: flex;
     align-items: center;
-    gap:         12px;
-    font-size: larger;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .iters-run input[type="checkbox"] {
+    width: 22px;
+    height: 22px;
+    cursor: pointer;
+    accent-color: #4a90e2;
+    margin: 0;
+    vertical-align: middle;
+  }
+
+  .iters-run input[type="checkbox"]:hover {
+    transform: scale(1.05);
+    transition: transform 0.2s ease;
+  }
+
+  .iters-group .iters-label {
+    font-size: 14px;
+    white-space: nowrap;
+  }
+
+  .iters-group input {
+    width: 70px;
+    padding: 6px 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 14px;
+    text-align: center;
+    transition: all 0.2s ease;
+  }
+
+  .iters-group input:focus {
+    outline: none;
+    border-color: #4a90e2;
+    box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.2);
+  }
+
+  .iters-group input.invalid {
+    border-color: #ff4444;
+    background-color: #fff0f0;
   }
 
   .results-info {
