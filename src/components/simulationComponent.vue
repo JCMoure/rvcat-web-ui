@@ -296,6 +296,7 @@
         document.getElementById('simulation-running').style.display     = 'block';
         document.getElementById('previous-simulations-section').style.display  = 'none';
         document.getElementById('run-simulation-button').disabled       = true;
+        resultsSvg.value = `<div class="error">Waiting to generate simulation results graph</div>`;
 
         const { ROBsize, dispatch, retire, sched, blksize, nBlocks, mPenalty, mIssueTime, instruction_list } = simState.simulatedProcess
         getExecutionResults(JSON.stringify( { ROBsize, dispatch, retire, sched, blksize, nBlocks, mPenalty, mIssueTime,
@@ -344,7 +345,7 @@
 
     // ---- Decode ----
     let decode_row = `<TR>
-      <TD COLSPAN="${port_ids.length}" BGCOLOR="#eeeeee" TITLE="Usage of dispatch capacity"><FONT POINT-SIZE="20"><B>Dispatch:&nbsp;</B>&nbsp;${dispatch}/cycle${message}</FONT></TD>
+      <TD COLSPAN="${port_ids.length}" BGCOLOR="#eeeeee" HREF="#" ID="dispatch" TITLE="Usage of dispatch capacity"><FONT POINT-SIZE="20"><B>Dispatch:&nbsp;</B>&nbsp;${dispatch}/cycle${message}</FONT></TD>
       <TD ROWSPAN="3" BGCOLOR="#f0f0f0" ALIGN="CENTER" VALIGN="MIDDLE"><FONT POINT-SIZE="20"><B>ROB</B><BR/><BR/><B>${ROBsize}</B></FONT><BR/><FONT POINT-SIZE="16">entries</FONT></TD>
     </TR>`
 
@@ -371,12 +372,12 @@
       usage = (results.ipc / retire) * 100
     let retire_color = color[Math.floor(usage/5)]
 
-    message = usage !== 0
-      ? `&nbsp;<B>Usage:<FONT COLOR="${retire_color}">${usage.toFixed(1)}%</FONT></B>`
+    message =  usage !== 0
+      ? `&nbsp;&nbsp;&nbsp;Usage:<B><FONT COLOR="${retire_color}">${usage.toFixed(1)}%</FONT></B>`
       : ""
 
     let reg_row = `<TR>
-      <TD WIDTH="538" COLSPAN="${port_ids.length}" BGCOLOR="#eeeeee" TITLE="Usage of retire capacity"><FONT POINT-SIZE="20"><B>Retire:</B>&nbsp;${retire}/cycle${message}</FONT></TD>
+      <TD WIDTH="538" COLSPAN="${port_ids.length}" BGCOLOR="#eeeeee" HREF="#" ID="retire" TITLE="Usage of retire capacity"><FONT POINT-SIZE="20"><B>Retire:</B>&nbsp;${retire}/cycle${message}</FONT></TD>
     </TR>`
 
     const dot = `
