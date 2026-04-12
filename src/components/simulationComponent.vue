@@ -33,6 +33,51 @@
 
   const simulationOptions = reactive({ ...defaultOptions, ...savedOptions })
 
+  const isObject = (obj) => obj !== null && typeof obj === 'object';
+  const isArray  = (arr) => Array.isArray(arr);
+
+  const areInstructionsEqual = (instr1, instr2) => {
+    if (!isObject(instr1) && !isObject(instr2)) return false;
+    if (!instr1 || !instr2)                     return false;
+
+    if (instr1.latency !== instr2.latency)  return false;
+    if (instr1.ports !== instr2.ports)      return false;
+    if (instr1.destin !== instr2.destin)    return false;
+    if (instr1.source1 !== instr2.source1)  return false;
+    if (instr1.source2 !== instr2.source2)  return false;
+    if (instr1.source3 !== instr2.source3)  return false;
+  }
+
+  const areProcessorsEqual = (proc1, proc2) => {
+    if (!proc1 || !proc2)              return false;
+    if (typeof proc1 !== typeof proc2) return false;
+    if (proc1 === proc2)               return true;
+
+    if (!isObject(proc1) && !isArray(proc1)) {
+      return proc1 === proc2;
+    }
+
+    if (proc1.dispatch !== proc2.dispatch) return false;
+    if (proc1.retire !== proc2.retire) return false;
+    if (proc1.sched !== proc2.sched) return false;
+    if (proc1.ROBsize !== proc2.ROBsize) return false;
+    if (proc1.nBlocks !== proc2.nBlocks) return false;
+    if (proc1.nBlocks > 0) {
+      if (proc1.blkSize    !== proc2.blkSize)    return false;
+      if (proc1.mIssueTime !== proc2.mIssueTime) return false;
+      if (proc1.mPenalty   !== proc2.mPenalty)   return false;
+    }
+
+    if (isArray(proc1.instruction_list) && isArray(proc2.instruction_list)) {
+      if (proc1.instruction_list.length !== proc2.instruction_list.length) return false;
+      for (let i = 0; i < proc1.instruction_list.length; i++) {
+        if (!areInstructionsEqual(proc1.instruction_list[i], proc2.instruction_list[i])) return false;
+      }
+      return true;
+    }
+    return false;
+  };
+
   const resultsSvg            = ref('')
   let   cleanupHandleResults  = null
   let   resultsTimeout        = null
@@ -341,7 +386,7 @@
     // ---- Decode ----
     let decode_row = `<TR>
       <TD COLSPAN="${port_ids.length}" BGCOLOR="#eeeeee" HREF="#" ID="dispatch" TITLE="Usage of dispatch capacity"><FONT POINT-SIZE="20"><B>Dispatch:&nbsp;</B>&nbsp;${dispatch}/cycle${message}</FONT></TD>
-      <TD ROWSPAN="3" BGCOLOR="#f0f0f0" HREF="#" ID="rob" TITLE="Pending: usage of ROB capacity" ALIGN="CENTER" VALIGN="MIDDLE"><FONT POINT-SIZE="20"><B>ROB</B><BR/><BR/><B>${ROBsize}</B></FONT><BR/><FONT POINT-SIZE="16">entries</FONT></TD>
+      <TD ROWSPAN="3" BGCOLOR="#f0f0f0" HREF="#" ID="rob" TITLE="Pending: usage of ROB capacity" ALIGN="CENTER" VALIGN="MIDDLE"><FONT POINT-SIZE="20"><B>ROB</B><BR/>${ROBsize}</FONT><BR/><FONT POINT-SIZE="16">entries</FONT></TD>
     </TR>`
 
     // ---- Port headers ----
@@ -372,7 +417,7 @@
       : ""
 
     let reg_row = `<TR>
-      <TD WIDTH="538" COLSPAN="${port_ids.length}" BGCOLOR="#eeeeee" HREF="#" ID="retire" TITLE="Usage of retire capacity"><FONT POINT-SIZE="20"><B>Retire:</B>&nbsp;${retire}/cycle${message}</FONT></TD>
+      <TD WIDTH="538" COLSPAN="${port_ids.length}" BGCOLOR="#eeeeee" HREF="#" ID="retire" TITLE="Usage of retire capacity"><FONT POINT-SIZE="20"><B>Retire:&nbsp;</B>&nbsp;${retire}/cycle${message}</FONT></TD>
     </TR>`
 
     const dot = `
