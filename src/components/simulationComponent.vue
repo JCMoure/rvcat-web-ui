@@ -240,6 +240,7 @@
     const results = simState.executionResults || {};
 
     return {
+      iters:        results["total_iterations"]?.toLocaleString() ?? '0',
       instructions: results["total_instructions"]?.toLocaleString() ?? '0',
       cycles:       results["total_cycles"]?.toLocaleString() ?? '0',
       cpi:          results["cycles_per_iteration"]?.toFixed(2) ?? '0',
@@ -454,11 +455,15 @@
     <div id="simulation-results-info" class="results-info">
       <div class="row">
         <div class="simulation-inline-item">
+          <label for="instructions">Iterations:</label>
+          <span id="iterations-output" title="Total loop iterations">{{ formattedResults.iters }}</span>
+        </div>
+        <div class="simulation-inline-item">
           <label for="instructions">Instructions:</label>
           <span id="instructions-output" title="Total executed instructions">{{ formattedResults.instructions }}</span>
         </div>
         <div class="simulation-inline-item">
-          <label for="cycles">ClockCycles:</label>
+          <label for="cycles">Clock Cycles:</label>
           <span id="cycles-output" title="Total clock cycles">{{ formattedResults.cycles }}</span>
         </div>
         <div class="simulation-inline-item">
