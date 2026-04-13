@@ -219,7 +219,7 @@
         if (typeof isInvalid !== 'undefined') isInvalid.value = false;
       }
 
-      if (simState.state >= 3 ) {
+      if (simState.state >= 3 &&  simState.executionResults) {
         const currentIters = simState.executionResults?.total_iterations;
         if (simulationOptions.iters === currentIters) {
           console.log('🕐✅ No need to re-run simulation');
@@ -284,8 +284,9 @@
   let oldProcess = null
   watch( () => simState.simulatedProcess, () => {
       if (simState.state >= 3 && simState.simulatedProcess) {
-        if (simState.executionResults && areProcessorsEqual(simState.simulatedProcess, oldProcess)) {
-          console.log('🕐✅ Simulated process changed but execution results are still valid');
+        if (areProcessorsEqual(simState.simulatedProcess, oldProcess)) {
+          if (simState.executionResults == null) simState.executionResults = simResults
+          console.log('🕐✅ Same simulated proces: execution results are still valid');
           drawProcessorResults();
         } else if (simulationOptions && simulationOptions.autorun) {
           console.log('🕐🔄 Simulated process changed: re-running simulation')
@@ -307,8 +308,7 @@
     }
     try {
       console.log('🕐✅ Execution Results received')
-      simState.executionResults = JSON.parse(data)
-
+      simResults = JSON.parse(data)
       if (resultsTimeout) clearTimeout(resultsTimeout)
       resultsTimeout = setTimeout(() => {
         drawProcessorResults()
@@ -317,6 +317,7 @@
         document.getElementById('previous-simulations-section').style.display  = 'block';
         document.getElementById('run-simulation-button').disabled       = false;
       }, 500)
+      simState.executionResults = simResults
     } catch (error) {
       console.error('🕐❌Failed to obtain execution results:', error)
     }
@@ -405,7 +406,7 @@
 
   const drawProcessorResults = async () => {
     try {
-      const dotCode      = get_proc_results_dot (simState.simulatedProcess, simState.executionResults)
+      const dotCode      = get_proc_results_dot (simState.simulatedProcess, simResults)
       const svg          = await createGraphVizGraph(dotCode);
       resultsSvg.value = svg.outerHTML;
     } catch (error) {
