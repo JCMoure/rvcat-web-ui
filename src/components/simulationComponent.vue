@@ -374,7 +374,6 @@
   });
 
   const reloadExecutionResults = async () => {
-    console.log('🕐✅ cloning instruction list', simState.simulatedProcess.instruction_list);
     simProcess = {
       dispatch: simState.simulatedProcess.dispatch,
       retire:   simState.simulatedProcess.retire,
@@ -384,7 +383,7 @@
       blkSize:  simState.simulatedProcess.blkSize,
       mIssueTime: simState.simulatedProcess.mIssueTime,
       mPenalty: simState.simulatedProcess.mPenalty,
-      instruction_list: structuredClone(simState.simulatedProcess.instruction_list)
+      instruction_list: JSON.parse(JSON.stringify(simState.simulatedProcess.instruction_list))
     }
     clearTimeout(resultsTimeout)
     try {
