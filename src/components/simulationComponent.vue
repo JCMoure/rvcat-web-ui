@@ -290,6 +290,9 @@
         } else if (simulationOptions && simulationOptions.autorun) {
           console.log('🕐🔄 Simulated process changed: re-running simulation')
           reloadExecutionResults()
+        } else {
+          simState.executionResults = null; // Clear results to avoid showing outdated data
+          console.log('🕐⚠️ Simulated process changed but autorun is disabled: clear simulation results')
         }
       }
     },
