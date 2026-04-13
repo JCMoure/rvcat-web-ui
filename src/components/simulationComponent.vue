@@ -124,6 +124,7 @@
         console.error('📄❌ Failed to load edited processor from localStorage:', e);
       }
     }
+  }
 
 // ============================================================================
 // INPUT VALIDATION: iterations field
