@@ -77,7 +77,6 @@
 
   const areProcessorsEqual = (proc1, proc2) => {
     if (proc1 == {} || proc2 == {}) return false
-    console.log('🕐 check basic fields')
     if (proc1.dispatch !== proc2.dispatch) return false;
     if (proc1.retire !== proc2.retire)     return false;
     if (proc1.sched !== proc2.sched)       return false;
@@ -89,12 +88,9 @@
       if (proc1.mPenalty   !== proc2.mPenalty)   return false;
     }
 
-    console.log('🕐 check instructions')
     if (isArray(proc1.instruction_list) && isArray(proc2.instruction_list)) {
-      console.log('🕐 check number of instructions')
       if (proc1.instruction_list.length !== proc2.instruction_list.length) return false;
       for (let i = 0; i < proc1.instruction_list.length; i++) {
-         console.log('🕐 instruction', i, proc1.instruction_list[i], proc2.instruction_list[i])
         if (!areInstructionsEqual(proc1.instruction_list[i], proc2.instruction_list[i])) return false;
       }
       return true;
@@ -387,7 +383,7 @@
       blkSize:  simState.simulatedProcess.blkSize,
       mIssueTime: simState.simulatedProcess.mIssueTime,
       mPenalty: simState.simulatedProcess.mPenalty,
-      instruction_list: structuredClone(instruction_list) // Clonar arrays anidados
+      instruction_list: structuredClone(simState.simulatedProcess.instruction_list)
     }
     clearTimeout(resultsTimeout)
     try {
