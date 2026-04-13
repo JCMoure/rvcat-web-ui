@@ -63,7 +63,6 @@
   * ------------------------------------------------------------------ */
   let simResults = {}
   let simProcess = {}
-  const isObject = (obj) => obj !== null && typeof obj === 'object';
   const isArray  = (arr) => Array.isArray(arr);
 
   const areInstructionsEqual = (instr1, instr2) => {
@@ -209,6 +208,25 @@
   let unwatch            = null;
   let isComponentMounted = false;
 
+  const updateResults() {
+    if (simState.state >= 3 && simState.simulatedProcess) {
+      const equalProcs = areProcessorsEqual(simState.simulatedProcess, simProcess)
+      const equalIters = simResults.total_iterations == simulationOptions.iters
+      if (equalProcs && equalIters) {
+        if (simState.executionResults == null) simState.executionResults = simResults
+        console.log('🕐✅ Same simulated proces && number of iterations: execution results are valid');
+        drawProcessorResults();
+      } else if (simulationOptions?.autorun) {
+        console.log('🕐🔄 Something changed: re-running simulation', equalProcs, equalIters)
+        reloadExecutionResults()
+      } else {
+        simState.executionResults = null; // Clear results to avoid showing outdated data
+        resultsSvg.value = ''; // Clear graph
+        console.log('🕐⚠️ Something changed but autorun is disabled: clear simulation results')
+      }
+    }
+  }
+
   const handleOptionsChange = (newVal, oldVal) => {
     // Verify that component is mounted and necessary data is available before executing the watch logic
     if (!isComponentMounted || !simulationOptions || !simState) {
@@ -217,31 +235,13 @@
     }
     try {
       console.log('🕐🔄 Options changed', newVal);
-
       if (newVal.iters !== oldVal?.iters) {
         console.log('  → Iterations changed:', newVal.iters);
         if (inputValue) inputValue.value = newVal.iters ?? '';
         if (typeof isInvalid !== 'undefined') isInvalid.value = false;
       }
-
-      if (simState.state >= 3 &&  simState.executionResults) {
-        const currentIters = simState.executionResults?.total_iterations;
-        if (simulationOptions.iters === currentIters) {
-          console.log('🕐✅ No need to re-run simulation');
-          simResults = toRaw(simState.executionResults)
-          saveResults()
-          drawProcessorResults();
-        } else if (simulationOptions.autorun) {
-          console.log('🕐🔄 Re-running simulation');
-          reloadExecutionResults();
-        } else {
-          console.log('🕐⚠️ Iterations changed but autorun is disabled: not re-running simulation');
-          simState.executionResults = null; // Clear results to avoid showing outdated data
-          resultsSvg.value = ''; // Clear graph
-        }
-      }
-
-      saveOptions();
+      updateResults()
+      saveOptions()
     } catch (error) {
       console.error('Error in options watch handler:', error);
     }
@@ -290,24 +290,7 @@
 // WATCHES: simulatedProcess, rvcat results
 // ============================================================================
 
-  watch( () => simState.simulatedProcess, () => {
-      if (simState.state >= 3 && simState.simulatedProcess) {
-        const equalProcs = areProcessorsEqual(simState.simulatedProcess, simProcess)
-        console.log('🕐✅ Comparing processes:', equalProcs, simState.simulatedProcess, simProcess)
-        if (equalProcs) {
-          if (simState.executionResults == null) simState.executionResults = simResults
-          console.log('🕐✅ Same simulated proces: execution results are still valid');
-          drawProcessorResults();
-        } else if (simulationOptions && simulationOptions.autorun) {
-          console.log('🕐🔄 Simulated process changed: re-running simulation')
-          reloadExecutionResults()
-        } else {
-          simState.executionResults = null; // Clear results to avoid showing outdated data
-          resultsSvg.value = ''; // Clear graph
-          console.log('🕐⚠️ Simulated process changed but autorun is disabled: clear simulation results')
-        }
-      }
-    },
+  watch( () => simState.simulatedProcess, () => { updateResults() },
     { deep: true, immediate: false }
   )
 
