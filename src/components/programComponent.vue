@@ -562,6 +562,8 @@ function snapshotMemory() {
   }
 
   function rowStyle(index) {
+    if (simState.executionResults == null || !simState.executionResults?.critical_path?.instructions)
+      return {}
     const percentage = simState.executionResults?.critical_path?.instructions?.[index]?.percentage;
     if (percentage == null || isNaN(percentage))
       return {}
