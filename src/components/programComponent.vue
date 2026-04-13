@@ -223,11 +223,11 @@ function loadEditedMemory() {
     { deep: true, immediate: false }
   )
 
-  watch( () => simState.executionResults, () => {
+ /* watch( () => simState.executionResults, () => {
     if (simState.state > 2)
       updateCriticalInfo()
   },
-  { deep: true, immediate: true })
+  { deep: true, immediate: true }) */
 
 // ============================================================================
 // LIFECYCLE:  Mount/unMount
@@ -431,27 +431,6 @@ function snapshotMemory() {
       console.error('📄❌Failed to generate SVG for graphviz Dependence Graph:', error)
       programSvg.value = `<div class="error">Failed to render graph</div>`;
     }
-  }
-
-  function updateCriticalInfo() {
-    const res        = simState.executionResults?.critical_path?.instructions
-    const instr_list = simState.simulatedProcess?.instruction_list
-
-    if (!instr_list) return
-
-    updateCritical = true;
-    if (!res) {
-      instr_list.forEach((inst, index) => {
-        delete inst.percentage
-      })
-      return
-    }
-
-    const resMap = new Map(res.map(r => [r.id, r.percentage]))
-
-    instr_list.forEach((inst, index) => {
-      inst.percentage = (resMap.get(index) ?? 0).toFixed(0)
-    })
   }
 
   function portsMaskToString(mask) {
@@ -658,7 +637,7 @@ function snapshotMemory() {
             >
               <td title="Instruction Number/Percentage of time aggregated to in critical path">
                 <section v-if="activeView === 'simulationComponent' && simState.executionResults.critical_path?.instructions?.[index]?.percentage != null">
-                  {{ simState.executionResults.critical_path.instructions[index].percentage }}%
+                  {{ simState.executionResults.critical_path.instructions[index].percentage.toFixed(0) }}%
                 </section>
                 <section v-else>
                  {{ index }}
