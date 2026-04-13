@@ -223,12 +223,6 @@ function loadEditedMemory() {
     { deep: true, immediate: false }
   )
 
- /* watch( () => simState.executionResults, () => {
-    if (simState.state > 2)
-      updateCriticalInfo()
-  },
-  { deep: true, immediate: true }) */
-
 // ============================================================================
 // LIFECYCLE:  Mount/unMount
 // ============================================================================
@@ -567,10 +561,13 @@ function snapshotMemory() {
     return `rgb(${r2}, ${g2}, ${b2})`
   }
 
-  function rowStyle(inst) {
+  function rowStyle(index) {
+    const percentage = simState.executionResults?.critical_path?.instructions?.[index]?.percentage;
+    if (percentage == null || isNaN(percentage))
+      return {}
     return {
-      backgroundColor: percentageToColor(inst.percentage),
-      color: inst.percentage > 50 ? 'white' : 'black'
+      backgroundColor: percentageToColor(percentage),
+      color: percentage > 50 ? 'white' : 'black'
     }
   }
 
@@ -632,7 +629,7 @@ function snapshotMemory() {
             <tr
               v-for="(inst, index) in simState.simulatedProcess.instruction_list"
               :key="index"
-              :style="activeView === 'simulationComponent' ? rowStyle(inst) : {}"
+              :style="activeView === 'simulationComponent' ? rowStyle(index) : {}"
               :class="{ highlighted: index === simState.instrHighlightedIdx }"
             >
               <td title="Instruction Number/Percentage of time aggregated to in critical path">
