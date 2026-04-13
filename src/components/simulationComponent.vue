@@ -79,15 +79,8 @@
   }
 
   const areProcessorsEqual = (proc1, proc2) => {
-    if (!proc1 || !proc2)              return false;
-    if (typeof proc1 !== typeof proc2) return false;
-    if (proc1 === proc2)               return true;
-
-    if (!isObject(proc1) && !isArray(proc1)) {
-      console.log('🕐 direct comparison')
-      return proc1 === proc2;
-    }
-
+    if (proc1 == {} || proc2 == {}) return false
+    console.log('🕐 check basic fields')
     if (proc1.dispatch !== proc2.dispatch) return false;
     if (proc1.retire !== proc2.retire)     return false;
     if (proc1.sched !== proc2.sched)       return false;
@@ -99,7 +92,7 @@
       if (proc1.mPenalty   !== proc2.mPenalty)   return false;
     }
 
-    console.log('🕐 need to check instructions')
+    console.log('🕐 check instructions')
     if (isArray(proc1.instruction_list) && isArray(proc2.instruction_list)) {
       if (proc1.instruction_list.length !== proc2.instruction_list.length) return false;
       for (let i = 0; i < proc1.instruction_list.length; i++) {
