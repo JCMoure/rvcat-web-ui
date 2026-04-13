@@ -219,14 +219,17 @@
         if (typeof isInvalid !== 'undefined') isInvalid.value = false;
       }
 
-      if (simState.state >= 3 && simulationOptions.autorun) {
+      if (simState.state >= 3 ) {
         const currentIters = simState.executionResults?.total_iterations;
         if (simulationOptions.iters === currentIters) {
           console.log('🕐✅ No need to re-run simulation');
           drawProcessorResults();
-        } else {
+        } else if (simulationOptions.autorun) {
           console.log('🕐🔄 Re-running simulation');
           reloadExecutionResults();
+        } else {
+          console.log('🕐⚠️ Iterations changed but autorun is disabled: not re-running simulation');
+          simState.executionResults = null; // Clear results to avoid showing outdated data
         }
       }
 
