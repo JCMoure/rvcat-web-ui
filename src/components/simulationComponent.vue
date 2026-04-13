@@ -208,7 +208,7 @@
   let unwatch            = null;
   let isComponentMounted = false;
 
-  const updateResults() {
+  const updateResults= () => {
     if (simState.state >= 3 && simState.simulatedProcess) {
       const equalProcs = areProcessorsEqual(simState.simulatedProcess, simProcess)
       const equalIters = simResults.total_iterations == simulationOptions.iters
