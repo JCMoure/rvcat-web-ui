@@ -94,8 +94,10 @@
 
     console.log('🕐 check instructions')
     if (isArray(proc1.instruction_list) && isArray(proc2.instruction_list)) {
+      console.log('🕐 check number of instructions')
       if (proc1.instruction_list.length !== proc2.instruction_list.length) return false;
       for (let i = 0; i < proc1.instruction_list.length; i++) {
+         console.log('🕐 instruction', i, proc1.instruction_list[i], proc2.instruction_list[i])
         if (!areInstructionsEqual(proc1.instruction_list[i], proc2.instruction_list[i])) return false;
       }
       return true;
