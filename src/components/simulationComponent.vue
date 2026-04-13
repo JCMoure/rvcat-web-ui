@@ -61,8 +61,8 @@
 /* ------------------------------------------------------------------
   * Simulation Results (persistent in localStorage)
   * ------------------------------------------------------------------ */
-  let simResults = null;
-  let simProcess = null
+  let simResults = {}
+  let simProcess = {}
   const isObject = (obj) => obj !== null && typeof obj === 'object';
   const isArray  = (arr) => Array.isArray(arr);
 
