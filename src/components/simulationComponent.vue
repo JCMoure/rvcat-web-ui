@@ -84,20 +84,22 @@
     if (proc1 === proc2)               return true;
 
     if (!isObject(proc1) && !isArray(proc1)) {
+      console.log('🕐 direct comparison')
       return proc1 === proc2;
     }
 
     if (proc1.dispatch !== proc2.dispatch) return false;
-    if (proc1.retire !== proc2.retire) return false;
-    if (proc1.sched !== proc2.sched) return false;
-    if (proc1.ROBsize !== proc2.ROBsize) return false;
-    if (proc1.nBlocks !== proc2.nBlocks) return false;
+    if (proc1.retire !== proc2.retire)     return false;
+    if (proc1.sched !== proc2.sched)       return false;
+    if (proc1.ROBsize !== proc2.ROBsize)   return false;
+    if (proc1.nBlocks !== proc2.nBlocks)   return false;
     if (proc1.nBlocks > 0) {
       if (proc1.blkSize    !== proc2.blkSize)    return false;
       if (proc1.mIssueTime !== proc2.mIssueTime) return false;
       if (proc1.mPenalty   !== proc2.mPenalty)   return false;
     }
 
+    console.log('🕐 need to check instructions')
     if (isArray(proc1.instruction_list) && isArray(proc2.instruction_list)) {
       if (proc1.instruction_list.length !== proc2.instruction_list.length) return false;
       for (let i = 0; i < proc1.instruction_list.length; i++) {
@@ -121,7 +123,7 @@
     let stored = localStorage.getItem('simResults');
     if (stored) {
       try {
-        Object.assign(simResults, JSON.parse(stored))
+        Object.assign(simResults, structuredClone(JSON.parse(stored)))
       } catch (e) {
         console.error('📄❌ Failed to load simulation results from localStorage:', e);
       }
@@ -129,7 +131,7 @@
     stored = localStorage.getItem('simProcess');
     if (stored) {
       try {
-        Object.assign(simProcess,  JSON.parse(stored))
+        Object.assign(simProcess, structuredClone(JSON.parse(stored)))
       } catch (e) {
         console.error('📄❌ Failed to load simulated processor from localStorage:', e);
       }
@@ -400,7 +402,17 @@
   });
 
   const reloadExecutionResults = async () => {
-    simProcess = structuredClone(toRaw(simState.simulatedProcess))
+    simProcess = {
+      dispatch: simState.simulatedProcess.dispatch,
+      retire:   simState.simulatedProcess.retire,
+      sched:    simState.simulatedProcess.sched,
+      ROBsize:  simState.simulatedProcess.ROBsize,
+      nBlocks:  simState.simulatedProcess.nBlocks,
+      blkSize:  simState.simulatedProcess.blkSize,
+      mIssueTime: simState.simulatedProcess.mIssueTime,
+      mPenalty: simState.simulatedProcess.mPenalty,
+      instruction_list: structuredClone(instruction_list) // Clonar arrays anidados
+    }
     clearTimeout(resultsTimeout)
     try {
       resultsTimeout = setTimeout(() => {
