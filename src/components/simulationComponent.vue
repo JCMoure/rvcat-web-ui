@@ -374,6 +374,7 @@
   });
 
   const reloadExecutionResults = async () => {
+    console.log('🕐✅ cloning instruction list', simState.simulatedProcess.instruction_list);
     simProcess = {
       dispatch: simState.simulatedProcess.dispatch,
       retire:   simState.simulatedProcess.retire,
