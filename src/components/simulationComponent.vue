@@ -13,7 +13,7 @@
    * Simulation Results options (persistent in localStorage)
    * ------------------------------------------------------------------ */
   const STORAGE_KEY = 'simulationOptions'
-  const MAX_ITERS    = 5000
+  const MAX_ITERS    = 2000
 
   const defaultOptions = {
     iters:        1,
@@ -33,6 +33,34 @@
 
   const simulationOptions = reactive({ ...defaultOptions, ...savedOptions })
 
+
+  const resultsSvg            = ref('')
+  let   cleanupHandleResults  = null
+  let   resultsTimeout        = null
+
+  const saveOptions = () => {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(simulationOptions))
+    } catch (error) {
+      console.error('🕐❌ Failed to save:', error)
+    }
+  }
+
+  const loadOptions = () => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY)
+      if (saved) {
+        Object.assign(simulationOptions, JSON.parse(saved))
+      }
+    } catch (error) {
+      console.error('🕐❌ Failed to load:', error)
+    }
+  }
+
+/* ------------------------------------------------------------------
+  * Simulation Results (persistent in localStorage)
+  * ------------------------------------------------------------------ */
+  let simResults = null;
   const isObject = (obj) => obj !== null && typeof obj === 'object';
   const isArray  = (arr) => Array.isArray(arr);
 
@@ -78,17 +106,28 @@
     return false;
   };
 
-  const resultsSvg            = ref('')
-  let   cleanupHandleResults  = null
-  let   resultsTimeout        = null
-
-  const saveOptions = () => {
+  const saveResults = () => {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(simulationOptions))
+      localStorage.setItem('simResults', JSON.stringify(simResults))
     } catch (error) {
       console.error('🕐❌ Failed to save:', error)
     }
   }
+
+  const loadResults = () => {
+    const stored = localStorage.getItem('simResults');
+    if (stored) {
+      try {
+        const data = JSON.parse(stored)
+        Object.assign(simResults, JSON.parse(JSON.stringify(data)))   // deep copy & fire draw-update
+      } catch (e) {
+        console.error('📄❌ Failed to load edited processor from localStorage:', e);
+      }
+    }
+
+// ============================================================================
+// INPUT VALIDATION: iterations field
+// ============================================================================
 
   const inputValue   = ref('');
   const isInvalid    = ref(false);
@@ -157,7 +196,11 @@
     }
   };
 
-  let unwatch = null;
+// ============================================================================
+// LIFECYCLE:  Mount/unMount
+// ============================================================================
+
+  let unwatch            = null;
   let isComponentMounted = false;
 
   const handleOptionsChange = (newVal, oldVal) => {
@@ -193,22 +236,15 @@
   };
 
   onMounted(() => {
-    cleanupHandleResults  = registerHandler('get_execution_results', handleResults);
-    document.getElementById('simulation-running').style.display = 'none';
-    try {    // Load from localStorage
-      const saved = localStorage.getItem(STORAGE_KEY)
-      if (saved) {
-        Object.assign(simulationOptions, JSON.parse(saved))
-      }
-    } catch (error) {
-      console.error('🕐❌ Failed to load:', error)
-    }
+    cleanupHandleResults  = registerHandler('get_execution_results', handleResults)
+    document.getElementById('simulation-running').style.display = 'none'
+    loadOptions()
     nextTick(() => {
       isComponentMounted = true;
       unwatch = watch(
         () => ({
-          iters: simulationOptions?.iters,
-          autorun: simulationOptions?.autorun,
+          iters:        simulationOptions?.iters,
+          autorun:      simulationOptions?.autorun,
           showPrevious: simulationOptions?.showPrevious
         }),
         handleOptionsChange,
@@ -237,10 +273,20 @@
     console.log('🕐👋 SimulationComponent unMounted')
   })
 
+// ============================================================================
+// WATCHES: simulatedProcess, rvcat results
+// ============================================================================
+
+  let oldProcess = null
   watch( () => simState.simulatedProcess, () => {
-      if (simState.state >= 3 && simState.simulatedProcess && simulationOptions.autorun) {
-        console.log('🕐🔄 Process changed: re-running simulation')
-        reloadExecutionResults()
+      if (simState.state >= 3 && simState.simulatedProcess) {
+        if (simState.executionResults && areProcessorsEqual(simState.simulatedProcess, oldProcess)) {
+          console.log('🕐✅ Simulated process changed but execution results are still valid');
+          drawProcessorResults();
+        } else if (simulationOptions && simulationOptions.autorun) {
+          console.log('🕐🔄 Simulated process changed: re-running simulation')
+          reloadExecutionResults()
+        }
       }
     },
     { deep: true, immediate: false }
@@ -329,6 +375,7 @@
   });
 
   const reloadExecutionResults = async () => {
+    oldProcess = toRaw(simState.simulatedProcess)
     clearTimeout(resultsTimeout)
     try {
       resultsTimeout = setTimeout(() => {
