@@ -62,6 +62,7 @@
   * Simulation Results (persistent in localStorage)
   * ------------------------------------------------------------------ */
   let simResults = null;
+  let simProcess = null
   const isObject = (obj) => obj !== null && typeof obj === 'object';
   const isArray  = (arr) => Array.isArray(arr);
 
@@ -110,19 +111,27 @@
   const saveResults = () => {
     try {
       localStorage.setItem('simResults', JSON.stringify(simResults))
+      localStorage.setItem('simProcess', JSON.stringify(simProcess))
     } catch (error) {
       console.error('🕐❌ Failed to save:', error)
     }
   }
 
   const loadResults = () => {
-    const stored = localStorage.getItem('simResults');
+    let stored = localStorage.getItem('simResults');
     if (stored) {
       try {
-        const data = JSON.parse(stored)
-        Object.assign(simResults, JSON.parse(JSON.stringify(data)))   // deep copy & fire draw-update
+        Object.assign(simResults, JSON.parse(stored))
       } catch (e) {
-        console.error('📄❌ Failed to load edited processor from localStorage:', e);
+        console.error('📄❌ Failed to load simulation results from localStorage:', e);
+      }
+    }
+    stored = localStorage.getItem('simProcess');
+    if (stored) {
+      try {
+        Object.assign(simProcess,  JSON.parse(stored))
+      } catch (e) {
+        console.error('📄❌ Failed to load simulated processor from localStorage:', e);
       }
     }
   }
@@ -225,6 +234,7 @@
         if (simulationOptions.iters === currentIters) {
           console.log('🕐✅ No need to re-run simulation');
           simResults = toRaw(simState.executionResults)
+          saveResults()
           drawProcessorResults();
         } else if (simulationOptions.autorun) {
           console.log('🕐🔄 Re-running simulation');
@@ -246,6 +256,7 @@
     cleanupHandleResults  = registerHandler('get_execution_results', handleResults)
     document.getElementById('simulation-running').style.display = 'none'
     loadOptions()
+    loadResults()
     nextTick(() => {
       isComponentMounted = true;
       unwatch = watch(
@@ -284,11 +295,11 @@
 // WATCHES: simulatedProcess, rvcat results
 // ============================================================================
 
-  let oldProcess = null
   watch( () => simState.simulatedProcess, () => {
       if (simState.state >= 3 && simState.simulatedProcess) {
-        console.log('🕐✅ Comparing processes:', simState.simulatedProcess, oldProcess);
-        if (areProcessorsEqual(simState.simulatedProcess, oldProcess)) {
+        const equalProcs = areProcessorsEqual(simState.simulatedProcess, simProcess)
+        console.log('🕐✅ Comparing processes:', equalProcs, simState.simulatedProcess, simProcess)
+        if (equalProcs) {
           if (simState.executionResults == null) simState.executionResults = simResults
           console.log('🕐✅ Same simulated proces: execution results are still valid');
           drawProcessorResults();
@@ -314,6 +325,7 @@
     try {
       console.log('🕐✅ Execution Results received')
       simResults = JSON.parse(data)
+      saveResults()
       if (resultsTimeout) clearTimeout(resultsTimeout)
       resultsTimeout = setTimeout(() => {
         drawProcessorResults()
@@ -388,7 +400,7 @@
   });
 
   const reloadExecutionResults = async () => {
-    oldProcess = structuredClone(toRaw(simState.simulatedProcess))
+    simProcess = structuredClone(toRaw(simState.simulatedProcess))
     clearTimeout(resultsTimeout)
     try {
       resultsTimeout = setTimeout(() => {
