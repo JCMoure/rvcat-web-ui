@@ -2,7 +2,7 @@
   import { ref, watch, watchEffect, onMounted, onUnmounted, nextTick, inject, computed, reactive } from 'vue'
   import HelpComponent                                                  from '@/components/helpComponent.vue'
   import { downloadJSON, uploadJSON, saveToLocalStorage, removeFromLocalStorage, initResource,
-            createGraphVizGraph, instructionTypes, typeOperations, typeSizes                } from '@/common'
+           createGraphVizGraph, instructionTypes, typeOperations, typeSizes                 } from '@/common'
 
   const simState = inject('simulationState');
 

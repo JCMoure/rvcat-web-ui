@@ -3,7 +3,8 @@
            nextTick, inject, watch, reactive }                       from "vue"
   import HelpComponent                    from '@/components/helpComponent.vue'
   import { useRVCAT_Api }                                     from '@/rvcatAPI'
-  import { createGraphVizGraph  }                               from '@/common'
+  import { createGraphVizGraph, saveToLocalStorage,
+           removeFromLocalStorage}                              from '@/common'
 
   const { getExecutionResults } = useRVCAT_Api();
   const { registerHandler }     = inject('worker');
@@ -387,7 +388,7 @@
   });
 
   const reloadExecutionResults = async () => {
-    oldProcess = toRaw(simState.simulatedProcess)
+    oldProcess = structuredClone(toRaw(simState.simulatedProcess))
     clearTimeout(resultsTimeout)
     try {
       resultsTimeout = setTimeout(() => {

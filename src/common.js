@@ -59,6 +59,11 @@ export const resourceConfig = {
     storagePrefix: 'timeline',
     resourceName:  'timeline',
     logPrefix:     '📈'
+  },
+  results: {
+    storagePrefix: 'results',
+    resourceName:  'results',
+    logPrefix:     '🕐'
   }
 };
 
