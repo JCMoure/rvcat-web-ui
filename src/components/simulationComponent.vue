@@ -67,15 +67,13 @@
   const isArray  = (arr) => Array.isArray(arr);
 
   const areInstructionsEqual = (instr1, instr2) => {
-    if (!isObject(instr1) && !isObject(instr2)) return false;
-    if (!instr1 || !instr2)                     return false;
-
     if (instr1.latency !== instr2.latency)  return false;
-    if (instr1.ports !== instr2.ports)      return false;
-    if (instr1.destin !== instr2.destin)    return false;
+    if (instr1.ports   !== instr2.ports)    return false;
+    if (instr1.destin  !== instr2.destin)   return false;
     if (instr1.source1 !== instr2.source1)  return false;
     if (instr1.source2 !== instr2.source2)  return false;
     if (instr1.source3 !== instr2.source3)  return false;
+    return true; // ✅ all are equal
   }
 
   const areProcessorsEqual = (proc1, proc2) => {
