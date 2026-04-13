@@ -293,6 +293,7 @@
           reloadExecutionResults()
         } else {
           simState.executionResults = null; // Clear results to avoid showing outdated data
+          resultsSvg.value = ''; // Clear graph
           console.log('🕐⚠️ Simulated process changed but autorun is disabled: clear simulation results')
         }
       }
