@@ -286,6 +286,7 @@
   let oldProcess = null
   watch( () => simState.simulatedProcess, () => {
       if (simState.state >= 3 && simState.simulatedProcess) {
+        console.log('🕐✅ Comparing processes:', simState.simulatedProcess, oldProcess);
         if (areProcessorsEqual(simState.simulatedProcess, oldProcess)) {
           if (simState.executionResults == null) simState.executionResults = simResults
           console.log('🕐✅ Same simulated proces: execution results are still valid');
