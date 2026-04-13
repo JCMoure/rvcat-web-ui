@@ -223,6 +223,7 @@
         const currentIters = simState.executionResults?.total_iterations;
         if (simulationOptions.iters === currentIters) {
           console.log('🕐✅ No need to re-run simulation');
+          simResults = toRaw(simState.executionResults)
           drawProcessorResults();
         } else if (simulationOptions.autorun) {
           console.log('🕐🔄 Re-running simulation');
@@ -230,6 +231,7 @@
         } else {
           console.log('🕐⚠️ Iterations changed but autorun is disabled: not re-running simulation');
           simState.executionResults = null; // Clear results to avoid showing outdated data
+          resultsSvg.value = ''; // Clear graph
         }
       }
 
