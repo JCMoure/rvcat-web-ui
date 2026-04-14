@@ -735,7 +735,7 @@
               </tr>
             </thead>
             <tbody v-if="simulationOptions.resultName">
-              <tr v-for="(name, index) in simulationOptions.availableResults" :key="name">
+              <tr v-for="(name, index) in simulationOptions.availableResults" :key="index">
                 <td title="Name of the stored results">
                   <input type="text"
                     v-model="simulationOptions.availableResults[index]"
