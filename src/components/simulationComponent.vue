@@ -17,9 +17,11 @@
   const MAX_ITERS    = 2000
 
   const defaultOptions = {
-    iters:        1,
-    autorun:      false,
-    showPrevious: false
+    iters:            100,
+    autorun:          false,
+    availableResults: [],
+    resultName:       '',
+    showPrevious:     false
   }
 
   const savedOptions = (() => {
@@ -243,11 +245,17 @@
     }
   };
 
+  const initSimulation = async () => {
+    await initResource('result', simulationOptions, 'resultName', 'availableResults');
+    updateResults()
+  };
+
   onMounted(() => {
     cleanupHandleResults  = registerHandler('get_execution_results', handleResults)
     document.getElementById('simulation-running').style.display = 'none'
     loadOptions()
     loadResults()
+    initSimulation()
     nextTick(() => {
       isComponentMounted = true;
       unwatch = watch(
@@ -513,7 +521,7 @@
         <span ref="helpIcon1" class="info-icon" @click="openHelp1" title="Show help">
            <img src="/img/info.png" class="info-img">
         </span>
-        <span class="header-title">Simulate Execution of <strong>{{ simState.programName }}</strong></span>
+        <span class="header-title">Simulate Execution of {{ simState.programName }} on {{ simState.processorName }}</span>
       </div>
       <div class="iters-run">
         <button class="blue-button" @click="reloadExecutionResults"
@@ -612,7 +620,28 @@
     </div>
 
     <Transition name="fold" appear>
-      <prev v-show="simulationOptions.showPrevious" id="previous-results"></prev>
+      <prev v-show="simulationOptions.showPrevious" id="previous-results">
+               <div class="settings-container">
+          <select v-model="simulationOptions.resultName" class="form-select"
+              id="results-list" title="Visualize previously obtained results">
+            <option value="" disabled>Select</option>
+            <option v-for="result in simulationOptions.availableResults" :key="result" :value="result" >
+              {{ result }}
+            </option>
+            <option value="_add_new_">Add new</option>
+          </select>
+          <button class="blue-button small-btn" @click="loadResults"
+            id="load-results-button"
+            title="Load selected simulation results">
+          📝
+          </button>
+          <button class="blue-button small-btn" @click="removeResults"
+            id="remove-results-button"
+            title="Remove simulation results from list (and local storage)">
+          🧹
+          </button>
+        </div>
+      </prev>
     </Transition>
   </div>
 
@@ -690,6 +719,40 @@
   .iters-group input.invalid {
     border-color: #ff4444;
     background-color: #fff0f0;
+  }
+
+  .settings-container {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    flex: 1;
+    justify-content: center;
+  }
+  .settings-container select,
+  .settings-container button {
+    flex-shrink: initial;
+  }
+
+  .form-select {
+    width:            100%;
+    padding:          1px 1px;
+    margin-bottom:    2px;
+    border:           2px solid #ddd;
+    border-radius:    6px;
+    font-size:        medium;
+    background-color: white;
+    transition:       border-color 0.3s;
+  }
+
+  .form-select:focus {
+    outline:      none;
+    border-color: #4a6cf7;
+  }
+
+  .form-select option[value="_add_new_"] {
+    color:            #4a6cf7;
+    font-weight:      bold;
+    background-color: #f0f5ff;
   }
 
   .results-info {

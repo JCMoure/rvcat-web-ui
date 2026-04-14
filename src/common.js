@@ -60,7 +60,7 @@ export const resourceConfig = {
     resourceName:  'timeline',
     logPrefix:     '📈'
   },
-  results: {
+  result: {
     storagePrefix: 'results',
     resourceName:  'results',
     logPrefix:     '🕐'
@@ -323,7 +323,7 @@ export async function initResource (resourceType, optionsObj, currentKey, availa
   const config = resourceConfig[resourceType];
   if (!config) {
     console.error(`Unknown resource type: ${resourceType}`);
-    return [];
+    return
   }
   const storagePrefix = config.storagePrefix;
   const logPrefix     = config.logPrefix;
@@ -336,17 +336,19 @@ export async function initResource (resourceType, optionsObj, currentKey, availa
       const data     = await response.json();
       const fileList = data[storagePrefix];
       if (!fileList) {
-        throw new Error(`No ${storagePrefix} found in index.json`);
+        console.log(`No ${storagePrefix} found in index.json`);
+        keys = []
+      } else {
+        for (const fileName of fileList) {
+          const name     = `./${storagePrefix}/${fileName}.json`;
+          const response = await fetch(name)
+          const filedata = await response.json()
+          console.log(`${logPrefix}📥 loadJSONfile: ${name}`)
+          localStorage.setItem(`${storagePrefix}.${fileName}`, JSON.stringify(filedata));
+        }
+        keys = getResourceKeys(`${storagePrefix}.`);
+        console.log(`${logPrefix}✅ Loaded ${keys.length} ${resourceType}s from distribution files`);
       }
-      for (const fileName of fileList) {
-        const name     = `./${storagePrefix}/${fileName}.json`;
-        const response = await fetch(name)
-        const filedata = await response.json()
-        console.log(`${logPrefix}📥 loadJSONfile: ${name}`)
-        localStorage.setItem(`${storagePrefix}.${fileName}`, JSON.stringify(filedata));
-      }
-      keys = getResourceKeys(`${storagePrefix}.`);
-      console.log(`${logPrefix}✅ Loaded ${keys.length} ${resourceType}s from distribution files`);
     } else {
       console.log(`${logPrefix}✅ Loaded ${keys.length} ${resourceType}s from localStorage`);
     }
