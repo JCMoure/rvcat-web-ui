@@ -736,11 +736,11 @@
             </thead>
             <tbody v-if="simulationOptions.resultName">
               <tr v-for="(name, index) in simulationOptions.availableResults" :key="name">
-                <td v-if="programOptions.visibleCols.text">
+                <td title="Name of the stored results">
                   <input type="text"
                     v-model="simulationOptions.availableResults[index]"
                     class="table-input"
-                    title="File Name"
+                    title="Modify File Name if required"
                   />
                 </td>
                 <td title="Total loop iterations executed">
