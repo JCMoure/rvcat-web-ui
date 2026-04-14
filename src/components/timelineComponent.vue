@@ -33,6 +33,20 @@
 
   const timelineOptions = reactive({ ...defaultOptions, ...savedOptions })
 
+  const loadOptions = () => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY)
+      if (saved) {
+        Object.assign(timelineOptions, JSON.parse(saved))
+      }
+      else {
+        saveOptions() // Save defaults if no options were saved before
+      }
+    } catch (error) {
+      console.error('📈❌ Failed to load:', error)
+    }
+  }
+
   const saveOptions = () => {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(timelineOptions))
@@ -107,6 +121,7 @@
 
   onMounted(() => {
     cleanupHandleTimeline = registerHandler('get_timeline', handleTimeline)
+    loadOptions()  // load timeline options or store it if not present (first run)
     addCanvasWrapper()
     requestTimeline()  // generate timeline using RVCAT (if previous components are mounted)
     console.log('📈🎯 Timeline Component mounted')

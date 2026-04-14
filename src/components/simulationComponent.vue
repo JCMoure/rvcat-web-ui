@@ -55,6 +55,9 @@
       if (saved) {
         Object.assign(simulationOptions, JSON.parse(saved))
       }
+      else {
+        saveOptions() // Save defaults if no options were saved before
+      }
     } catch (error) {
       console.error('🕐❌ Failed to load:', error)
     }
@@ -284,7 +287,7 @@
   onMounted(() => {
     cleanupHandleResults  = registerHandler('get_execution_results', handleResults)
     document.getElementById('simulation-running').style.display = 'none'
-    loadOptions()
+    loadOptions() // load timeline options or store it if not present (first run)
     loadResults()
     initSimulation()
     nextTick(() => {
@@ -598,7 +601,6 @@
 
 const renameResult = (index, oldName) => {
   const newName = simulationOptions.availableResults[index];
-  // Si el nombre no cambió, no hacer nada
   if (oldName === newName) return;
   const oldData = localStorage.getItem(`results.${oldName}`);
   if (oldData) {
