@@ -763,19 +763,19 @@
                   />
                 </td>
                 <td title="Total loop iterations executed">
-                  {{ showResultsInfo[index]?.total_iterationsiters?.toLocaleString() ?? '0' }}
+                  {{ showResultsInfo[index]?.total_iterations?.toLocaleString() ?? '0' }}
                 </td>
                 <td title="Total machine instructions executed">
-                  {{ name }}
+                  {{ showResultsInfo[index]?.total_instructions?.toLocaleString() ?? '0' }}
                 </td>
                 <td title="Total clock cycles taken">
-                  {{ name }}
+                  {{ showResultsInfo[index]?.total_cycles?.toLocaleString() ?? '0' }}
                 </td>
                 <td title="Cycles per loop iteration">
-                  {{ name}}
+                  {{ showResultsInfo[index]?.cycles_per_iteration?.toLocaleString() ?? '0' }}
                 </td>
                 <td title="Instructions Per cycle (IPC)">
-                  {{ name }}
+                  {{ showResultsInfo[index]?.ipc?.toLocaleString() ?? '0' }}
                 </td>
               </tr>
             </tbody>
