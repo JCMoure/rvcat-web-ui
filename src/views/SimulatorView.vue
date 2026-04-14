@@ -139,7 +139,6 @@ watch(isReady, (ready) => {
   if (ready) {
       loadingMessage.value = 'Loading complete!';
       importRVCAT();       // call RVCAT API
-      checkRVCATversion()
   }
 })
 
@@ -149,6 +148,7 @@ watch(isReady, (ready) => {
 let  cleanupRVCAT = null
 
 onMounted(() => {
+  checkRVCATversion()
   console.log('🔵🎯 Main Component mounted')
   nextTick(() => {
       loadingMessage.value = 'Loading RVCAT';
@@ -166,7 +166,6 @@ onUnmounted(() => {
 
 </script>
 
-<!----  Id's on the template are used for tutorial linking of panels and buttons: do not change them! -->
 <template>
   <body>
     <header>
