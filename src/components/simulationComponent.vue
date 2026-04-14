@@ -115,7 +115,7 @@
       try {
         Object.assign(simResults, structuredClone(JSON.parse(stored)))
       } catch (e) {
-        console.error('📄❌ Failed to load simulation results from localStorage:', e);
+        console.error('🕐❌ Failed to load simulation results from localStorage:', e);
       }
     }
     stored = localStorage.getItem('simProcess');
@@ -123,7 +123,7 @@
       try {
         Object.assign(simProcess, structuredClone(JSON.parse(stored)))
       } catch (e) {
-        console.error('📄❌ Failed to load simulated processor from localStorage:', e);
+        console.error('🕐❌ Failed to load simulated processor from localStorage:', e);
       }
     }
   }
@@ -431,7 +431,7 @@
       const svg          = await createGraphVizGraph(dotCode);
       resultsSvg.value = svg.outerHTML;
     } catch (error) {
-      console.error('💻❌ Failed to draw results+processor:', error)
+      console.error('🕐❌ Failed to draw results+processor:', error)
       resultsSvg.value = `<div class="error">Failed to render graph</div>`;
     }
   }
@@ -523,7 +523,7 @@
         return uploadResults(oldName)
         saveOptions()
     } catch (error) {
-      console.error('💻❌ Failed when changing result name:', error)
+      console.error('🕐❌ Failed when changing result name:', error)
     }
   })
 
@@ -557,11 +557,22 @@
         return
       }
     } catch (error) {
-      console.error('📄❌ Failed to upload result:', error)
+      console.error('🕐❌ Failed to upload result:', error)
     }
     simulationOptions.resultName = oldResult
   }
 
+  const copyResults = async () => {
+    try {
+      const res = localStorage.getItem('simResults');
+      if (res) {
+        const data = JSON.parse(res);
+        localStorage.setItem('results.current', JSON.stringify(data));
+      }
+    } catch (error) {
+      console.error('🕐📄❌ Failed to upload program for edition:', error)
+    }
+  };
 
 /* ------------------------------------------------------------------
  * Help support
@@ -672,6 +683,11 @@
       <span ref="helpIcon2" class="info-icon" @click="openHelp2" title="Show help">
          <img src="/img/info.png" class="info-img">
       </span>
+      <button class="blue-button" @click="copyResults"
+          title="Store current simulation results"
+          id="store-results-button">
+        Store Results
+      </button>
       <button class="dropdown-header" @click="togglePrevious" :aria-expanded="showPrevious"
         title="Show previous simulation results"
         id   ="show-previous-button">
