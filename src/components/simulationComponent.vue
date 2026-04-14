@@ -250,6 +250,13 @@
     updateResults()
   };
 
+  function removeResult () {
+    removeFromLocalStorage('result', simulationOptions.resultName, simulationOptions.availableResults)
+    alert("Removed results disappear if they have not been already saved on local file system. To save results, click on 💾 button before removing them from the list.")
+    if ( simulationOptions.availableResults.length > 0)
+      simulationOptions.resultName = simulationOptions.availableResults[0]
+  }
+
   onMounted(() => {
     cleanupHandleResults  = registerHandler('get_execution_results', handleResults)
     document.getElementById('simulation-running').style.display = 'none'
@@ -630,15 +637,20 @@
             </option>
             <option value="_add_new_">Add new</option>
           </select>
-          <button class="blue-button small-btn" @click="loadResults"
+          <button class="blue-button small-btn" @click="loadResult"
             id="load-results-button"
             title="Load selected simulation results">
           📝
           </button>
-          <button class="blue-button small-btn" @click="removeResults"
+          <button class="blue-button small-btn" @click="removeResult"
             id="remove-results-button"
             title="Remove simulation results from list (and local storage)">
           🧹
+          </button>
+          <button class="blue-button small-btn" @click="saveResult"
+            id="save-results-button"
+            title="Save current simulation results">
+          💾
           </button>
         </div>
       </prev>
