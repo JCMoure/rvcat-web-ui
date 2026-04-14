@@ -533,7 +533,7 @@
 
   async function confirmDownload() {
     const name   = modalName.value.trim();
-    const stored = localStorage.getItem(`result.${simulationOptions.resultName}`)
+    const stored = localStorage.getItem(`results.${simulationOptions.resultName}`)
     if (stored) {
       const data = JSON.parse(stored)
       data.name = name
