@@ -3,8 +3,8 @@
            nextTick, inject, watch, reactive }                       from "vue"
   import HelpComponent                    from '@/components/helpComponent.vue'
   import { useRVCAT_Api }                                     from '@/rvcatAPI'
-  import { createGraphVizGraph, saveToLocalStorage,
-           removeFromLocalStorage}                              from '@/common'
+  import { createGraphVizGraph, downloadJSON, uploadJSON,
+           saveToLocalStorage, removeFromLocalStorage, initResource} from '@/common'
 
   const { getExecutionResults } = useRVCAT_Api();
   const { registerHandler }     = inject('worker');
