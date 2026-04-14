@@ -251,10 +251,15 @@
   };
 
   function removeResult () {
-    removeFromLocalStorage('result', simulationOptions.resultName, simulationOptions.availableResults)
-    alert("Removed results disappear if they have not been already saved on local file system. To save results, click on 💾 button before removing them from the list.")
-    if ( simulationOptions.availableResults.length > 0)
-      simulationOptions.resultName = simulationOptions.availableResults[0]
+    if (simulationOptions.availableResults.length > 0) {
+      if (confirm(`Results named "${simulationOptions.resultName}" will disappear, Are you sure?`)) {
+        removeFromLocalStorage('result', simulationOptions.resultName, simulationOptions.availableResults)
+        if ( simulationOptions.availableResults.length > 0)
+          simulationOptions.resultName = simulationOptions.availableResults[0]
+      } else {
+        alert('Removal cancelled.')
+      }
+    }
   }
 
   onMounted(() => {
@@ -507,6 +512,57 @@
     return dot
   }
 
+// ============================================================================
+// confirmDownload, uploadResults
+// ============================================================================
+ const ADD_NEW_OPTION = '_add_new_'
+
+  watch( () => simulationOptions.resultName, (newName, oldName) => {
+    try {
+      if (newName === ADD_NEW_OPTION)
+        return uploadResults(oldName)
+        saveOptions()
+    } catch (error) {
+      console.error('💻❌ Failed when changing result name:', error)
+    }
+  })
+
+  const showModalDownload = ref(false)
+  const modalName         = ref("")
+  const nameError         = ref("")
+
+  async function confirmDownload() {
+    const name   = modalName.value.trim();
+    const stored = localStorage.getItem(`result.${simulationOptions.resultName}`)
+    if (stored) {
+      const data = JSON.parse(stored)
+      data.name = name
+      await downloadJSON(data, name, 'result')
+    }
+    showModalDownload.value = false;
+  }
+
+  const uploadResults = async (oldResult) => {
+    try {
+      const data = await uploadJSON(null, 'result')
+      if (data) {
+        const exists = simulationOptions.availableResults.includes(data.name)
+        if (exists && !confirm(`A result with the name "${data.name}" is already loaded. Do you want to overwrite it?`)) {
+          alert('Upload cancelled.')
+          simulationOptions.resultName = oldResult
+          return
+        }
+        saveToLocalStorage('result', data.name, data, simulationOptions.availableResults)
+        simulationOptions.resultName = data.name;
+        return
+      }
+    } catch (error) {
+      console.error('📄❌ Failed to upload result:', error)
+    }
+    simulationOptions.resultName = oldResult
+  }
+
+
 /* ------------------------------------------------------------------
  * Help support
  * ------------------------------------------------------------------ */
@@ -647,7 +703,7 @@
             title="Remove simulation results from list (and local storage)">
           🧹
           </button>
-          <button class="blue-button small-btn" @click="saveResult"
+          <button class="blue-button small-btn" @click="showModalDownload = true"
             id="save-results-button"
             title="Save current simulation results">
           💾
@@ -655,6 +711,21 @@
         </div>
       </prev>
     </Transition>
+  </div>
+
+  <div v-if="showModalDownload" class="modal-overlay">
+    <div class="modal">
+      <h4>Save Results As</h4>
+      <label for="results-name">Name:</label>
+      <input v-model="modalName" type="text" id="save-results-name"
+           title="file name of new simulation results" placeholder="Enter name for results"
+        />
+      <div v-if="nameError" class="error">{{ nameError }}</div>
+      <div class="modal-actions">
+        <button class="blue-button" title="Accept Download" @click="confirmDownload"> Yes </button>
+        <button class="blue-button" title="Cancel Download" @click="showModalDownload=false">  Cancel </button>
+      </div>
+    </div>
   </div>
 
   <Teleport to="body">
