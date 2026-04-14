@@ -586,6 +586,7 @@
       const res = localStorage.getItem('simResults');
       if (res) {
         const data = JSON.parse(res);
+        // to do: if the name already exists, add a suffix like "current (copy)" or "current (2)"
         localStorage.setItem('results.current', JSON.stringify(data));
         simulationOptions.availableResults.push('current')
         simulationOptions.resultName = 'current'
@@ -594,6 +595,26 @@
       console.error('🕐📄❌ Failed to upload program for edition:', error)
     }
   };
+
+const renameResult = (index, oldName) => {
+  const newName = simulationOptions.availableResults[index];
+  // Si el nombre no cambió, no hacer nada
+  if (oldName === newName) return;
+  const oldData = localStorage.getItem(`results.${oldName}`);
+  if (oldData) {
+    try {
+      localStorage.setItem(`results.${newName}`, oldData);
+      localStorage.removeItem(`results.${oldName}`);
+      /*
+      if (showResultsInfo.value && showResultsInfo.value[index]) {
+        showResultsInfo.value[index] = JSON.parse(oldData);
+      } */
+      console.log(`✅ Renamed results from "${oldName}" to "${newName}"`);
+    } catch (e) {
+      console.error(`❌ Failed to rename results:`, e);
+    }
+  }
+}
 
 /* ------------------------------------------------------------------
  * Help support
@@ -760,6 +781,7 @@
                     v-model="simulationOptions.availableResults[index]"
                     class="table-input"
                     title="Modify File Name if required"
+                    @blur="renameResult(index, name)"
                   />
                 </td>
                 <td title="Total loop iterations executed">
