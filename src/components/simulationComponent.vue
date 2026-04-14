@@ -684,7 +684,7 @@
 
     <Transition name="fold" appear>
       <prev v-show="simulationOptions.showPrevious" id="previous-results">
-               <div class="settings-container">
+        <div class="settings-container">
           <select v-model="simulationOptions.resultName" class="form-select"
               id="results-list" title="Visualize previously obtained results">
             <option value="" disabled>Select</option>
@@ -703,6 +703,42 @@
             title="Save current simulation results">
           💾
           </button>
+        </div>
+        <div class="table-container">
+          <table class="results-table">
+            <thead>
+              <tr>
+                <th style="width: 100px;"> Name  </th>
+                <th style="width: 100px;"> Iters  </th>
+                <th style="width: 100px;"> Instr  </th>
+                <th style="width: 100px;"> Cycles </th>
+                <th style="width: 100px;"> C/iter </th>
+                <th style="width: 100px;"> IPC    </th>
+              </tr>
+            </thead>
+            <tbody v-if="simulationOptions.resultName">
+              <tr v-for="(name) in simulationOptions.availableResults" :key="name">
+                <td title="Name of Results">
+                  {{ name }}
+                </td>
+                <td title="Total loop iterations executed">
+                  {{ name }}
+                </td>
+                <td title="Total machine instructions executed">
+                  {{ name }}
+                </td>
+                <td title="Total clock cycles taken">
+                  {{ name }}
+                </td>
+                <td title="Cycles per loop iteration">
+                  {{ name}}
+                </td>
+                <td title="Instructions Per cycle (IPC)">
+                  {{ name }}
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       </prev>
     </Transition>
