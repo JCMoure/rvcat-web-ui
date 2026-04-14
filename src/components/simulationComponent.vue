@@ -568,6 +568,8 @@
       if (res) {
         const data = JSON.parse(res);
         localStorage.setItem('results.current', JSON.stringify(data));
+        simulationOptions.availableResults.push('current')
+        simulationOptions.resultName = 'current'
       }
     } catch (error) {
       console.error('🕐📄❌ Failed to upload program for edition:', error)
