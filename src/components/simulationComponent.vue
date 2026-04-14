@@ -36,10 +36,10 @@
 
   const simulationOptions = reactive({ ...defaultOptions, ...savedOptions })
 
-
   const resultsSvg            = ref('')
   let   cleanupHandleResults  = null
   let   resultsTimeout        = null
+  const showResultsInfo       = ref({})
 
   const saveOptions = () => {
     try {
@@ -237,6 +237,25 @@
         console.log('  → Iterations changed:', newVal.iters);
         if (inputValue) inputValue.value = newVal.iters ?? '';
         if (typeof isInvalid !== 'undefined') isInvalid.value = false;
+      } else if (newVal.showPrevious !== oldVal?.showPrevious) {
+        console.log('  → Show Previous changed:', newVal.showPrevious);
+        if (newVal.showPrevious) {
+
+          for (const [index, name] of simulationOptions.availableResults.entries()) {
+            const stored = localStorage.getItem(`results.${name}`);
+            if (stored) {
+              try {
+                showResultsInfo.value[index] = JSON.parse(stored);
+                console.log(`🕐✅ Loaded previous results for ${name} at index ${index}`);
+              } catch (e) {
+                console.error(`🕐❌ Failed to load previous results for ${name}:`, e);
+              }
+            }
+          }
+        } else {
+          // clear previous results info from simulation state
+          showResultsInfo.value = null
+        }
       }
       updateResults()
       saveOptions()
@@ -744,7 +763,7 @@
                   />
                 </td>
                 <td title="Total loop iterations executed">
-                  {{ name }}
+                  {{ showResultsInfo[index]?.total_iterationsiters?.toLocaleString() ?? '0' }}
                 </td>
                 <td title="Total machine instructions executed">
                   {{ name }}
