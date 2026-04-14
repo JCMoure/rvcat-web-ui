@@ -693,11 +693,6 @@
             </option>
             <option value="_add_new_">Add new</option>
           </select>
-          <button class="blue-button small-btn" @click="loadResult"
-            id="load-results-button"
-            title="Load selected simulation results">
-          📝
-          </button>
           <button class="blue-button small-btn" @click="removeResult"
             id="remove-results-button"
             title="Remove simulation results from list (and local storage)">
