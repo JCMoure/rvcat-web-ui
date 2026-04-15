@@ -596,10 +596,17 @@
     } catch (error) {
       console.error('🕐📄❌ Failed to copy results', error)
     }
-  };
+  }
 
-  const renameResult = (index, oldName) => {
+  let oldResultNames = {}
+
+  const captureOldValue = (index) => {
+    oldResultNames[index] = simulationOptions.availableResults[index]
+  }
+
+  const renameResult = (index) => {
     const newName = simulationOptions.availableResults[index]
+    const oldName = oldResultNames[index]
     console.log(`✅ Renamed results from "${oldName}" to "${newName}"`);
     if (oldName === newName) return
     const oldData = localStorage.getItem(`results.${oldName}`)
@@ -608,7 +615,6 @@
         localStorage.setItem(`results.${newName}`, oldData)
         localStorage.removeItem(`results.${oldName}`)
         updateShowResults()
-
       } catch (e) {
         console.error(`❌ Failed to rename results:`, e);
       }
@@ -780,7 +786,8 @@
                     v-model="simulationOptions.availableResults[index]"
                     class="table-input"
                     title="Modify File Name if required"
-                    @blur="renameResult(index, name)"
+                    @focus="captureOldValue(index)"
+                    @blur="renameResult(index)"
                   />
                 </td>
                 <td title="Total loop iterations executed">
