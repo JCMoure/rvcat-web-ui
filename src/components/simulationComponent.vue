@@ -34,7 +34,9 @@
     }
   })()
 
-  const simulationOptions = reactive({ ...defaultOptions, ...savedOptions })
+  //const simulationOptions = reactive({ ...defaultOptions, ...savedOptions })
+
+  const simulationOptions = reactive(defaultOptions)
 
   const resultsSvg            = ref('')
   let   cleanupHandleResults  = null
@@ -223,7 +225,7 @@
       } else {
         simState.executionResults = null; // Clear results to avoid showing outdated data
         resultsSvg.value = ''; // Clear graph
-        console.log('🕐⚠️ Something changed but autorun is disabled: clear simulation results')
+        console.log('🕐🧹 Process/Iterations changed but autorun is disabled: clear simulation results')
       }
     }
   }
@@ -235,15 +237,9 @@
       return
     }
     try {
-      console.log('🕐🔄 Options changed', newVal);
-      if (newVal.iters !== oldVal?.iters) {
-        console.log('  → Iterations changed:', newVal.iters);
-        if (inputValue) inputValue.value = newVal.iters ?? '';
-        if (typeof isInvalid !== 'undefined') isInvalid.value = false;
-      } else if (newVal.showPrevious !== oldVal?.showPrevious) {
-        console.log('  → Show Previous changed:', newVal.showPrevious);
+      if (newVal.showPrevious !== oldVal?.showPrevious) {
+        console.log('🕐🔄 Show Previous changed:', newVal.showPrevious);
         if (newVal.showPrevious) {
-
           for (const [index, name] of simulationOptions.availableResults.entries()) {
             const stored = localStorage.getItem(`results.${name}`);
             if (stored) {
@@ -259,11 +255,17 @@
           // clear previous results info from simulation state
           showResultsInfo.value = null
         }
+      } else {
+        if (newVal.iters !== oldVal?.iters) {
+          console.log('🕐🔄 Iterations changed:', newVal.iters);
+          if (inputValue) inputValue.value = newVal.iters ?? '';
+          if (typeof isInvalid !== 'undefined') isInvalid.value = false;
+        }
+        updateResults()
       }
-      updateResults()
       saveOptions()
     } catch (error) {
-      console.error('Error in options watch handler:', error);
+      console.error('🕐❌ Error in options watch handler:', error);
     }
   };
 
@@ -287,7 +289,7 @@
   onMounted(() => {
     cleanupHandleResults  = registerHandler('get_execution_results', handleResults)
     document.getElementById('simulation-running').style.display = 'none'
-    loadOptions() // load timeline options or store it if not present (first run)
+    loadOptions() // load options or store it if not present (first run)
     loadResults()
     initSimulation()
     nextTick(() => {

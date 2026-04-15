@@ -46,7 +46,6 @@ const { importRVCAT }               = useRVCAT_Api();
     alert('💻 New version of RVCAT has been released (V1.04)')
   }
 
-
 // ============================================================================
 // Main Simulator Panel UI
 // ============================================================================
@@ -99,7 +98,6 @@ function onRequestSwitch(key) {
   currentFullKey.value       = 'none'
 }
 
-// Handle requests from header (& processor/program/tutorial engine)
 function toggleFullScreen(key) {
   if (currentFullKey.value === key) {
     currentFullKey.value = 'none'
@@ -115,16 +113,13 @@ function toggleFullScreen(key) {
 // Navigation state
 const showOverlay = ref(true);
 
-function closeLoadingOverlay() {
-   showOverlay.value = false
-}
+function closeLoadingOverlay() { showOverlay.value = false }
 
 // ============================================================================
 // EVENT HANDLERS: import_rvcat     WATCH: isReady
 // ============================================================================
 const loadingMessage = ref('Initializing');
 
-// Handler for 'import_rvcat' message
 const handleRVCAT = async (data, dataType) => {
   if (dataType === 'error') {
     console.error('❌ handler: failed to import RVCAT:', data);
