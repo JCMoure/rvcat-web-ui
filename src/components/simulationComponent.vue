@@ -289,6 +289,7 @@
           deep: false
         }
       )
+      updateShowResults()
       console.log('🕐🎯 SimulationComponent mounted')
     })
   })
