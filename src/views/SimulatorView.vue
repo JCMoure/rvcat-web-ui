@@ -209,7 +209,7 @@ onUnmounted(() => {
           <li>
             <button class="blue-button" :class="{ active: currentKey === 'staticAnalysisComponent' }"
                id="analysis-button"
-               title="Static Performance Analysis -> identify potential bottleneck, either throughput or latency (depnedencies)"
+               title="Static Performance Analysis -> identify potential bottleneck, either throughput or latency (dependencies)"
                @click="onRequestSwitch('staticAnalysisComponent')" >
                 Static Analysis
             </button>
