@@ -20,8 +20,7 @@
     iters:            100,
     autorun:          false,
     availableResults: [],
-    resultName:       '',
-    showPrevious:     false
+    resultName:       ''
   }
 
   const simulationOptions = reactive(defaultOptions)
@@ -222,15 +221,13 @@
 
   const updateShowResults= () => {
     showResultsInfo.value = {}  // clear previous results info from simulation state
-    if (simulationOptions.showPrevious) {
-      for (const [index, name] of simulationOptions.availableResults.entries()) {
-        const stored = localStorage.getItem(`results.${name}`);
-        if (stored) {
-          try {
-            showResultsInfo.value[index] = JSON.parse(stored);
-          } catch (e) {
-            console.error(`🕐❌ Failed to load previous results for ${name}:`, e);
-          }
+    for (const [index, name] of simulationOptions.availableResults.entries()) {
+      const stored = localStorage.getItem(`results.${name}`);
+      if (stored) {
+        try {
+          showResultsInfo.value[index] = JSON.parse(stored);
+        } catch (e) {
+          console.error(`🕐❌ Failed to load previous results for ${name}:`, e);
         }
       }
     }
@@ -243,17 +240,12 @@
       return
     }
     try {
-      if (newVal.showPrevious !== oldVal?.showPrevious) {
-        console.log('🕐🔄 Show Previous changed:', newVal.showPrevious);
-        updateShowResults()
-      } else {
-        if (newVal.iters !== oldVal?.iters) {
-          console.log('🕐🔄 Iterations changed:', newVal.iters);
-          if (inputValue) inputValue.value = newVal.iters ?? '';
-          if (typeof isInvalid !== 'undefined') isInvalid.value = false;
-        }
-        updateResults()
+      if (newVal.iters !== oldVal?.iters) {
+        console.log('🕐🔄 Iterations changed:', newVal.iters);
+        if (inputValue) inputValue.value = newVal.iters ?? '';
+        if (typeof isInvalid !== 'undefined') isInvalid.value = false;
       }
+      updateResults()
       saveOptions()
     } catch (error) {
       console.error('🕐❌ Error in options watch handler:', error);
@@ -289,7 +281,6 @@
         () => ({
           iters:        simulationOptions?.iters,
           autorun:      simulationOptions?.autorun,
-          showPrevious: simulationOptions?.showPrevious,
           name:         simulationOptions?.resultName
         }),
         handleOptionsChange,
@@ -354,7 +345,6 @@
   * Simulation options: UI actions
   * ------------------------------------------------------------------ */
 
-  function togglePrevious() { simulationOptions.showPrevious = !simulationOptions.showPrevious }
   function toggleAutorun()  { simulationOptions.autorun      = !simulationOptions.autorun }
 
   const formattedResults = computed(() => {
@@ -732,87 +722,75 @@
       <span ref="helpIcon2" class="info-icon" @click="openHelp2" title="Show help">
          <img src="/img/info.png" class="info-img">
       </span>
+      <span class="dropdown-title">Previous simulation results</span>
       <button class="blue-button" @click="copyResults"
           title="Store current simulation results"
           id="store-results-button">
         Store Results
       </button>
-      <button class="dropdown-header" @click="togglePrevious" :aria-expanded="showPrevious"
-        title="Show previous simulation results"
-        id   ="show-previous-button">
-        <span class="arrow" aria-hidden="true">
-          {{ simulationOptions.showPrevious ? '▼' : '▶' }}
-        </span>
-        <span class="dropdown-title">Previous simulation results</span>
-      </button>
+      <div class="settings-container">
+        <select v-model="simulationOptions.resultName" class="form-select"
+            id="results-list" title="Visualize previously obtained results">
+          <option value="" disabled>Select</option>
+          <option v-for="result in simulationOptions.availableResults" :key="result" :value="result" >
+            {{ result }}
+          </option>
+          <option value="_add_new_">Add new</option>
+        </select>
+        <button class="blue-button small-btn" @click="removeResult"
+          id="remove-results-button"
+          title="Remove simulation results from list (and local storage)">
+        🧹
+        </button>
+        <button class="blue-button small-btn" @click="showModalDownload = true"
+          id="save-results-button"
+          title="Save current simulation results">
+        💾
+        </button>
+      </div>
+      <div class="table-container">
+        <table class="results-table">
+          <thead>
+            <tr>
+              <th style="width: 100px;"> Name  </th>
+              <th style="width: 100px;"> Iters  </th>
+              <th style="width: 100px;"> Instr  </th>
+              <th style="width: 100px;"> Cycles </th>
+              <th style="width: 100px;"> C/iter </th>
+              <th style="width: 100px;"> IPC    </th>
+            </tr>
+          </thead>
+          <tbody v-if="simulationOptions.resultName">
+            <tr v-for="(name, index) in simulationOptions.availableResults" :key="index">
+              <td title="Name of the stored results">
+                <input type="text"
+                  v-model="simulationOptions.availableResults[index]"
+                  class="iters-group"
+                  title="Modify File Name if required"
+                  @focus="captureOldValue(index)"
+                  @blur="renameResult(index)"
+                />
+              </td>
+              <td title="Total loop iterations executed">
+                {{ showResultsInfo[index]?.total_iterations?.toLocaleString() ?? '0' }}
+              </td>
+              <td title="Total machine instructions executed">
+                {{ showResultsInfo[index]?.total_instructions?.toLocaleString() ?? '0' }}
+              </td>
+              <td title="Total clock cycles taken">
+                {{ showResultsInfo[index]?.total_cycles?.toLocaleString() ?? '0' }}
+              </td>
+              <td title="Cycles per loop iteration">
+                {{ showResultsInfo[index]?.cycles_per_iteration?.toLocaleString() ?? '0' }}
+              </td>
+              <td title="Instructions Per cycle (IPC)">
+                {{ showResultsInfo[index]?.ipc?.toLocaleString() ?? '0' }}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
-
-    <Transition name="fold" appear>
-      <prev v-show="simulationOptions.showPrevious" id="previous-results">
-        <div class="settings-container">
-          <select v-model="simulationOptions.resultName" class="form-select"
-              id="results-list" title="Visualize previously obtained results">
-            <option value="" disabled>Select</option>
-            <option v-for="result in simulationOptions.availableResults" :key="result" :value="result" >
-              {{ result }}
-            </option>
-            <option value="_add_new_">Add new</option>
-          </select>
-          <button class="blue-button small-btn" @click="removeResult"
-            id="remove-results-button"
-            title="Remove simulation results from list (and local storage)">
-          🧹
-          </button>
-          <button class="blue-button small-btn" @click="showModalDownload = true"
-            id="save-results-button"
-            title="Save current simulation results">
-          💾
-          </button>
-        </div>
-        <div class="table-container">
-          <table class="results-table">
-            <thead>
-              <tr>
-                <th style="width: 100px;"> Name  </th>
-                <th style="width: 100px;"> Iters  </th>
-                <th style="width: 100px;"> Instr  </th>
-                <th style="width: 100px;"> Cycles </th>
-                <th style="width: 100px;"> C/iter </th>
-                <th style="width: 100px;"> IPC    </th>
-              </tr>
-            </thead>
-            <tbody v-if="simulationOptions.resultName">
-              <tr v-for="(name, index) in simulationOptions.availableResults" :key="index">
-                <td title="Name of the stored results">
-                  <input type="text"
-                    v-model="simulationOptions.availableResults[index]"
-                    class="iters-group"
-                    title="Modify File Name if required"
-                    @focus="captureOldValue(index)"
-                    @blur="renameResult(index)"
-                  />
-                </td>
-                <td title="Total loop iterations executed">
-                  {{ showResultsInfo[index]?.total_iterations?.toLocaleString() ?? '0' }}
-                </td>
-                <td title="Total machine instructions executed">
-                  {{ showResultsInfo[index]?.total_instructions?.toLocaleString() ?? '0' }}
-                </td>
-                <td title="Total clock cycles taken">
-                  {{ showResultsInfo[index]?.total_cycles?.toLocaleString() ?? '0' }}
-                </td>
-                <td title="Cycles per loop iteration">
-                  {{ showResultsInfo[index]?.cycles_per_iteration?.toLocaleString() ?? '0' }}
-                </td>
-                <td title="Instructions Per cycle (IPC)">
-                  {{ showResultsInfo[index]?.ipc?.toLocaleString() ?? '0' }}
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </prev>
-    </Transition>
   </div>
 
   <div v-if="showModalDownload" class="modal-overlay">
