@@ -69,9 +69,11 @@
       let timelineRVCAT       = JSON.parse(data)
       timelineRVCAT.portUsage = getPortUsage(timelineRVCAT);
       timeline.value = timelineRVCAT
-      timelineOptions.canvasScale   = 1
       timelineOptions.canvasOffsetX = 0
       timelineOptions.canvasOffsetY = 0
+      // timelineOptions.canvasScale   = 1
+      scheduleDraw()
+
     } catch (error) {
       console.error('📈❌Failed to process JSON timeline:', error)
     }
@@ -227,7 +229,6 @@
 
     const canvas = timelineCanvas.value
 
-    // canvas.addEventListener("mousemove", onMouseMove)
     canvas.addEventListener("click", onClick)
 
     wrapper.addEventListener("mousedown", (e) => {

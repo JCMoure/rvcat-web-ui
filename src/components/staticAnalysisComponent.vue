@@ -124,6 +124,7 @@
         cleanupHandleGraph    = null;
         cleanupHandleAnalysis = null
     }
+    console.log('🔎👋 Static Analysis Component unMounted')
   })
 
  /* ------------------------------------------------------------------
