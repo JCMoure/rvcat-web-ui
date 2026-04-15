@@ -24,7 +24,7 @@
     showPrevious:     false
   }
 
-  const savedOptions = (() => {
+  /* const savedOptions = (() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY)
       console.log('🕐load options')
@@ -32,7 +32,7 @@
     } catch {
       return defaultOptions
     }
-  })()
+  })() */
 
   //const simulationOptions = reactive({ ...defaultOptions, ...savedOptions })
 
