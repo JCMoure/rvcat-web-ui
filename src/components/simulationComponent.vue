@@ -718,17 +718,19 @@
         <div class="processor-img" v-html="resultsSvg" v-if="resultsSvg"></div>
       </div>
     </div>
-    <div class="dropdown-wrapper" id="previous-simulations-section">
-      <span ref="helpIcon2" class="info-icon" @click="openHelp2" title="Show help">
-         <img src="/img/info.png" class="info-img">
-      </span>
-      <span class="dropdown-title">Previous simulation results</span>
-      <button class="blue-button" @click="copyResults"
-          title="Store current simulation results"
-          id="store-results-button">
-        Store Results
-      </button>
-      <div class="settings-container">
+    <div class="header">
+      <div class="section-title-and-info">
+        <span ref="helpIcon2" class="info-icon" @click="openHelp2" title="Show help">
+          <img src="/img/info.png" class="info-img">
+        </span>
+        <span class="header-title">Previous simulation results</span>
+      </div>
+      <div class="iters-run">
+        <button class="blue-button" @click="copyResults"
+            title="Store current simulation results"
+            id="store-results-button">
+          Store Results
+        </button>
         <select v-model="simulationOptions.resultName" class="form-select"
             id="results-list" title="Visualize previously obtained results">
           <option value="" disabled>Select</option>
@@ -748,7 +750,8 @@
         💾
         </button>
       </div>
-      <div class="table-container">
+    </div>
+    <div class="table-container">
         <table class="results-table">
           <thead>
             <tr>
@@ -789,7 +792,6 @@
             </tr>
           </tbody>
         </table>
-      </div>
     </div>
   </div>
 
