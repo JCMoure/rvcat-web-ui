@@ -220,6 +220,22 @@
     }
   }
 
+  const updateShowResults= () => {
+    showResultsInfo.value = null  // clear previous results info from simulation state
+    if (simulationOptions.showPrevious) {
+      for (const [index, name] of simulationOptions.availableResults.entries()) {
+        const stored = localStorage.getItem(`results.${name}`);
+        if (stored) {
+          try {
+            showResultsInfo.value[index] = JSON.parse(stored);
+          } catch (e) {
+            console.error(`🕐❌ Failed to load previous results for ${name}:`, e);
+          }
+        }
+      }
+    }
+  }
+
   const handleOptionsChange = (newVal, oldVal) => {
     // Verify that component is mounted and necessary data is available before executing the watch logic
     if (!isComponentMounted || !simulationOptions || !simState) {
@@ -229,22 +245,7 @@
     try {
       if (newVal.showPrevious !== oldVal?.showPrevious) {
         console.log('🕐🔄 Show Previous changed:', newVal.showPrevious);
-        if (newVal.showPrevious) {
-          for (const [index, name] of simulationOptions.availableResults.entries()) {
-            const stored = localStorage.getItem(`results.${name}`);
-            if (stored) {
-              try {
-                showResultsInfo.value[index] = JSON.parse(stored);
-                console.log(`🕐✅ Loaded previous results for ${name} at index ${index}`);
-              } catch (e) {
-                console.error(`🕐❌ Failed to load previous results for ${name}:`, e);
-              }
-            }
-          }
-        } else {
-          // clear previous results info from simulation state
-          showResultsInfo.value = null
-        }
+        updateShowResults()
       } else {
         if (newVal.iters !== oldVal?.iters) {
           console.log('🕐🔄 Iterations changed:', newVal.iters);
@@ -568,6 +569,8 @@
         }
         saveToLocalStorage('result', data.name, data, simulationOptions.availableResults)
         simulationOptions.resultName = data.name;
+        updateShowResults()
+        console.log(`✅ Upload results to "${data.name}"`);
         return
       }
     } catch (error) {
@@ -585,30 +588,31 @@
         localStorage.setItem('results.current', JSON.stringify(data));
         simulationOptions.availableResults.push('current')
         simulationOptions.resultName = 'current'
+        updateShowResults()
+        console.log(`✅ Copied results to "current"`);
+        return
       }
+      console.log(`✅ Cannot copy, since there are no results to copy`);
     } catch (error) {
       console.error('🕐📄❌ Failed to upload program for edition:', error)
     }
   };
 
-const renameResult = (index, oldName) => {
-  const newName = simulationOptions.availableResults[index];
-  if (oldName === newName) return;
-  const oldData = localStorage.getItem(`results.${oldName}`);
-  if (oldData) {
-    try {
-      localStorage.setItem(`results.${newName}`, oldData);
-      localStorage.removeItem(`results.${oldName}`);
-      /*
-      if (showResultsInfo.value && showResultsInfo.value[index]) {
-        showResultsInfo.value[index] = JSON.parse(oldData);
-      } */
-      console.log(`✅ Renamed results from "${oldName}" to "${newName}"`);
-    } catch (e) {
-      console.error(`❌ Failed to rename results:`, e);
+  const renameResult = (index, oldName) => {
+    const newName = simulationOptions.availableResults[index];
+    if (oldName === newName) return;
+    const oldData = localStorage.getItem(`results.${oldName}`);
+    if (oldData) {
+      try {
+        localStorage.setItem(`results.${newName}`, oldData);
+        localStorage.removeItem(`results.${oldName}`);
+        updateShowResults()
+        console.log(`✅ Renamed results from "${oldName}" to "${newName}"`);
+      } catch (e) {
+        console.error(`❌ Failed to rename results:`, e);
+      }
     }
   }
-}
 
 /* ------------------------------------------------------------------
  * Help support

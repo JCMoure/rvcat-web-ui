@@ -786,7 +786,7 @@ async function processTutorialUpdate(t) {
     console.log('🎓📥 Edited tutorial saved in localStorage', t.name);
 
     const dotCode = generateTutorialDot(t);
-    console.log('🎓📥 Dot Code', dotCode);
+    // console.log('🎓📥 Dot Code', dotCode);
 
     const svg = await createGraphVizGraph(dotCode);
     tutorialSvg.value = svg.outerHTML;
