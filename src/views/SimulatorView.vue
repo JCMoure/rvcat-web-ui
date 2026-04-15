@@ -242,14 +242,14 @@ onUnmounted(() => {
 
     <main class="container" :class="containerClasses">
 
-      <div v-show="isProcessorFullscreen || isNotFullscreen"
+      <div v-show="!showOverlay&& (isProcessorFullscreen || isNotFullscreen)"
           class="grid-item processor" :class="{ 'fullscreen': isProcessorFullscreen }"
           id="processor-panel"
         >
         <processorComponent :is-fullscreen="isProcessorFullscreen" @requestSwitchFull="toggleFullScreen"/>
       </div>
 
-      <div v-show="isProgramFullscreen || isNotFullscreen"
+      <div v-show="!showOverlay&& (isProgramFullscreen || isNotFullscreen)"
         class="grid-item program" :class="{ 'fullscreen': isProgramFullscreen }"
         id="program-panel"
         >
@@ -258,14 +258,14 @@ onUnmounted(() => {
         />
       </div>
 
-      <div v-show="isTutorialFullscreen"
+      <div v-show="!showOverlay&&  isTutorialFullscreen"
         class="grid-item tutorial" :class="{ 'fullscreen': isTutorialFullscreen }"
         id="tutorial-panel"
         >
         <tutorialEditor     :is-fullscreen="isTutorialFullscreen"  @requestSwitchFull="toggleFullScreen"/>
       </div>
 
-      <div v-show= "isNotFullscreen"
+      <div v-show= "!showOverlay&& isNotFullscreen"
         class="grid-item results"
         id="right-panel"
         >
