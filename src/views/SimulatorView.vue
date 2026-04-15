@@ -273,13 +273,15 @@ onUnmounted(() => {
         <div v-else>Component not found</div>
       </div>
 
-      <tutorialComponent
-        :activeView="currentKey"
-        :activeFull="currentFullKey"
-        id="tutorial-activation"
-        @requestSwitchPanel="onRequestSwitch"
-        @requestSwitchFull="toggleFullScreen"
-      />
+      <div v-if="!showOverlay">
+        <tutorialComponent
+          :activeView="currentKey"
+          :activeFull="currentFullKey"
+          id="tutorial-activation"
+          @requestSwitchPanel="onRequestSwitch"
+          @requestSwitchFull="toggleFullScreen"
+        />
+      </div>
     </main>
   </body>
 </template>
