@@ -786,7 +786,7 @@
                 <td title="Name of the stored results">
                   <input type="text"
                     v-model="simulationOptions.availableResults[index]"
-                    class="table-input"
+                    class="iters-group"
                     title="Modify File Name if required"
                     @focus="captureOldValue(index)"
                     @blur="renameResult(index)"
@@ -1103,7 +1103,7 @@
     border:      1px solid #005a9e;
   }
   .results-table td {
-    padding:        1px;
+    padding:        0px;
     border:         1px solid #ddd;
     vertical-align: middle;
     text-align:     center;
