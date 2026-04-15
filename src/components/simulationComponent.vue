@@ -24,18 +24,6 @@
     showPrevious:     false
   }
 
-  /* const savedOptions = (() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY)
-      console.log('🕐load options')
-      return saved ? JSON.parse(saved) : defaultOptions
-    } catch {
-      return defaultOptions
-    }
-  })() */
-
-  //const simulationOptions = reactive({ ...defaultOptions, ...savedOptions })
-
   const simulationOptions = reactive(defaultOptions)
 
   const resultsSvg            = ref('')
@@ -56,9 +44,11 @@
       const saved = localStorage.getItem(STORAGE_KEY)
       if (saved) {
         Object.assign(simulationOptions, JSON.parse(saved))
+        console.log('🕐load options')
       }
       else {
         saveOptions() // Save defaults if no options were saved before
+        console.log('🕐default load options')
       }
     } catch (error) {
       console.error('🕐❌ Failed to load:', error)
