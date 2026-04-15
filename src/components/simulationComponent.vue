@@ -333,7 +333,6 @@
         drawProcessorResults()
         document.getElementById('run-simulation-spinner').style.display = 'none';
         document.getElementById('simulation-running').style.display     = 'none';
-        document.getElementById('previous-simulations-section').style.display  = 'block';
         document.getElementById('run-simulation-button').disabled       = false;
       }, 500)
       simState.executionResults = simResults
@@ -417,7 +416,6 @@
       resultsTimeout = setTimeout(() => {
         document.getElementById('run-simulation-spinner').style.display = 'block';
         document.getElementById('simulation-running').style.display     = 'block';
-        document.getElementById('previous-simulations-section').style.display  = 'none';
         document.getElementById('run-simulation-button').disabled       = true;
         resultsSvg.value = `<div class="error">Waiting to generate simulation results graph</div>`;
 
