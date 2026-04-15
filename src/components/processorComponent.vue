@@ -29,18 +29,24 @@
                                             )
   }
 
-  const savedOptions = (() => {
+  const processorOptions = reactive(defaultOptions)
+  const simulatedSvg     = ref('')
+
+  const loadOptions = () => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY)
-      console.log('💻load options')
-      return saved ? JSON.parse(saved) : defaultOptions
-    } catch {
-      return defaultOptions
+      if (saved) {
+        Object.assign(processorOptions, JSON.parse(saved))
+        console.log('💻load options')
+      }
+      else {
+        saveOptions() // Save defaults if no options were saved before
+        console.log('💻default load options')
+      }
+    } catch (error) {
+      console.error('💻❌ Failed to load:', error)
     }
-  })()
-
-  const processorOptions = reactive({ ...defaultOptions, ...savedOptions })
-  const simulatedSvg     = ref('')
+  }
 
   const saveOptions = () => {
     try {
@@ -320,20 +326,10 @@
 // LIFECYCLE:  Mount/unMount
 // ============================================================================
   onMounted(() => {
-    console.log('💻🎯 ProcessorComponent mounted')
-
-    // load Edited Processor
-    const stored = localStorage.getItem('processorTemp');
-    if (stored) {
-      try {
-        const data = JSON.parse(stored)
-        updateProcessorSettings(data)
-        return
-      } catch (e) {
-        console.error('📄❌ Failed to load edited processor from localStorage:', e);
-      }
-    }
+    loadOptions()
+    loadEditedProcessor()
     if (currentConfig.value?.label) highlightLabel()
+    console.log('💻🎯 ProcessorComponent mounted')
   });
 
   onUnmounted(() => {
@@ -373,6 +369,20 @@
   }
 
   const emit = defineEmits(['requestSwitchFull'])
+
+  function loadEditedProcessor() {
+    // load Edited Processor
+    const stored = localStorage.getItem('processorTemp');
+    if (stored) {
+      try {
+        const data = JSON.parse(stored)
+        updateProcessorSettings(data)
+        return
+      } catch (e) {
+        console.error('📄❌ Failed to load edited processor from localStorage:', e);
+      }
+    }
+  }
 
   function editProcessor () {
     if (simState.simulatedProcess) {

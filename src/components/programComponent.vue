@@ -46,20 +46,26 @@ const STORAGE_KEY = 'programOptions'
     }
   }
 
-  const savedOptions = (() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY)
-      console.log('📄load options')
-      return saved ? JSON.parse(saved) : defaultOptions
-    } catch {
-      return defaultOptions
-    }
-  })()
-
-  const programOptions = reactive({ ...defaultOptions, ...savedOptions })
+  const programOptions = reactive(defaultOptions)
   const programSvg     = ref('')
   const showFullScreen = ref(false)
   let   graphTimeout   = null
+
+  const loadOptions = () => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY)
+      if (saved) {
+        Object.assign(programOptions, JSON.parse(saved))
+        console.log('📄load options')
+      }
+      else {
+        saveOptions() // Save defaults if no options were saved before
+        console.log('📄default load options')
+      }
+    } catch (error) {
+      console.error('📄❌ Failed to load:', error)
+    }
+  }
 
   const saveOptions = () => {
     try {
@@ -229,10 +235,11 @@ function loadEditedMemory() {
   let cleanupHandleGraph= null
 
   onMounted(() => {
-    console.log('📄🎯 ProgramComponent mounted')
+    loadOptions()
     cleanupHandleGraph = registerHandler('get_prog_graph', handleGraph);
     loadEditedProgram()
     loadEditedMemory()
+    console.log('📄🎯 ProgramComponent mounted')
   });
 
   onUnmounted(() => {

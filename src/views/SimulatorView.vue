@@ -58,9 +58,10 @@ const components = {
 };
 
 // Navigation state
-const currentFullKey    = ref('none')
-const currentKey        = ref('simulationComponent')
-const currentComponent  = shallowRef(components[currentKey.value])
+const checkOK          = ref(false);
+const currentFullKey   = ref('none')
+const currentKey       = ref('simulationComponent')
+const currentComponent = shallowRef(components[currentKey.value])
 
 // Computed to use on template
 const isNotFullscreen       = computed(() => currentFullKey.value === 'none');
@@ -145,6 +146,7 @@ let  cleanupRVCAT = null
 onMounted(() => {
   checkRVCATversion()
   console.log('🔵🎯 Main Component mounted')
+  checkOK.value = true   // mount all components
   nextTick(() => {
       loadingMessage.value = 'Loading RVCAT';
       showOverlay.value    = true
@@ -242,14 +244,14 @@ onUnmounted(() => {
 
     <main class="container" :class="containerClasses">
 
-      <div v-if="!showOverlay" v-show="isProcessorFullscreen || isNotFullscreen"
+      <div v-if="checkOK" v-show="isProcessorFullscreen || isNotFullscreen"
           class="grid-item processor" :class="{ 'fullscreen': isProcessorFullscreen }"
           id="processor-panel"
         >
         <processorComponent :is-fullscreen="isProcessorFullscreen" @requestSwitchFull="toggleFullScreen"/>
       </div>
 
-      <div v-if="!showOverlay" v-show="isProgramFullscreen || isNotFullscreen"
+      <div v-if="checkOK" v-show="isProgramFullscreen || isNotFullscreen"
         class="grid-item program" :class="{ 'fullscreen': isProgramFullscreen }"
         id="program-panel"
         >
@@ -258,14 +260,14 @@ onUnmounted(() => {
         />
       </div>
 
-      <div v-if="!showOverlay" v-show="isTutorialFullscreen"
+      <div v-if="checkOK" v-show="isTutorialFullscreen"
         class="grid-item tutorial" :class="{ 'fullscreen': isTutorialFullscreen }"
         id="tutorial-panel"
         >
         <tutorialEditor     :is-fullscreen="isTutorialFullscreen"  @requestSwitchFull="toggleFullScreen"/>
       </div>
 
-      <div v-if="!showOverlay" v-show= "isNotFullscreen"
+      <div v-if="checkOK" v-show= "isNotFullscreen"
         class="grid-item results"
         id="right-panel"
         >
@@ -273,7 +275,7 @@ onUnmounted(() => {
         <div v-else>Component not found</div>
       </div>
 
-      <div v-if="!showOverlay">
+      <div v-if="checkOK">
         <tutorialComponent
           :activeView="currentKey"
           :activeFull="currentFullKey"
