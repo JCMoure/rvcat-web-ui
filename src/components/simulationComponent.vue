@@ -221,7 +221,7 @@
   }
 
   const updateShowResults= () => {
-    showResultsInfo.value = null  // clear previous results info from simulation state
+    showResultsInfo.value = {}  // clear previous results info from simulation state
     if (simulationOptions.showPrevious) {
       for (const [index, name] of simulationOptions.availableResults.entries()) {
         const stored = localStorage.getItem(`results.${name}`);
@@ -594,7 +594,7 @@
       }
       console.log(`✅ Cannot copy, since there are no results to copy`);
     } catch (error) {
-      console.error('🕐📄❌ Failed to upload program for edition:', error)
+      console.error('🕐📄❌ Failed to copy results', error)
     }
   };
 
