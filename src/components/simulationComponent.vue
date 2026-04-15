@@ -846,7 +846,7 @@
     display:     flex;
     align-items: center;
     gap:         10px;
-    flex-wrap:   wrap;
+    flex-wrap:   nowrap;
   }
 
   .iters-run input[type="checkbox"] {
