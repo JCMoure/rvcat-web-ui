@@ -599,15 +599,16 @@
   };
 
   const renameResult = (index, oldName) => {
-    const newName = simulationOptions.availableResults[index];
-    if (oldName === newName) return;
-    const oldData = localStorage.getItem(`results.${oldName}`);
+    const newName = simulationOptions.availableResults[index]
+    console.log(`✅ Renamed results from "${oldName}" to "${newName}"`);
+    if (oldName === newName) return
+    const oldData = localStorage.getItem(`results.${oldName}`)
     if (oldData) {
       try {
-        localStorage.setItem(`results.${newName}`, oldData);
-        localStorage.removeItem(`results.${oldName}`);
+        localStorage.setItem(`results.${newName}`, oldData)
+        localStorage.removeItem(`results.${oldName}`)
         updateShowResults()
-        console.log(`✅ Renamed results from "${oldName}" to "${newName}"`);
+
       } catch (e) {
         console.error(`❌ Failed to rename results:`, e);
       }
@@ -853,14 +854,14 @@
   }
 
   .iters-run {
-    display: flex;
+    display:     flex;
     align-items: center;
-    gap: 10px;
-    flex-wrap: wrap;
+    gap:         10px;
+    flex-wrap:   wrap;
   }
 
   .iters-run input[type="checkbox"] {
-    width: 22px;
+    width:  22px;
     height: 22px;
     cursor: pointer;
     accent-color: #4a90e2;
@@ -869,7 +870,7 @@
   }
 
   .iters-run input[type="checkbox"]:hover {
-    transform: scale(1.05);
+    transform:  scale(1.05);
     transition: transform 0.2s ease;
   }
 
@@ -878,17 +879,17 @@
   }
 
   .iters-group input {
-    width: 70px;
-    border: 1px solid #ccc;
+    width:         70px;
+    border:        1px solid #ccc;
     border-radius: 4px;
-    text-align: center;
-    transition: all 0.2s ease;
+    text-align:    center;
+    transition:    all 0.2s ease;
   }
 
   .iters-group input:focus {
-    outline: none;
+    outline:       none;
     border-color: #4a90e2;
-    box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.2);
+    box-shadow:    0 0 0 2px rgba(74, 144, 226, 0.2);
   }
 
   .iters-group input.invalid {
@@ -931,15 +932,15 @@
   }
 
   .results-info {
-    font-size: 16px;
+    font-size:   16px;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   }
 
   .results-info .row {
-    display:       flex;
-    gap:           20px;
-    margin-bottom: 8px;
-    flex-wrap:     wrap;
+    display:         flex;
+    gap:             5px;
+    margin-bottom:   8px;
+    flex-wrap:       wrap;
     justify-content: space-between;
   }
 
@@ -963,8 +964,8 @@
     text-align:  right;
     flex-shrink: 0;
     font-weight: bold;
-    font-size: 1.1em;
-    transition: color 0.3s ease;
+    font-size:   1.1em;
+    transition:  color 0.3s ease;
   }
 
   #IPC-output {
@@ -1000,8 +1001,8 @@
   }
 
   .sim-running-msg {
-    display: flex;
-    width:   100%;
+    display:         flex;
+    width:           100%;
     align-items:     center;
     justify-content: center;
   }
@@ -1067,7 +1068,7 @@
      max-width:      100%;
      overflow-x:     auto;
      overflow-y:     auto;
-     padding-bottom: 37px; /* move container and see it completely */
+     padding-bottom: 37px;
      border:         1px solid #ddd;
      border-radius:  5px;
      margin-right:   2px;
@@ -1077,7 +1078,7 @@
     width:           100%;
     border-collapse: collapse;
     font-size:       small;
-    padding-bottom: 30px; /* permite mover el contenedor y verlo completo */
+    padding-bottom:  30px;
   }
   .results-table thead {
     position:   sticky;
@@ -1105,6 +1106,5 @@
   .results-table tbody tr:hover {
     background: #e8f4fd;
   }
-
 
 </style>
