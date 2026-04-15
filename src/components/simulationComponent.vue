@@ -280,7 +280,7 @@
   onMounted(() => {
     cleanupHandleResults  = registerHandler('get_execution_results', handleResults)
     document.getElementById('simulation-running').style.display = 'none'
-    loadOptions() // load options or store it if not present (first run)
+    loadOptions()
     loadResults()
     initSimulation()
     nextTick(() => {
@@ -289,7 +289,8 @@
         () => ({
           iters:        simulationOptions?.iters,
           autorun:      simulationOptions?.autorun,
-          showPrevious: simulationOptions?.showPrevious
+          showPrevious: simulationOptions?.showPrevious,
+          name:         simulationOptions?.resultName
         }),
         handleOptionsChange,
         {
@@ -614,6 +615,7 @@
       try {
         localStorage.setItem(`results.${newName}`, oldData)
         localStorage.removeItem(`results.${oldName}`)
+        simulationOptions.resultName = newName
         updateShowResults()
       } catch (e) {
         console.error(`❌ Failed to rename results:`, e);
