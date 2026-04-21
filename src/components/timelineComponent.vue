@@ -316,8 +316,8 @@
 
     const { cycles, instructions, portUsage } = timeline.value
 
-    totalCycles = Math.max(cycles, timelineOptions.cycles)
-    totalInstr  = Math.max(instructions.length, timelineOptions.instructions)
+    totalCycles = Math.min(cycles, timelineOptions.cycles)
+    totalInstr  = Math.min(instructions.length, timelineOptions.instructions)
     cellW = 14
     cellH = 20
     padX  = 10
