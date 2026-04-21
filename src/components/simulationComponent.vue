@@ -246,6 +246,7 @@
         if (typeof isInvalid !== 'undefined') isInvalid.value = false;
       }
       updateResults()
+      updateShowResults()
       saveOptions()
     } catch (error) {
       console.error('🕐❌ Error in options watch handler:', error);
@@ -289,7 +290,6 @@
           deep: false
         }
       )
-      updateShowResults()
       console.log('🕐🎯 SimulationComponent mounted')
     })
   })
@@ -333,7 +333,6 @@
         drawProcessorResults()
         document.getElementById('run-simulation-spinner').style.display = 'none';
         document.getElementById('simulation-running').style.display     = 'none';
-        document.getElementById('previous-simulations-section').style.display  = 'block';
         document.getElementById('run-simulation-button').disabled       = false;
       }, 500)
       simState.executionResults = simResults
@@ -352,12 +351,12 @@
     const results = simState.executionResults || {};
 
     return {
-      iters:        results["total_iterations"]?.toLocaleString() ?? '0',
-      instructions: results["total_instructions"]?.toLocaleString() ?? '0',
-      cycles:       results["total_cycles"]?.toLocaleString() ?? '0',
-      cpi:          results["cycles_per_iteration"]?.toFixed(2) ?? '0',
-      ipc:          results["ipc"]?.toFixed(3) ?? '0',
-      loads:        results["total_loads"]?.toLocaleString() ?? '0'
+      iters:        results["total_iterations"]?.toLocaleString() ?? 'X',
+      instructions: results["total_instructions"]?.toLocaleString() ?? 'X',
+      cycles:       results["total_cycles"]?.toLocaleString() ?? 'X',
+      cpi:          results["cycles_per_iteration"]?.toFixed(2) ?? 'X',
+      ipc:          results["ipc"]?.toFixed(3) ?? 'X',
+      loads:        results["total_loads"]?.toLocaleString() ?? 'X'
     };
   });
 
@@ -417,7 +416,6 @@
       resultsTimeout = setTimeout(() => {
         document.getElementById('run-simulation-spinner').style.display = 'block';
         document.getElementById('simulation-running').style.display     = 'block';
-        document.getElementById('previous-simulations-section').style.display  = 'none';
         document.getElementById('run-simulation-button').disabled       = true;
         resultsSvg.value = `<div class="error">Waiting to generate simulation results graph</div>`;
 
@@ -528,7 +526,7 @@
     try {
       if (newName === ADD_NEW_OPTION)
         return uploadResults(oldName)
-        saveOptions()
+      saveOptions()
     } catch (error) {
       console.error('🕐❌ Failed when changing result name:', error)
     }
@@ -576,12 +574,18 @@
       const res = localStorage.getItem('simResults');
       if (res) {
         const data = JSON.parse(res);
-        // to do: if the name already exists, add a suffix like "current (copy)" or "current (2)"
-        localStorage.setItem('results.current', JSON.stringify(data));
-        simulationOptions.availableResults.push('current')
-        simulationOptions.resultName = 'current'
+        let   baseName = 'current';
+        let   name = baseName;
+        let   counter = 1;
+        while (simulationOptions.availableResults.includes(name)) {
+          name = `${baseName} (${counter})`;
+          counter++;
+        }
+        localStorage.setItem(`results.${name}`, JSON.stringify(data));
+        simulationOptions.availableResults.push(name)
+        simulationOptions.resultName = name
         updateShowResults()
-        console.log(`✅ Copied results to "current"`);
+        console.log(`✅ Copied results to ${name}`);
         return
       }
       console.log(`✅ Cannot copy, since there are no results to copy`);
@@ -776,19 +780,19 @@
                 />
               </td>
               <td title="Total loop iterations executed">
-                {{ showResultsInfo[index]?.total_iterations?.toLocaleString() ?? '0' }}
+                {{ showResultsInfo[index]?.total_iterations?.toLocaleString() ?? 'X' }}
               </td>
               <td title="Total machine instructions executed">
-                {{ showResultsInfo[index]?.total_instructions?.toLocaleString() ?? '0' }}
+                {{ showResultsInfo[index]?.total_instructions?.toLocaleString() ?? 'X' }}
               </td>
               <td title="Total clock cycles taken">
-                {{ showResultsInfo[index]?.total_cycles?.toLocaleString() ?? '0' }}
+                {{ showResultsInfo[index]?.total_cycles?.toLocaleString() ?? 'X' }}
               </td>
               <td title="Cycles per loop iteration">
-                {{ showResultsInfo[index]?.cycles_per_iteration?.toLocaleString() ?? '0' }}
+                {{ showResultsInfo[index]?.cycles_per_iteration?.toLocaleString() ?? 'X' }}
               </td>
               <td title="Instructions Per cycle (IPC)">
-                {{ showResultsInfo[index]?.ipc?.toLocaleString() ?? '0' }}
+                {{ showResultsInfo[index]?.ipc?.toLocaleString() ?? 'X' }}
               </td>
             </tr>
           </tbody>
