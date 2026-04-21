@@ -360,6 +360,10 @@
     };
   });
 
+  function increaseIterations () { simulationOptions.iters = Math.min(simulationOptions.iters + 10, MAX_ITERS) }
+  function decreaseIterations () { simulationOptions.iters = Math.max(simulationOptions.iters - 10, 1) }
+
+
   const ipcColor = computed(() => {
     const ipc = simState.executionResults?.["ipc"] ?? 0
     const dw  = simState.simulatedProcess?.dispatch || 1
@@ -691,6 +695,21 @@
             :class=   "{ 'invalid': isInvalid }"
             :title=   "`Rang: 1 - ${MAX_ITERS} iters`"
           />
+          <button
+            class="blue-button small-btn"
+            @click="increaseIterations()"
+            title="Increase iterations"
+          >
+            ▲
+          </button>
+
+          <button
+            class="blue-button small-btn"
+            @click="decreaseIterations()"
+            title="Decrease iterations"
+          >
+            ▼
+          </button>
         </div>
       </div>
     </div>
