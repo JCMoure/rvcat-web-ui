@@ -400,7 +400,7 @@
     // Increase step level every 6 rapid repetitions
     if (iterControl.streak >= 6 && iterControl.stepLevel < STEP_VALUES.length - 1) {
       iterControl.stepLevel++;
-      iterControl.streak = -10; // reset para siguiente escalado
+      iterControl.streak = 0; // reset para siguiente escalado
     }
 
     iterControl.lastTime = now;
@@ -428,7 +428,10 @@
     let newValue = simulationOptions.iters - step
 
     if (simulationOptions.iters < step*2) {
-      if (iterControl.stepLevel > 0) iterControl.stepLevel--;
+      if (iterControl.stepLevel > 0) {
+        iterControl.stepLevel--;
+        iterControl.streak = -10000; // disable scaling
+      }
       newValue = simulationOptions.iters - STEP_VALUES[iterControl.stepLevel]
     }
     if (step > 1) newValue = roundToStep(newValue, step, 'down')
@@ -734,7 +737,7 @@
 
   function startHold(action) {
     const INITIAL_DELAY = 400;   // tiempo hasta que empieza la repetición
-    const REPEAT_INTERVAL = 200; // velocidad de repetición
+    const REPEAT_INTERVAL = 250; // velocidad de repetición
 
     action()    // first click
 
