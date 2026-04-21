@@ -683,8 +683,8 @@ function snapshotMemory() {
       </div>
 
       <button class="blue-button add-prev-margin" :class="{ active: programOptions.showInOut }"
-          title="Show/Hide instruction Input/Output operands"
-          id="show-inout-operands"
+          title="Toggle between showing latency & Ports / Instruction type"
+          id="show-latPorts-operands"
         @click="toggleInOut">
         <span v-if="programOptions.showInOut">✔ </span>
         InOut
