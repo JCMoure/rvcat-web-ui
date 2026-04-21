@@ -618,6 +618,26 @@
     }
   }
 
+  function moveResultsUp() {
+    if (simulationOptions.resultName !== simulationOptions.availableResults[0]) {
+      const index = simulationOptions.availableResults.indexOf(simulationOptions.resultName);
+      const temp = simulationOptions.availableResults[index];
+      simulationOptions.availableResults[index] = simulationOptions.availableResults[index - 1];
+      simulationOptions.availableResults[index - 1] = temp;
+      updateShowResults();
+    }
+  }
+
+  function moveResultsDown() {
+    if (simulationOptions.resultName !== simulationOptions.availableResults[simulationOptions.availableResults.length - 1]) {
+      const index = simulationOptions.availableResults.indexOf(simulationOptions.resultName);
+      const temp = simulationOptions.availableResults[index];
+      simulationOptions.availableResults[index] = simulationOptions.availableResults[index + 1];
+      simulationOptions.availableResults[index + 1] = temp;
+      updateShowResults();
+    }
+  }
+
 /* ------------------------------------------------------------------
  * Help support
  * ------------------------------------------------------------------ */
@@ -744,6 +764,21 @@
           </option>
           <option value="_add_new_">Add new</option>
         </select>
+        <button
+          class="blue-button small-btn"
+          @click="moveResultsUp()"
+          title="Move results up"
+        >
+          ▲
+        </button>
+
+        <button
+          class="blue-button small-btn"
+          @click="moveResultsDown()"
+          title="Move results down"
+        >
+          ▼
+        </button>
         <button class="blue-button small-btn" @click="removeResult"
           id="remove-results-button"
           title="Remove simulation results from list (and local storage)">
