@@ -258,15 +258,34 @@
     updateResults()
   };
 
+  const CONFIRM_KEY = 'confirmDeleteResults';
+
   function removeResult () {
-    if (simulationOptions.availableResults.length > 0) {
-      if (confirm(`Results named "${simulationOptions.resultName}" will disappear, Are you sure?`)) {
-        removeFromLocalStorage('result', simulationOptions.resultName, simulationOptions.availableResults)
-        if ( simulationOptions.availableResults.length > 0)
-          simulationOptions.resultName = simulationOptions.availableResults[0]
-      } else {
-        alert('Removal cancelled.')
+    if (simulationOptions.availableResults.length === 0) return;
+
+    const askConfirmation = localStorage.getItem(CONFIRM_KEY) !== 'false';
+
+    if (askConfirmation) {
+      const confirmed = confirm(
+        `Results named "${simulationOptions.resultName}" will disappear. Are you sure?\n\n` +
+        `Press OK to confirm, Cancel to abort.`
+      );
+
+      if (!confirmed) {
+        alert('Removal cancelled.');
+        return;
       }
+
+      const dontAskAgain = confirm("Do you want to skip this confirmation next time?");
+      if (dontAskAgain) {
+        localStorage.setItem(CONFIRM_KEY, 'false');
+      }
+    }
+
+    removeFromLocalStorage('result', simulationOptions.resultName, simulationOptions.availableResults );
+
+    if (simulationOptions.availableResults.length > 0) {
+      simulationOptions.resultName = simulationOptions.availableResults[0];
     }
   }
 
@@ -995,11 +1014,12 @@
 
   <Teleport to="body">
     <HelpComponent v-if="showHelp2" :position="helpPosition"
-    text="Open this tab to visualize the <strong>performance results</strong> from previous simulations.
-      This section allows you to compare the current simulation results with those from previous runs,
+    text="Visualize the <strong>performance results</strong> from previous simulations.
+      This table allows you to compare the current simulation results with those from previous runs,
       enabling you to track performance changes over time or after modifications to the processor configuration
       or program.
-      <p>Use this feature to analyze trends, identify regressions, or confirm improvements in your simulations.</p>"
+      <p>You can also manage your stored results by renaming them, reordering them for better comparison,
+        saving them for later usage, or removing those that are no longer needed.</p>"
     title="Previous Performance Results"
     @close="closeHelp2"/>
   </Teleport>
