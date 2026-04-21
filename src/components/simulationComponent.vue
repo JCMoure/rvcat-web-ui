@@ -425,15 +425,14 @@
 
   function decreaseIterations() {
     const step   = getStep('down')
-    let newValue = simulationOptions.iters - step
-
     if (simulationOptions.iters < step*2) {
       if (iterControl.stepLevel > 0) {
         iterControl.stepLevel--;
         iterControl.streak = -10000; // disable scaling
+        step = STEP_VALUES[iterControl.stepLevel];
       }
-      newValue = simulationOptions.iters - STEP_VALUES[iterControl.stepLevel]
     }
+    let newValue = simulationOptions.iters - step
     if (step > 1) newValue = roundToStep(newValue, step, 'down')
     simulationOptions.iters = Math.max(newValue, 1)
   }
@@ -734,11 +733,14 @@
  * ------------------------------------------------------------------ */
   let holdTimeout = null;
   let holdInterval= null;
+  let savedAutorun = false;
 
   function startHold(action) {
     const INITIAL_DELAY = 400;   // tiempo hasta que empieza la repetición
     const REPEAT_INTERVAL = 250; // velocidad de repetición
 
+    savedAutorun = simulationOptions.autorun; // save autorun state to restore later
+    simulationOptions.autorun = false; // disable autorun while manually changing iterations
     action()    // first click
 
     // wait until repetition
@@ -752,6 +754,7 @@
   function stopHold() {
     clearTimeout(holdTimeout);
     clearInterval(holdInterval);
+    simulationOptions.autorun = savedAutorun; // restore autorun state after manual change
   }
 
 </script>
