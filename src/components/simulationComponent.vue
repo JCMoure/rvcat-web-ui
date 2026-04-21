@@ -397,10 +397,10 @@
       iterControl.streak = 0;
     }
 
-    // Subir nivel cada 2–3 repeticiones rápidas
-    if (iterControl.streak >= 2 && iterControl.stepLevel < STEP_VALUES.length - 1) {
+    // Increase step level every 6 rapid repetitions
+    if (iterControl.streak >= 6 && iterControl.stepLevel < STEP_VALUES.length - 1) {
       iterControl.stepLevel++;
-      iterControl.streak = -5; // reset para siguiente escalado
+      iterControl.streak = -10; // reset para siguiente escalado
     }
 
     iterControl.lastTime = now;
@@ -424,8 +424,10 @@
   }
 
   function decreaseIterations() {
-    const step = getStep('down')
+    const step   = getStep('down')
     let newValue = simulationOptions.iters - step
+
+    if (newValue < 1) newValue = simulationOptions.iters - step/10
     if (step > 1) newValue = roundToStep(newValue, step, 'down')
     simulationOptions.iters = Math.max(newValue, 1)
   }
@@ -794,7 +796,7 @@
             @mouseleave="stopHold"
             @touchstart.prevent="startHold(increaseIterations)"
             @touchend="stopHold"
-            title="Increase iterations"
+            title="Increase iterations (press and hold for faster incrementing)"
           >
             ▲
           </button>
@@ -806,7 +808,7 @@
             @mouseleave="stopHold"
             @touchstart.prevent="startHold(decreaseIterations)"
             @touchend="stopHold"
-            title="Decrease iterations"
+            title="Decrease iterations (press and hold for faster decrementing)"
           >
             ▼
           </button>
