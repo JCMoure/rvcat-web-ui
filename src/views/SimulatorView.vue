@@ -207,19 +207,19 @@ onUnmounted(() => {
             </button>
           </li>
           <li>
-            <button class="blue-button" :class="{ active: currentKey === 'staticAnalysisComponent' }"
-               id="analysis-button"
-               title="Static Performance Analysis -> identify potential bottleneck, either throughput or latency (dependencies)"
-               @click="onRequestSwitch('staticAnalysisComponent')" >
-                Static Analysis
-            </button>
-          </li>
-          <li>
             <button class="blue-button" :class="{ active: currentKey === 'timelineComponent' }"
                id="timeline-button"
                title="Detailed Timeline of Program's execution"
                @click="onRequestSwitch('timelineComponent')" >
                 Timeline
+            </button>
+          </li>
+          <li>
+            <button class="blue-button" :class="{ active: currentKey === 'staticAnalysisComponent' }"
+               id="analysis-button"
+               title="Static Performance Analysis -> identify potential bottleneck, either throughput or latency (dependencies)"
+               @click="onRequestSwitch('staticAnalysisComponent')" >
+                Static Analysis
             </button>
           </li>
           <li>

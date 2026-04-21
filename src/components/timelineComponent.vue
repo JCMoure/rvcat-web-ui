@@ -15,7 +15,8 @@
   const STORAGE_KEY = 'timelineOptions'
 
   const defaultOptions = {
-    iters:         1,
+    instructions:  20,
+    cycles:        40,
     showPorts:     false,
     canvasScale:   1,
     canvasOffsetX: 0,
@@ -59,8 +60,18 @@
   watch ([() => simState.simulatedProcess], () => { requestTimeline() },
     { deep: true, immediate: false })
 
-  // Handler for 'get_timeline' message (fired by RVCAT getTimeline function)
+  function requestTimeline() {
+    if (simState.state >= 3) {
+      console.log('📈🔄 Request timeline from RVCAT')
+      const { name, ROBsize, dispatch, retire, sched, blksize, nBlocks, mPenalty, mIssueTime, instruction_list } = simState.simulatedProcess
+      getTimeline(JSON.stringify( { name, ROBsize, dispatch, retire, sched, blksize, nBlocks, mPenalty, mIssueTime,
+                                    instruction_list: toRaw(instruction_list)}, null, 2),
+                  10) // Call Python RVCAT (obtain timeline with current process info, for 10 loop iterations)
+    }
+  }
+
   const handleTimeline = async (data, dataType) => {
+    // Handler for 'get_timeline' message (fired by RVCAT getTimeline function)
     if (dataType === 'error') {
       console.error('📈❌Failed to get timeline:', data)
       return;
@@ -71,9 +82,7 @@
       timeline.value = timelineRVCAT
       timelineOptions.canvasOffsetX = 0
       timelineOptions.canvasOffsetY = 0
-      // timelineOptions.canvasScale   = 1
       scheduleDraw()
-
     } catch (error) {
       console.error('📈❌Failed to process JSON timeline:', error)
     }
@@ -94,22 +103,22 @@
     nextTick(() => {
       isComponentMounted = true;
       unwatch = watch(
-        () => [timelineOptions.iters, timelineOptions.showPorts, timelineOptions.canvasScale,
-                timelineOptions.canvasOffsetX, timelineOptions.canvasOffsetY ],
-            ([newIters, newShowPorts], [oldIters, oldShowPorts]) => {
+        () => [timelineOptions.instructions, timelineOptions.cycles, timelineOptions.showPorts,
+               timelineOptions.canvasScale, timelineOptions.canvasOffsetX, timelineOptions.canvasOffsetY ],
+            ([newInstructions, newCycles, newShowPorts], [oldInstructions, oldCycles, oldShowPorts]) => {
               if (!timelineCanvas.value || !timeline.value) return
-              if (newIters != oldIters) {
-                const clamped = Math.min(Math.max(newIters, 1), 9)
-                if (clamped !== newIters) {
-                  timelineOptions.iters = clamped
+              if (newCycles != oldCycles) {
+                const clamped = Math.min(Math.max(newCycles, 1), 100)
+                if (clamped !== newCycles) {
+                  timelineOptions.cycles = clamped
                   return
                 }
-                console.log('📈✅ Modified timeline iters')
-                saveOptions()
-                requestTimeline() // request timeline to RVCAT, then update timeline --> fire drawTimeline
-                return
-              } else if (newShowPorts !== oldShowPorts) {
-                console.log('📈✅ Modified showPorts')
+              } else if (newInstructions != oldInstructions) {
+                const clamped = Math.min(Math.max(newInstructions, 1), 100)
+                if (clamped !== newInstructions) {
+                  timelineOptions.instructions = clamped
+                  return
+                }
               }
               saveOptions()
               scheduleDraw()
@@ -138,16 +147,6 @@
 /* ------------------------------------------------------------------
 * UI actions
 * ------------------------------------------------------------------ */
-
-  function requestTimeline() {
-    if (simState.state >= 3) {
-      console.log('📈🔄 Request timeline from RVCAT')
-      const { name, ROBsize, dispatch, retire, sched, blksize, nBlocks, mPenalty, mIssueTime, instruction_list } = simState.simulatedProcess
-      getTimeline(JSON.stringify( { name, ROBsize, dispatch, retire, sched, blksize, nBlocks, mPenalty, mIssueTime,
-                                    instruction_list: toRaw(instruction_list)}, null, 2),
-                  timelineOptions.iters) // Call Python RVCAT
-    }
-  }
 
   function togglePorts()  { timelineOptions.showPorts = !timelineOptions.showPorts }
 
@@ -317,8 +316,8 @@
 
     const { cycles, instructions, portUsage } = timeline.value
 
-    totalCycles = cycles
-    totalInstr  = instructions.length
+    totalCycles = Math.max(cycles, timelineOptions.cycles)
+    totalInstr  = Math.max(instructions.length, timelineOptions.instructions)
     cellW = 14
     cellH = 20
     padX  = 10
@@ -355,7 +354,7 @@
     // First line: 0 1 2 3 ...   start on (0,0)
     let   x = padX
     const y = padY
-    for (let i = 0; i < cycles; ) {
+    for (let i = 0; i < totalCycles; ) {
       let ch          = String(i % 10)
       ctx.fillStyle   = "#ffffff"
       ctx.strokeStyle = "#bbb"
@@ -399,7 +398,9 @@
       let   x = padX;
       const y = padY + (rowIdx+1) * cellH;
 
-      for (let i = 0; i < cycles; ) {
+      if (rowIdx >= timelineOptions.instructions) return
+
+      for (let i = 0; i < totalCycles; ) {
         let ch        = ' '
         let currColor = "#000"
 
@@ -603,10 +604,16 @@
 
       <div class="timeline-controls">
         <div class="iters-group">
-          <span class="iters-label">Iterations:</span>
-          <input type="number" min="1" max="9"  v-model.number="timelineOptions.iters"
-            title="# loop iterations (1 to 9)"
-            id="timeline-iterations">
+          <span class="iters-label">Instructions:</span>
+          <input type="number" min="1" max="100"  v-model.number="timelineOptions.instructions"
+            title="# instructions (1 to 100)"
+            id="timeline-instructions">
+        </div>
+        <div class="iters-group">
+          <span class="iters-label">Cycles:</span>
+          <input type="number" min="1" max="100"  v-model.number="timelineOptions.cycles"
+            title="# cycles (1 to 100)"
+            id="timeline-cycles">
         </div>
 
         <div class="iters-group">
