@@ -371,7 +371,7 @@
   };
 
   const STEP_VALUES     = [1, 10, 100, 1000];
-  const FAST_THRESHOLD  = 400;   // ms → considera "rápido"
+  const FAST_THRESHOLD  = 300;  // ms → considera "rápido"
   const RESET_THRESHOLD = 1200; // ms → reinicia velocidad
 
   function getStep(direction) {
@@ -400,7 +400,7 @@
     // Subir nivel cada 2–3 repeticiones rápidas
     if (iterControl.streak >= 2 && iterControl.stepLevel < STEP_VALUES.length - 1) {
       iterControl.stepLevel++;
-      iterControl.streak = 0; // reset para siguiente escalado
+      iterControl.streak = -5; // reset para siguiente escalado
     }
 
     iterControl.lastTime = now;
@@ -721,6 +721,31 @@
   function openHelp2()  { nextTick(() => { showHelp2.value = true }) }
   function closeHelp2() { showHelp2.value  = false }
 
+/* ------------------------------------------------------------------
+ * Button Support: press & hold
+ * ------------------------------------------------------------------ */
+  let holdTimeout = null;
+  let holdInterval= null;
+
+  function startHold(action) {
+    const INITIAL_DELAY = 400; // tiempo hasta que empieza la repetición
+    const REPEAT_INTERVAL = 100; // velocidad de repetición
+
+    action()    // first click
+
+    // wait until repetition
+    holdTimeout = setTimeout(() => {
+      holdInterval = setInterval(() => {
+        action();
+      }, REPEAT_INTERVAL);
+    }, INITIAL_DELAY);
+  }
+
+  function stopHold() {
+    clearTimeout(holdTimeout);
+    clearInterval(holdInterval);
+  }
+
 </script>
 
 <template>
@@ -764,7 +789,11 @@
           />
           <button
             class="blue-button small-btn"
-            @click="increaseIterations()"
+            @mousedown="startHold(increaseIterations)"
+            @mouseup="stopHold"
+            @mouseleave="stopHold"
+            @touchstart.prevent="startHold(increaseIterations)"
+            @touchend="stopHold"
             title="Increase iterations"
           >
             ▲
@@ -772,7 +801,11 @@
 
           <button
             class="blue-button small-btn"
-            @click="decreaseIterations()"
+            @mousedown="startHold(decreaseIterations)"
+            @mouseup="stopHold"
+            @mouseleave="stopHold"
+            @touchstart.prevent="startHold(decreaseIterations)"
+            @touchend="stopHold"
             title="Decrease iterations"
           >
             ▼
