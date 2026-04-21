@@ -427,7 +427,7 @@
     const step   = getStep('down')
     let newValue = simulationOptions.iters - step
 
-    if (newValue < 1) newValue = simulationOptions.iters - step/10
+    if (simulationOptions.iters < step*2) newValue = simulationOptions.iters - step/10
     if (step > 1) newValue = roundToStep(newValue, step, 'down')
     simulationOptions.iters = Math.max(newValue, 1)
   }
@@ -730,8 +730,8 @@
   let holdInterval= null;
 
   function startHold(action) {
-    const INITIAL_DELAY = 400; // tiempo hasta que empieza la repetición
-    const REPEAT_INTERVAL = 100; // velocidad de repetición
+    const INITIAL_DELAY = 400;   // tiempo hasta que empieza la repetición
+    const REPEAT_INTERVAL = 200; // velocidad de repetición
 
     action()    // first click
 
