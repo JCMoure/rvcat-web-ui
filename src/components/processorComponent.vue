@@ -943,6 +943,44 @@
   function closeHelp3() { showHelp3.value  = false }
   function openHelp4()  { nextTick(() => { showHelp4.value = true }) }
   function closeHelp4() { showHelp4.value  = false }
+
+/* ------------------------------------------------------------------
+ * Button Support: press & hold
+ * ------------------------------------------------------------------ */
+  let holdTimeout = null;
+  let holdInterval= null;
+
+  function startHold(action) {
+    const INITIAL_DELAY = 400;   // tiempo hasta que empieza la repetición
+    const REPEAT_INTERVAL = 250; // velocidad de repetición
+
+    action()    // first click
+
+    // wait until repetition
+    holdTimeout = setTimeout(() => {
+      holdInterval = setInterval(() => {
+        action();
+      }, REPEAT_INTERVAL);
+    }, INITIAL_DELAY);
+  }
+
+  function stopHold() {
+    clearTimeout(holdTimeout);
+    clearInterval(holdInterval);
+  }
+
+  function increaseParameter() {
+    const max    = currentConfig.value.max
+    let newValue = simState.simulatedProcess[currentConfig.value.model]
+    simState.simulatedProcess[currentConfig.value.model] = Math.min(newValue+1, max)
+  }
+
+  function decreaseParameter() {
+    const min    = currentConfig.value.min
+    let newValue = simState.simulatedProcess[currentConfig.value.model]
+    simState.simulatedProcess[currentConfig.value.model] = Math.max(newValue-1, min)
+  }
+
 </script>
 
 <template>
@@ -993,6 +1031,28 @@
               :title="`Rang: ${currentConfig.min} - ${currentConfig.max}`"
             />
           </div>
+          <button
+            class="blue-button small-btn"
+            @mousedown="startHold(increaseParameter)"
+            @mouseup="stopHold"
+            @mouseleave="stopHold"
+            @touchstart.prevent="startHold(increaseParameter)"
+            @touchend="stopHold"
+            title="Increase parameter (press and hold for faster incrementing)"
+          >
+            ▲
+          </button>
+          <button
+            class="blue-button small-btn"
+            @mousedown="startHold(decreaseParameter)"
+            @mouseup="stopHold"
+            @mouseleave="stopHold"
+            @touchstart.prevent="startHold(decreaseParameter)"
+            @touchend="stopHold"
+            title="Decrease parameter (press and hold for faster decrementing)"
+          >
+            ▼
+          </button>
         </div>
       </div>
 
