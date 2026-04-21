@@ -360,8 +360,75 @@
     };
   });
 
-  function increaseIterations () { simulationOptions.iters = Math.min(simulationOptions.iters + 10, MAX_ITERS) }
-  function decreaseIterations () { simulationOptions.iters = Math.max(simulationOptions.iters - 10, 1) }
+  // function increaseIterations () { simulationOptions.iters = Math.min(simulationOptions.iters + 10, MAX_ITERS) }
+  // function decreaseIterations () { simulationOptions.iters = Math.max(simulationOptions.iters - 10, 1) }
+
+  let iterControl = {
+    lastTime:  0,
+    direction: null, // 'up' | 'down'
+    stepLevel: 0,    // 0:1, 1:10, 2:100, 3:1000
+    streak:    0
+  };
+
+  const STEP_VALUES     = [1, 10, 100, 1000];
+  const FAST_THRESHOLD  = 400;   // ms → considera "rápido"
+  const RESET_THRESHOLD = 1200; // ms → reinicia velocidad
+
+  function getStep(direction) {
+    const now = Date.now();
+
+    // Si pasa mucho tiempo → reset
+    if (now - iterControl.lastTime > RESET_THRESHOLD) {
+      iterControl.stepLevel = 0;
+      iterControl.streak    = 0;
+    }
+
+    // Si cambia la dirección → reset parcial
+    if (iterControl.direction !== direction) {
+      iterControl.stepLevel = 0;
+      iterControl.streak    = 0;
+      iterControl.direction = direction;
+    }
+
+    // Si es rápido → aumentar racha
+    if (now - iterControl.lastTime < FAST_THRESHOLD) {
+      iterControl.streak++;
+    } else {
+      iterControl.streak = 0;
+    }
+
+    // Subir nivel cada 2–3 repeticiones rápidas
+    if (iterControl.streak >= 2 && iterControl.stepLevel < STEP_VALUES.length - 1) {
+      iterControl.stepLevel++;
+      iterControl.streak = 0; // reset para siguiente escalado
+    }
+
+    iterControl.lastTime = now;
+
+    return STEP_VALUES[iterControl.stepLevel];
+  }
+
+  function roundToStep(value, step, direction) {
+    if (direction === 'up') {
+      return Math.ceil(value / step) * step;
+    } else {
+      return Math.floor(value / step) * step;
+    }
+  }
+
+  function increaseIterations() {
+    const step   = getStep('up')
+    let newValue = simulationOptions.iters + step
+    if (step > 1) newValue = roundToStep(newValue, step, 'up')
+    simulationOptions.iters = Math.min(newValue, MAX_ITERS)
+  }
+
+  function decreaseIterations() {
+    const step = getStep('down')
+    let newValue = simulationOptions.iters - step
+    if (step > 1) newValue = roundToStep(newValue, step, 'down')
+    simulationOptions.iters = Math.max(newValue, 1)
+  }
 
 
   const ipcColor = computed(() => {
