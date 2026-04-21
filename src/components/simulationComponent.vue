@@ -379,9 +379,6 @@
     };
   });
 
-  // function increaseIterations () { simulationOptions.iters = Math.min(simulationOptions.iters + 10, MAX_ITERS) }
-  // function decreaseIterations () { simulationOptions.iters = Math.max(simulationOptions.iters - 10, 1) }
-
   let iterControl = {
     lastTime:  0,
     direction: null, // 'up' | 'down'
@@ -389,7 +386,7 @@
     streak:    0
   };
 
-  const STEP_VALUES     = [1, 10, 100, 1000];
+  const STEP_VALUES     = [1, 10, 100];
   const FAST_THRESHOLD  = 300;  // ms → considera "rápido"
   const RESET_THRESHOLD = 1200; // ms → reinicia velocidad
 
