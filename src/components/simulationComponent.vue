@@ -427,7 +427,10 @@
     const step   = getStep('down')
     let newValue = simulationOptions.iters - step
 
-    if (simulationOptions.iters < step*2) newValue = simulationOptions.iters - step/10
+    if (simulationOptions.iters < step*2) {
+      if (iterControl.stepLevel > 0) iterControl.stepLevel--;
+      newValue = simulationOptions.iters - STEP_VALUES[iterControl.stepLevel]
+    }
     if (step > 1) newValue = roundToStep(newValue, step, 'down')
     simulationOptions.iters = Math.max(newValue, 1)
   }
