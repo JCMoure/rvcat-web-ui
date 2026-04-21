@@ -951,8 +951,8 @@
   let holdInterval= null;
 
   function startHold(action) {
-    const INITIAL_DELAY = 400;   // tiempo hasta que empieza la repetición
-    const REPEAT_INTERVAL = 250; // velocidad de repetición
+    const INITIAL_DELAY   = 400;   // tiempo hasta que empieza la repetición
+    const REPEAT_INTERVAL = 150; // velocidad de repetición
 
     action()    // first click
 
