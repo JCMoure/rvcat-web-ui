@@ -379,12 +379,11 @@
 
       sequenceOfPorts = `Ports used: ${sequenceOfPorts || 'none'}`
 
-      // calculat column init and column length for this cycle
-      let initRow = 0
-      while (initRow < totalInstr && instructions[initRow][2] < i) initRow++
-      let lengthRow = 0
-      while (initRow+lengthRow < totalInstr &&
-             (instructions[initRow+lengthRow][2] + instructions[initRow+lengthRow][4].length) > i ) lengthRow++
+      // calculate column init and column length for this cycle i
+      let initRow   = 0
+      while (initRow < totalInstr && (instructions[initRow][2] + instructions[initRow][4].length < i)) initRow++
+      let lengthRow = 1
+      while (initRow+lengthRow < totalInstr && instructions[initRow+lengthRow][2] <= i) lengthRow++
 
       interactiveCells.push({
         x, y, colIdx: i, rowIdx: -1,   /* indicates 1st row of cycles */
