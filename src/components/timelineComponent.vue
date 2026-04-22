@@ -353,6 +353,9 @@
     // First line: 0 1 2 3 ...   start on (0,0)
     let   x = padX
     const y = padY
+    const initRowList = []
+    const lengthRowList = []
+
     for (let i = 0; i < totalCycles; ) {
       let ch          = String(i % 10)
       ctx.fillStyle   = "#ffffff"
@@ -376,10 +379,22 @@
 
       sequenceOfPorts = `Ports used: ${sequenceOfPorts || 'none'}`
 
+      // calculat column init and column length for this cycle
+      let initRow = 0
+      while (initRow < totalInstr && instructions[initRow][2] < i) initRow++
+      let lengthRow = 0
+      while (initRow+lengthRow < totalInstr &&
+             (instructions[initRow+lengthRow][2] + instructions[initRow+lengthRow][4].length) > i ) lengthRow++
+
       interactiveCells.push({
         x, y, colIdx: i, rowIdx: -1,   /* indicates 1st row of cycles */
+        initCol, lengthCol,
+        initRow, lengthRow,
         sequenceOfPorts
       })
+
+      initRowList.push(initRow)
+      lengthRowList.push(lengthRow)
 
       i++
       x += cellW
@@ -390,6 +405,8 @@
     // ************************************************************************************
     for (const [rowIdx, [iter, instrIdx, startCycle, port, states, critical_cycles]] of instructions.entries())
     {
+      if (rowIdx >= totalInstr) return
+
       // Compute background color based on iteration number
       const rowBg = iter >= 0 ? `hsl(${(iter * 80) % 360}, 50%, 90%)` : "#ffffff";
 
@@ -397,14 +414,15 @@
       let   x = padX;
       const y = padY + (rowIdx+1) * cellH;
 
-      if (rowIdx >= timelineOptions.instructions) return
+      let initCol   = startCycle
+      let lengthCol = states.length
 
       for (let i = 0; i < totalCycles; ) {
         let ch        = ' '
         let currColor = "#000"
 
         // register interactive cell & check critical
-        if (i >= startCycle && i < startCycle+states.length) {
+        if (i >= startCycle && i < startCycle+lengthCol) {
           ch  = states[i-startCycle];
           let critical         = critical_cycles.includes(i - startCycle)
           let first_exec_stage = (ch == 'E' && states[i-startCycle-1] != 'E')
@@ -415,6 +433,9 @@
             x, y,
             colIdx: i,
             rowIdx,
+            initCol, lengthCol,
+            initRow: initRowList[i],
+            lengthRow: lengthRowList[i],
             char: ch,
             critical,
             first_exec_stage,
@@ -437,43 +458,26 @@
     }
   }
 
-  function drawHoverOverlay(row, col) {
+  function drawHoverOverlay(row, col, initRow, lengthRow, initCol, lengthCol) {
     const ctx = overlayCanvas.value.getContext('2d')
     ctx.clearRect(0, 0,
                   Math.max(overlayCanvas.value.width, 1+padX+totalCycles*cellW),
                   Math.max(overlayCanvas.value.height,1+padY+(totalInstr+1)*cellH))
 
-    if (row === null || col === null || timeline.value === null) return
-
-    const { cycles, instructions, portUsage } = timeline.value
-
     ctx.strokeStyle = 'red'
     ctx.lineWidth   = 1
 
-    // highlight row (instruction)
-    const [iter, instrIdx, startCycle, port, states, critical_cycles] = instructions[row]
-
-    let init   = startCycle
-    let length = states.length
-    ctx.strokeRect( padY + init*cellW, padY + (row+1) * cellH, length*cellW, cellH )
-
     // highlight column (cycle)
-    init = row
-    while (init > 0) {
-      if (instructions[init-1][2] + instructions[init-1][4].length <= col ) {
-        break
-      }
-      init--
-    }
-    length = 0
-    while (init + length < instructions.length) {
-      if (instructions[init+length][2] > col) {
-        break
-      }
-      length++
+    if (col !== null) {
+      let length = Math.min(lengthCol, totalInstr-initCol)
+      ctx.strokeRect( padX + initCol * cellW, padX+col*cellH, cellW, lengthCol*cellH)
     }
 
-    ctx.strokeRect( padX + col * cellW, padX+init*cellH, cellW, length*cellH)
+    // highlight row (instruction)
+    if (row !== null) {
+      let length = Math.min(lengthRow, totalCycles-initRow)
+      ctx.strokeRect( padY + initRow*cellW, padY + (row+1) * cellH, lengthRow*cellW, cellH )
+    }
   }
 
   function onMouseMove(e) {
@@ -506,12 +510,13 @@
       if (hoverRow != null || hoverCol != null) {
         hoverRow = null
         hoverCol = null
-        drawHoverOverlay(null, null)
+        drawHoverOverlay(null, null, null, null, null, null)
       }
       return
     }
 
-    const { rowIdx: row, colIdx: col, instrIdx, char, port, first_exec_stage, critical, sequenceOfPorts } = hitCell
+    const { rowIdx: row, colIdx: col, instrIdx, initCol, lengthCol, initRow, lengthRow,
+            char, port, first_exec_stage, critical, sequenceOfPorts } = hitCell
 
     if (row === -1) {
       simState.highlightedPort = -1
@@ -524,7 +529,7 @@
       }
       hoverRow = null
       hoverCol = null
-      drawHoverOverlay(null, null)
+      drawHoverOverlay(null, col, null, null, initCol, lengthCol)
       adjustTooltipPosition(e)
       return
     }
@@ -548,7 +553,7 @@
 
       hoverRow = row
       hoverCol = col
-      drawHoverOverlay(row, col)
+      drawHoverOverlay(row, col, initRow, lengthRow, initCol, lengthCol)
     }
   }
 
