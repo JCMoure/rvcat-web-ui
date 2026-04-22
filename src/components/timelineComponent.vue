@@ -374,6 +374,8 @@
       let lengthRow = 1
       while (initRow+lengthRow < totalInstr && instructions[initRow+lengthRow][2] <= i) lengthRow++
 
+      const portsUsed = []
+
       let sequenceOfPorts = Object.keys(portUsage)
         .filter(p => {
           const usage = portUsage[p]
