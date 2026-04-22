@@ -455,11 +455,25 @@
 
     let init   = startCycle
     let length = states.length
-    ctx.strokeRect( padY + startCycle*cellW, padY + (row+1) * cellH, length*cellW, cellH )
+    ctx.strokeRect( padY + init*cellW, padY + (row+1) * cellH, length*cellW, cellH )
 
     // highlight column (cycle)
+    init = row
+    while (init > 0) {
+      if (instructions[init-1][2] + instructions[init-1][4].length <= col ) {
+        break
+      }
+      init--
+    }
+    length = 0
+    while (init + length < instructions.length) {
+      if (instructions[init+length][2] > col) {
+        break
+      }
+      length++
+    }
 
-    ctx.strokeRect( padX + col * cellW, padX, cellW, (totalInstr+1)*cellH)
+    ctx.strokeRect( padX + col * cellW, padX+init*cellH, cellW, length*cellH)
   }
 
   function onMouseMove(e) {
