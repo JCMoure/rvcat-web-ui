@@ -470,14 +470,14 @@
 
     // highlight column (cycle)
     if (col !== null) {
-      let length = Math.min(lengthCol, totalInstr-initCol)
-      ctx.strokeRect( padX + initCol * cellW, padX+col*cellH, cellW, lengthCol*cellH)
+      let length = Math.min(lengthRow, totalInstr-initRow)
+      ctx.strokeRect( padX + (initRow+1) * cellW, padX+col*cellH, cellW, length*cellH)
     }
 
     // highlight row (instruction)
     if (row !== null) {
-      let length = Math.min(lengthRow, totalCycles-initRow)
-      ctx.strokeRect( padY + initRow*cellW, padY + (row+1) * cellH, lengthRow*cellW, cellH )
+      let length = Math.min(lengthCol, totalCycles-initCol)
+      ctx.strokeRect( padY + initCol*cellW, padY + (row+1) * cellH, length*cellW, cellH )
     }
   }
 
