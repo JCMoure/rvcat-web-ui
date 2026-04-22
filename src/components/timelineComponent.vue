@@ -443,11 +443,22 @@
                   Math.max(overlayCanvas.value.width, 1+padX+totalCycles*cellW),
                   Math.max(overlayCanvas.value.height,1+padY+(totalInstr+1)*cellH))
 
-    if (row === null || col === null) return
+    if (row === null || col === null || timeline.value === null) return
+
+    const { cycles, instructions, portUsage } = timeline.value
 
     ctx.strokeStyle = 'red'
-    ctx.lineWidth = 1
-    ctx.strokeRect( padY, padY + (row+1) * cellH, totalCycles*cellW, cellH )
+    ctx.lineWidth   = 1
+
+    // highlight row (instruction)
+    const [iter, instrIdx, startCycle, port, states, critical_cycles] = instructions[row+1]
+
+    let init   = startCycle
+    let length = states.length
+    ctx.strokeRect( padY,m, padY + (row+1) * cellH, length*cellW, cellH )
+
+    // highlight column (cycle)
+
     ctx.strokeRect( padX + col * cellW, padX, cellW, (totalInstr+1)*cellH)
   }
 
