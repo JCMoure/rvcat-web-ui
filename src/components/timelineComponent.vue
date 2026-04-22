@@ -158,8 +158,14 @@
       const eIndex = states.indexOf("E");
       if (eIndex < 0) alert("Timeline problem: all instructions must traverse an E state");
       const cycle = startCycle + eIndex;
-      usageInstr[cycle].push(rowIdx)
-      (usagePorts[port] ??= []).push(cycle);
+
+      // Verificar que cycle esté dentro del rango
+      if (cycle >= 0 && cycle < timeline.cycles) {
+        usageInstr[cycle].push(rowIdx);
+        (usagePorts[port] ??= []).push(cycle);
+      } else {
+        console.warn(`Cycle ${cycle} fuera de rango (0-${timeline.cycles-1}) para instrucción ${rowIdx}`);
+      }
     }
     for (const p in usagePorts) {
       usagePorts[p].sort((a,b)=>a-b);
