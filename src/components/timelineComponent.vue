@@ -367,6 +367,12 @@
       ctx.fillStyle = "#000"
       ctx.fillText    (ch, x + fontXOffset, y + fontYOffset)
 
+      // calculate column init and column length for this cycle i
+      let initRow   = 0
+      while (initRow < totalInstr && (instructions[initRow][2] + instructions[initRow][4].length <= i)) initRow++
+      let lengthRow = 1
+      while (initRow+lengthRow < totalInstr && instructions[initRow+lengthRow][2] <= i) lengthRow++
+
       let sequenceOfPorts = Object.keys(portUsage)
         .filter(p => {
           const usage = portUsage[p]
@@ -377,13 +383,7 @@
         .map(p => `P${p}`)
         .join(',')
 
-      sequenceOfPorts = `Ports used: ${sequenceOfPorts || 'none'}`
-
-      // calculate column init and column length for this cycle i
-      let initRow   = 0
-      while (initRow < totalInstr && (instructions[initRow][2] + instructions[initRow][4].length <= i)) initRow++
-      let lengthRow = 1
-      while (initRow+lengthRow < totalInstr && instructions[initRow+lengthRow][2] <= i) lengthRow++
+      sequenceOfPorts = `Ports used: ${sequenceOfPorts || 'none'}\nROB usage: ${lengthRow}`
 
       interactiveCells.push({
         x, y, colIdx: i, rowIdx: -1,   /* indicates 1st row of cycles */
