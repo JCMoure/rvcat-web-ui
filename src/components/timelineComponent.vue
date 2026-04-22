@@ -471,7 +471,7 @@
     // highlight column (cycle)
     if (col !== null) {
       let length = Math.min(lengthRow, totalInstr-initRow)
-      ctx.strokeRect( padX + (initRow+1) * cellW, padX+col*cellH, cellW, length*cellH)
+      ctx.strokeRect( padX + col*cellH, padX + (initRow+1) * cellW,  cellW, length*cellH)
     }
 
     // highlight row (instruction)
