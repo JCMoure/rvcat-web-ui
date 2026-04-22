@@ -644,7 +644,7 @@
   <Teleport to="body">
     <HelpComponent v-if="showHelp1" :position="helpPosition" title="Timeline"
        text= "<p>The <strong>Timeline</strong> section shows the program execution over time.
-                The dimension of the timeline, <em>instructions</em>x<em>cycles</em> can be modified, and you can choose to see the <strong>full timeline</strong></p>
+                The dimension of the timeline, <em>instructions</em> × <em>cycles</em> can be modified, and you can choose to see the <strong>full timeline</strong></p>
               <p><strong>Grab</strong> the timeline and move the mouse left/right and up/down, and use the mouse wheel to zoom in/out.
                 Hover over the grid to see specific info about the selected cell, the selected instruction (initial cell of a row),
                 or the selected cycle (initial cell of a column).</p>"
