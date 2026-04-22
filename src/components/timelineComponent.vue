@@ -472,7 +472,7 @@
       let length = Math.min(lengthRow, totalInstr-initRow)
       ctx.strokeRect( padX + col*cellW, padX + (initRow+1) * cellH,  cellW, length*cellH)
 
-      positions = [1, 3, 5]
+      let positions = [1, 3, 5]
 
       // highlight specific positions (cells)
       if (positions && positions.length > 0) {
