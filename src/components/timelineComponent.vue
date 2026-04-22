@@ -471,6 +471,21 @@
     if (col !== null) {
       let length = Math.min(lengthRow, totalInstr-initRow)
       ctx.strokeRect( padX + col*cellW, padX + (initRow+1) * cellH,  cellW, length*cellH)
+
+      positions = [1, 3, 5]
+
+      // highlight specific positions (cells)
+      if (positions && positions.length > 0) {
+        positions.forEach(pos => {
+          let row = pos; // o pos - 1 si es 1-indexado
+          if (row >= initRow && row < initRow + lengthRow) {
+            ctx.save();
+            ctx.fillStyle = 'rgba(255, 0, 0, 0.2)';
+            ctx.fillRect(padX + col * cellW, padX + (row + 1) * cellH, cellW, cellH);
+            ctx.restore();
+          }
+        });
+      }
     }
 
     // highlight row (instruction)
