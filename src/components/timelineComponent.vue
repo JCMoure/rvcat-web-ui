@@ -383,7 +383,7 @@
         .map(p => `P${p}`)
         .join(',')
 
-      sequenceOfPorts = `Ports used: ${sequenceOfPorts || 'none'}\nROB usage: ${lengthRow}`
+      sequenceOfPorts = `Ports used: ${sequenceOfPorts || 'none'}<br>ROB usage: ${lengthRow}`
 
       interactiveCells.push({
         x, y, colIdx: i, rowIdx: -1,   /* indicates 1st row of cycles */
