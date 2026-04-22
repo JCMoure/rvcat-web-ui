@@ -388,7 +388,8 @@
 
       interactiveCells.push({
         x, y, colIdx: i, rowIdx: -1,   /* indicates 1st row of cycles */
-        initCol, lengthCol,
+        initCol: i,
+        lengthCol: 1,
         initRow, lengthRow,
         sequenceOfPorts
       })
