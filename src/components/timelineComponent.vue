@@ -170,8 +170,8 @@
     for (const p in usagePorts) {
       usagePorts[p].sort((a,b)=>a-b);
     }
-    timelineRVCAT.portUsagePorts = usagePorts;
-    timelineRVCAT.portUsageInstr = usageInstr;
+    timeline.portUsagePorts = usagePorts
+    timeline.portUsageInstr = usageInstr
   }
 
   function buildPortTimelineMatrix(timeline) {
