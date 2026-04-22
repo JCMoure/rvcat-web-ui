@@ -384,8 +384,6 @@
       let lengthRow = 1
       while (initRow+lengthRow < totalInstr && instructions[initRow+lengthRow][2] <= i) lengthRow++
 
-      const portsUsed = []
-
       let sequenceOfPorts = Object.keys(portUsagePorts)
         .filter(p => {
           const usage = portUsagePorts[p]
@@ -398,7 +396,7 @@
 
       sequenceOfPorts = `Ports used: ${sequenceOfPorts || 'none'}\nROB usage: ${lengthRow}`
 
-      portsUsed = portUsageInstr[i]
+      const portsUsed = portUsageInstr[i]
 
       interactiveCells.push({
         x, y, colIdx: i, rowIdx: -1,   /* indicates 1st row of cycles */
