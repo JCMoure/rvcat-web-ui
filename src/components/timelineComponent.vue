@@ -355,6 +355,7 @@
     const y = padY
     const initRowList = []
     const lengthRowList = []
+    const portsUsedList = []
 
     for (let i = 0; i < totalCycles; ) {
       let ch          = String(i % 10)
@@ -385,16 +386,20 @@
 
       sequenceOfPorts = `Ports used: ${sequenceOfPorts || 'none'}\nROB usage: ${lengthRow}`
 
+      portsUsed.push(3)
+
       interactiveCells.push({
         x, y, colIdx: i, rowIdx: -1,   /* indicates 1st row of cycles */
         initCol: i,
         lengthCol: 1,
         initRow, lengthRow,
-        sequenceOfPorts
+        sequenceOfPorts,
+        portsUsed
       })
 
       initRowList.push(initRow)
       lengthRowList.push(lengthRow)
+      portsUsedList.push(portsUsed)
 
       i++
       x += cellW
@@ -440,7 +445,8 @@
             critical,
             first_exec_stage,
             port,
-            instrIdx
+            instrIdx,
+            portsUsed: portsUsedList[i]
           })
         }
 
@@ -458,7 +464,7 @@
     }
   }
 
-  function drawHoverOverlay(row, col, initRow, lengthRow, initCol, lengthCol) {
+  function drawHoverOverlay(row, col, initRow, lengthRow, initCol, lengthCol, portsUsed) {
     const ctx = overlayCanvas.value.getContext('2d')
     ctx.clearRect(0, 0,
                   Math.max(overlayCanvas.value.width, 1+padX+totalCycles*cellW),
@@ -472,11 +478,9 @@
       let length = Math.min(lengthRow, totalInstr-initRow)
       ctx.strokeRect( padX + col*cellW, padX + (initRow+1) * cellH,  cellW, length*cellH)
 
-      let positions = [1, 3, 5]
-
       // highlight specific positions (cells)
-      if (positions && positions.length > 0) {
-        positions.forEach(pos => {
+      if (portsUsed && portsUsed.length > 0) {
+        portsUsed.forEach(pos => {
           let row = pos; // o pos - 1 si es 1-indexado
           if (row >= initRow && row < initRow + lengthRow) {
             ctx.save();
@@ -525,13 +529,13 @@
       if (hoverRow != null || hoverCol != null) {
         hoverRow = null
         hoverCol = null
-        drawHoverOverlay(null, null, null, null, null, null)
+        drawHoverOverlay(null, null, null, null, null, null, null)
       }
       return
     }
 
     const { rowIdx: row, colIdx: col, initCol, lengthCol, initRow, lengthRow,
-            char, port, first_exec_stage, critical, sequenceOfPorts, instrIdx } = hitCell
+            char, port, first_exec_stage, critical, sequenceOfPorts, instrIdx, portsUsed } = hitCell
 
     if (row === -1) {
       simState.highlightedPort = -1
@@ -544,7 +548,7 @@
       }
       hoverRow = null
       hoverCol = null
-      drawHoverOverlay(null, col, initRow, lengthRow, initCol, lengthCol)
+      drawHoverOverlay(null, col, initRow, lengthRow, initCol, lengthCol, portsUsed)
       adjustTooltipPosition(e)
       return
     }
@@ -568,7 +572,7 @@
 
       hoverRow = row
       hoverCol = col
-      drawHoverOverlay(row, col, initRow, lengthRow, initCol, lengthCol)
+      drawHoverOverlay(row, col, initRow, lengthRow, initCol, lengthCol, portsUsed)
     }
   }
 
