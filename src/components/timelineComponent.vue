@@ -220,8 +220,8 @@
     let   startX, startY
 
     const observer = new ResizeObserver(() => {
-      togglePorts()  // forces watcher to re-draw canvas
-      togglePorts()  // forces watcher to re-draw canvas
+      toggleFull()  // forces watcher to re-draw canvas
+      toggleFull()  // forces watcher to re-draw canvas
     })
 
     observer.observe(wrapper)
@@ -276,7 +276,6 @@
  * ------------------------------------------------------------------ */
   const hoverInfo        = ref(null)
   const tooltipRef       = ref(null)
-  const clickedCellInfo  = ref(null)
   const interactiveCells = []
   let totalCycles = 0
   let totalInstr  = 0
@@ -575,11 +574,6 @@
     })
   }
 
-  async function handleCellClick(instrID, cycle) {
-    const text = 'To DO';
-    clickedCellInfo.value = { instrID, cycle, text };
-  }
-
 /* ------------------------------------------------------------------
  * Help support
  * ------------------------------------------------------------------ */
@@ -650,19 +644,6 @@
                 or the selected cycle (initial cell of a column).</p>"
        @close="closeHelp1" />
   </Teleport>
-
-  <div v-if="clickedCellInfo" class="modal-overlay" @click.self="clickedCellInfo = null">
-    <div class="modal">
-      <div class="modal-header">
-        Cell Info
-        <button class="close-btn" @click="clickedCellInfo = null">x</button>
-      </div>
-      <p><strong>Instruction:</strong> {{ clickedCellInfo.instrID }}</p>
-      <p><strong>Cycle:</strong>       {{ clickedCellInfo.cycle }}</p>
-      <p>{{ clickedCellInfo.text }}</p>
-    </div>
-  </div>
-
 </template>
 
 <style scoped>
