@@ -17,7 +17,7 @@
   const defaultOptions = {
     instructions:  20,
     cycles:        40,
-    showPorts:     false,
+    full:          false,
     canvasScale:   1,
     canvasOffsetX: 0,
     canvasOffsetY: 0
@@ -103,9 +103,9 @@
     nextTick(() => {
       isComponentMounted = true;
       unwatch = watch(
-        () => [timelineOptions.instructions, timelineOptions.cycles, timelineOptions.showPorts,
+        () => [timelineOptions.instructions, timelineOptions.cycles, timelineOptions.full,
                timelineOptions.canvasScale, timelineOptions.canvasOffsetX, timelineOptions.canvasOffsetY ],
-            ([newInstructions, newCycles, newShowPorts], [oldInstructions, oldCycles, oldShowPorts]) => {
+            ([newInstructions, newCycles], [oldInstructions, oldCycles]) => {
               if (!timelineCanvas.value || !timeline.value) return
               if (newCycles != oldCycles) {
                 const clamped = Math.min(Math.max(newCycles, 1), 100)
@@ -148,7 +148,7 @@
 * UI actions
 * ------------------------------------------------------------------ */
 
-  function togglePorts()  { timelineOptions.showPorts = !timelineOptions.showPorts }
+  function toggleFull()  { timelineOptions.full = !timelineOptions.full }
 
   function getPortUsage(timeline) {
     const usage = {};
@@ -617,12 +617,12 @@
         </div>
 
         <div class="iters-group">
-          <button class="blue-button" :class="{ active: timelineOptions.showPorts }" :aria-pressed="timelineOptions.showPorts"
-            title="Show/Hide Resource Usage"
-            id="timeline-show-ports"
-            @click="togglePorts">
-            <span v-if="timelineOptions.showPorts">✔ </span>
-            Port Usage
+          <button class="blue-button" :class="{ active: timelineOptions.full }" :aria-pressed="timelineOptions.full"
+            title="Toggle Full Timeline View"
+            id="timeline-full"
+            @click="toggleFull">
+            <span v-if="timelineOptions.full">✔ </span>
+            Full Timeline
           </button>
         </div>
       </div>
@@ -644,8 +644,10 @@
   <Teleport to="body">
     <HelpComponent v-if="showHelp1" :position="helpPosition" title="Timeline"
        text= "<p>The <strong>Timeline</strong> section shows the program execution over time.
-                The number of <em>loop iterations</em> can be modified, and the timeline can be <strong>zoomed in/out</strong>.</p>
-             <p><strong>Click</strong> on the timeline to activate it, then use the <strong>arrow keys</strong> to move left/right and up/down. Hover over the grid to see basic info about the selected cell, and <em>click</em> to obtain more detailed information.</p>"
+                The dimension of the timeline, <em>instructions</em>x<em>cycles</em> can be modified, and you can choose to see the <strong>full timeline</strong></p>
+              <p><strong>Grab</strong> the timeline and move the mouse left/right and up/down, and use the mouse wheel to zoom in/out.
+                Hover over the grid to see specific info about the selected cell, the selected instruction (initial cell of a row),
+                or the selected cycle (initial cell of a column).</p>"
        @close="closeHelp1" />
   </Teleport>
 

@@ -952,7 +952,7 @@
 
   function startHold(action) {
     const INITIAL_DELAY   = 400;   // tiempo hasta que empieza la repetición
-    const REPEAT_INTERVAL = 150; // velocidad de repetición
+    const REPEAT_INTERVAL = 100;   // velocidad de repetición
 
     action()    // first click
 
