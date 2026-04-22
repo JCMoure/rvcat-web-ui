@@ -455,7 +455,7 @@
 
     let init   = startCycle
     let length = states.length
-    ctx.strokeRect( padY,m, padY + (row+1) * cellH, length*cellW, cellH )
+    ctx.strokeRect( padY, padY + (row+1) * cellH, length*cellW, cellH )
 
     // highlight column (cycle)
 
