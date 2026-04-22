@@ -381,7 +381,7 @@
 
       // calculate column init and column length for this cycle i
       let initRow   = 0
-      while (initRow < totalInstr && (instructions[initRow][2] + instructions[initRow][4].length < i)) initRow++
+      while (initRow < totalInstr && (instructions[initRow][2] + instructions[initRow][4].length <= i)) initRow++
       let lengthRow = 1
       while (initRow+lengthRow < totalInstr && instructions[initRow+lengthRow][2] <= i) lengthRow++
 
