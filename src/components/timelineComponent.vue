@@ -78,7 +78,7 @@
     }
     try {
       let timelineRVCAT       = JSON.parse(data)
-      timelineRVCAT.portUsage = getPortUsage(timelineRVCAT);
+      getPortUsage(timelineRVCAT);
       timeline.value = timelineRVCAT
       timelineOptions.canvasOffsetX = 0
       timelineOptions.canvasOffsetY = 0
@@ -151,22 +151,26 @@
   function toggleFull()  { timelineOptions.full = !timelineOptions.full }
 
   function getPortUsage(timeline) {
-    const usage = {};
-    for (const [iter, instrIdx, startCycle, port, states] of timeline.instructions) {
+    const usagePorts = {};
+    const usageInstr = Array.from({ length: timeline.cycles }, () => []);
+
+    for (const [rowIdx, [iter, instrIdx, startCycle, port, states]] of timeline.instructions.entries()) {
       const eIndex = states.indexOf("E");
-      if (eIndex < 0) continue;
+      if (eIndex < 0) alert("Timeline problem: all instructions must traverse an E state");
       const cycle = startCycle + eIndex;
-      (usage[port] ??= []).push(cycle);
+      usageInstr[cycle].push(rowIdx)
+      (usagePorts[port] ??= []).push(cycle);
     }
-    for (const p in usage) {
-      usage[p].sort((a,b)=>a-b);
+    for (const p in usagePorts) {
+      usagePorts[p].sort((a,b)=>a-b);
     }
-    return usage;
+    timelineRVCAT.portUsagePorts = usagePorts;
+    timelineRVCAT.portUsageInstr = usageInstr;
   }
 
   function buildPortTimelineMatrix(timeline) {
 
-    const portUsage = timeline.portUsage || getPortUsage(timeline);
+    const portUsage = timeline.portUsagePorts;
 
     // Determinar número de ciclos
     const maxCycle = Math.max(
@@ -313,7 +317,7 @@
     overlayCanvas.value.width  = rect.width
     overlayCanvas.value.height = rect.height
 
-    const { cycles, instructions, portUsage } = timeline.value
+    const { cycles, instructions, portUsagePorts, portUsageInstr } = timeline.value
 
     totalCycles = Math.min(cycles, timelineOptions.cycles)
     totalInstr  = Math.min(instructions.length, timelineOptions.instructions)
@@ -376,9 +380,9 @@
 
       const portsUsed = []
 
-      let sequenceOfPorts = Object.keys(portUsage)
+      let sequenceOfPorts = Object.keys(portUsagePorts)
         .filter(p => {
-          const usage = portUsage[p]
+          const usage = portUsagePorts[p]
           return Array.isArray(usage)
             ? usage.includes(i)
             : i in usage
@@ -388,7 +392,7 @@
 
       sequenceOfPorts = `Ports used: ${sequenceOfPorts || 'none'}\nROB usage: ${lengthRow}`
 
-      portsUsed.push(3)
+      portsUsed = portUsageInstr[i]
 
       interactiveCells.push({
         x, y, colIdx: i, rowIdx: -1,   /* indicates 1st row of cycles */
