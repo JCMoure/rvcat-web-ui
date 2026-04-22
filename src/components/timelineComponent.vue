@@ -516,8 +516,8 @@
       return
     }
 
-    const { rowIdx: row, colIdx: col, instrIdx, initCol, lengthCol, initRow, lengthRow,
-            char, port, first_exec_stage, critical, sequenceOfPorts } = hitCell
+    const { rowIdx: row, colIdx: col, initCol, lengthCol, initRow, lengthRow,
+            char, port, first_exec_stage, critical, sequenceOfPorts, instrIdx } = hitCell
 
     if (row === -1) {
       simState.highlightedPort = -1
@@ -530,7 +530,7 @@
       }
       hoverRow = null
       hoverCol = null
-      drawHoverOverlay(null, col, null, null, initCol, lengthCol)
+      drawHoverOverlay(null, col, initRow, lengthRow, initCol, lengthCol)
       adjustTooltipPosition(e)
       return
     }
