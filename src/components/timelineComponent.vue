@@ -688,7 +688,7 @@
            :style="{ top: hoverInfo.y + 'px', left: hoverInfo.x + 'px' }">
         <div v-if="hoverInfo.state" :class="{ critical: hoverInfo.critical }">
             {{ hoverInfo.state }}
-            <span v-if="hoverInfo.critical">\n(in Critical Path)</span>
+            <span v-if="hoverInfo.critical">(in Critical Path)</span>
         </div>
       </div>
     </div>
