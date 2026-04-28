@@ -348,7 +348,7 @@ nav ul li {
   grid-auto-rows:        40% 60%;
   gap:          0.5vh;
   width:        100vw;
-  height:        98vh;
+  height:       fit-content;
   margin-top:   0.5vh;
   margin-right: 0.5vh;
   background:   #e3e3e3;
@@ -371,6 +371,7 @@ nav ul li {
   top:      40px;
   left:     0;
   right:    0;
+  height:   200vh;
   bottom:   0;
   z-index:  999;
   padding:  0;
