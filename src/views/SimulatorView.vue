@@ -348,7 +348,6 @@ nav ul li {
   grid-auto-rows:        40% 60%;
   gap:          0.5vh;
   width:        100vw;
-  height:       fit-content;
   margin-top:   0.5vh;
   margin-right: 0.5vh;
   background:   #e3e3e3;
@@ -356,6 +355,15 @@ nav ul li {
   box-sizing:   border-box;
   transition:   all 0.3s ease;
 }
+
+.container.processor {
+  height:  fit-content;
+}
+
+.container.program {
+  height:  200vh;
+}
+
 
 .processor { grid-column: 1; grid-row: 1; }
 .program   { grid-column: 1; grid-row: 2; }
