@@ -12,7 +12,7 @@
       "source3": "",
       "constant": "",
       "stride": 1,
-      "lanes": 0
+      "lanes": 1
     },
     {
       "text": "sum = sum + tmp",
@@ -36,7 +36,7 @@
       "source3": "",
       "constant": "",
       "stride": 1,
-      "lanes": 0
+      "lanes": 1
     },
     {
       "text": "sum = sum + tmp",
