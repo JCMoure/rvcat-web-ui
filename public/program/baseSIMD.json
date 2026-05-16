@@ -1,0 +1,88 @@
+{
+  "name": "BaseSIMD",
+  "instruction_list": [
+    {
+      "text": "tmp[0:3] = V[i:i+3]",
+      "type": "VMEM",
+      "oper": "LOAD",
+      "size": "word",
+      "destin": "tmp",
+      "source1": "i",
+      "source2": "V",
+      "source3": "",
+      "constant": "",
+      "stride": 1,
+      "lanes": 4
+    },
+    {
+      "text": "sum[0:3] = sum[0:3] + tmp[0:3]",
+      "type": "VFLOAT",
+      "oper": "ADD",
+      "size": "single",
+      "destin": "sum",
+      "source1": "sum",
+      "source2": "tmp",
+      "source3": "",
+      "constant": "",
+      "lanes": 4
+    },
+    {
+      "text": "tmp[0:3] = W[i:i+3]",
+      "type": "VMEM",
+      "oper": "LOAD",
+      "size": "word",
+      "destin": "tmp",
+      "source1": "i",
+      "source2": "W",
+      "source3": "",
+      "constant": "",
+      "stride": 1,
+      "lanes": 4
+    },
+    {
+      "text": "sum[0:3] = sum[0:3] + tmp[0:3]",
+      "type": "VFLOAT",
+      "oper": "ADD",
+      "size": "single",
+      "destin": "sum",
+      "source1": "sum",
+      "source2": "tmp",
+      "source3": "",
+      "constant": "",
+      "lanes": 4
+    },
+    {
+      "text": "i = i + 4",
+      "type": "INT",
+      "oper": "ARITH",
+      "size": "word",
+      "destin": "i",
+      "source1": "i",
+      "source2": "",
+      "source3": "",
+      "constant": "4"
+    },
+    {
+      "text": "c = i != N",
+      "type": "INT",
+      "oper": "ARITH",
+      "size": "word",
+      "destin": "c",
+      "source1": "i",
+      "source2": "N",
+      "source3": "",
+      "constant": ""
+    },
+    {
+      "text": "if c go back",
+      "type": "BRANCH",
+      "oper": "",
+      "size": "",
+      "destin": "",
+      "source1": "c",
+      "source2": "",
+      "source3": "",
+      "constant": ""
+    }
+  ]
+}
