@@ -444,7 +444,9 @@
         if (i >= startCycle && i < startCycle+lengthCol) {
           ch  = states[i-startCycle];
           let critical         = critical_cycles.includes(i - startCycle)
-          let first_exec_stage = (ch == 'E' && states[i-startCycle-1] != 'E')
+          let first_exec_stage = (ch == 'E' && states[i-startCycle-1] != 'E') ||
+                                 (ch == 'L' && states[i-startCycle-1] != 'L') ||
+                                 (ch == 'S' && states[i-startCycle-1] != 'S')
 
           if (critical) currColor = "red"
 
