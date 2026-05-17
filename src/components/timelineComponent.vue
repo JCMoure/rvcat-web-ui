@@ -159,9 +159,9 @@
       const lIndex = states.indexOf("L");
       const sIndex = states.indexOf("S");
 
-      eIndex = eIndex >= 0 ? eIndex : (lIndex >= 0 ? lIndex : sIndex);
-      if (eIndex < 0) alert("Timeline problem: all instructions must traverse an E/L/S state");
-      const cycle = startCycle + eIndex;
+      const Index = eIndex >= 0 ? eIndex : (lIndex >= 0 ? lIndex : sIndex);
+      if (Index < 0) alert("Timeline problem: all instructions must traverse an E/L/S state");
+      const cycle = startCycle + Index;
 
       // Verificar que cycle esté dentro del rango
       if (cycle >= 0 && cycle < timeline.cycles) {
