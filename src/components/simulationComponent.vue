@@ -906,11 +906,11 @@
           </span>
         </div>
         <div class="simulation-inline-item">
-          <label for="RdMiss">Read Misses:</label>
+          <label for="RdMiss">RdMisses:</label>
           <span id="RdMiss-output" title="Total Cache Read Misses">{{ formattedResults.loads }}</span>
         </div>
         <div class="simulation-inline-item">
-          <label for="WrMiss">Write Misses:</label>
+          <label for="WrMiss">WrMisses:</label>
           <span id="WrMiss-output" title="Total Cache Write Misses">{{ formattedResults.stores }}</span>
         </div>
         <div class="simulation-inline-item">
