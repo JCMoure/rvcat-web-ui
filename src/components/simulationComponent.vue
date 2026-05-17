@@ -382,8 +382,8 @@
     const ipc         = totalInstrs / totalCycles
     const read_misses = results["read_misses"]
     const write_misses= results["write_misses"]
-    const MM_reads    = results["MM_reads"]
-    const MM_writes   = results["MM_writes"]
+    const MM_reads    = results["MM_Reads"]
+    const MM_writes   = results["MM_Writes"]
 
     let rdMiss;
     const formateado = read_misses.toLocaleString();
