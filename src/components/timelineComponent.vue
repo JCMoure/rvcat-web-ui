@@ -418,7 +418,7 @@
     // ************************************************************************************
     //   for each inst. & for each cycle, write cell into canvas and push interactive cells
     // ************************************************************************************
-    for (const [rowIdx, [iter, instrIdx, startCycle, port, states, critical_cycles]] of instructions.entries())
+    for (const [rowIdx, [iter, instrIdx, startCycle, port, states, critical_cycles, addr]] of instructions.entries())
     {
       if (rowIdx >= totalInstr) return
 
@@ -456,7 +456,8 @@
             first_exec_stage,
             port,
             instrIdx,
-            portsUsed: portsUsedList[i]
+            portsUsed: portsUsedList[i],
+            addr
           })
         }
 
@@ -545,7 +546,8 @@
     }
 
     const { rowIdx: row, colIdx: col, initCol, lengthCol, initRow, lengthRow,
-            char, port, first_exec_stage, critical, sequenceOfPorts, instrIdx, portsUsed } = hitCell
+            char, port, first_exec_stage, critical, sequenceOfPorts,
+            instrIdx, portsUsed, addr } = hitCell
 
     if (row === -1) {
       simState.highlightedPort = -1
@@ -575,7 +577,7 @@
       hoverInfo.value = {
         x:        e.clientX + 10,
         y:        e.clientY + 10,
-        state:    charToProcessingState(char, first_exec_stage ? port : null),
+        state:    charToProcessingState(char, first_exec_stage ? port : null, addr),
         critical: critical
       }
       adjustTooltipPosition(e)
