@@ -346,10 +346,10 @@ nav ul li {
   display:               grid;
   grid-template-columns: 34% 65.5%;
   grid-auto-rows:        40% 60%;
-  gap:          0.5vh;
+  gap:          0.3vh;
   width:        100vw;
-  margin-top:   0.5vh;
-  margin-right: 0.5vh;
+  margin-top:   0.3vh;
+  margin-right: 0.3vh;
   background:   #e3e3e3;
   overflow:     hidden;
   box-sizing:   border-box;
@@ -361,9 +361,12 @@ nav ul li {
 }
 
 .container.program {
-  height:  200vh;
+  height:  fit-content;
 }
 
+.container.results {
+  height:  max-content;
+}
 
 .processor { grid-column: 1; grid-row: 1; }
 .program   { grid-column: 1; grid-row: 2; }

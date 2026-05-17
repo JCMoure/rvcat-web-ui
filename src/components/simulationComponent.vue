@@ -375,7 +375,9 @@
       cycles:       results["total_cycles"]?.toLocaleString() ?? 'X',
       cpi:          results["cycles_per_iteration"]?.toFixed(2) ?? 'X',
       ipc:          results["ipc"]?.toFixed(3) ?? 'X',
-      loads:        results["total_loads"]?.toLocaleString() ?? 'X'
+      loads:        results["read_misses"]?.toLocaleString() ?? 'X',
+      stores:       results["write_misses"]?.toLocaleString() ?? 'X',
+      MM:           results["MM_usage"]?.toLocaleString() ?? 'X'
     };
   });
 
@@ -872,8 +874,16 @@
           </span>
         </div>
         <div class="simulation-inline-item">
-          <label for="Loads">Loads:</label>
-          <span id="Loads-output" title="Total executed LOADs">{{ formattedResults.loads }}</span>
+          <label for="RdMiss">Read Misses:</label>
+          <span id="RdMiss-output" title="Total Cache Read Misses">{{ formattedResults.loads }}</span>
+        </div>
+        <div class="simulation-inline-item">
+          <label for="WrMiss">Write Misses:</label>
+          <span id="WrMiss-output" title="Total Cache Write Misses">{{ formattedResults.stores }}</span>
+        </div>
+        <div class="simulation-inline-item">
+          <label for="MM">MM accesses:</label>
+          <span id="MM-output" title="Total MM accesses">{{ formattedResults.MM }}</span>
         </div>
       </div>
     </div>
