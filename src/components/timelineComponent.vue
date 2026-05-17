@@ -156,7 +156,11 @@
 
     for (const [rowIdx, [iter, instrIdx, startCycle, port, states]] of timeline.instructions.entries()) {
       const eIndex = states.indexOf("E");
-      if (eIndex < 0) alert("Timeline problem: all instructions must traverse an E state");
+      const lIndex = states.indexOf("L");
+      const sIndex = states.indexOf("S");
+
+      eIndex = eIndex >= 0 ? eIndex : (lIndex >= 0 ? lIndex : sIndex);
+      if (eIndex < 0) alert("Timeline problem: all instructions must traverse an E/L/S state");
       const cycle = startCycle + eIndex;
 
       // Verificar que cycle esté dentro del rango
