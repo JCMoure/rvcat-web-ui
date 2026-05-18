@@ -244,32 +244,34 @@ onUnmounted(() => {
 
     <main class="container" :class="containerClasses">
 
-      <div v-if="checkOK" v-show="isProcessorFullscreen || isNotFullscreen"
-          class="grid-item processor" :class="{ 'fullscreen': isProcessorFullscreen }"
+      <div v-if="checkOK" v-show="isNotFullscreen"
+          class="grid-item process"
+          id="process-panel"
+        >
+        <processorComponent @requestSwitchFull="toggleFullScreen"/>
+        <programComponent :active-view="currentKey" @requestSwitchFull="toggleFullScreen"/>
+      </div>
+
+      <div v-if="checkOK" v-show="isProcessorFullscreen"
+          class="grid-item processor"
           id="processor-panel"
         >
         <processorComponent :is-fullscreen="isProcessorFullscreen" @requestSwitchFull="toggleFullScreen"/>
-        <programComponent :is-fullscreen="isProgramFullscreen" :active-view="currentKey"
-                          @requestSwitchFull="toggleFullScreen"
-        />
       </div>
-
-      <!--
-      <div v-if="checkOK" v-show="isProgramFullscreen || isNotFullscreen"
-        class="grid-item program" :class="{ 'fullscreen': isProgramFullscreen }"
+      <div v-if="checkOK" v-show="isProgramFullscreen"
+        class="grid-item program"
         id="program-panel"
         >
         <programComponent :is-fullscreen="isProgramFullscreen" :active-view="currentKey"
                           @requestSwitchFull="toggleFullScreen"
         />
       </div>
-       -->
 
       <div v-if="checkOK" v-show="isTutorialFullscreen"
         class="grid-item tutorial" :class="{ 'fullscreen': isTutorialFullscreen }"
         id="tutorial-panel"
         >
-        <tutorialEditor     :is-fullscreen="isTutorialFullscreen"  @requestSwitchFull="toggleFullScreen"/>
+        <tutorialEditor :is-fullscreen="isTutorialFullscreen"  @requestSwitchFull="toggleFullScreen"/>
       </div>
 
       <div v-if="checkOK" v-show= "isNotFullscreen"
@@ -349,11 +351,11 @@ nav ul li {
 .container {
   position:              relative;
   display:               grid;
-  grid-template-columns: 34% 65.5%;
+  grid-template-columns: 33% 66.5%;
   /* grid-auto-rows:        40% 60%; */
   gap:          0.3vh;
   width:        100vw;
-  min-height:   100vh;
+  min-height:   130vh;
   margin-top:   0.3vh;
   margin-right: 0.3vh;
   background:   #e3e3e3;
@@ -362,16 +364,18 @@ nav ul li {
   transition:   all 0.3s ease;
 }
 
+/*
 .container.processor,
 .container.program,
 .container.results {
-  min-height: 100vh; /* Mínimo toda la ventana, pero crece si hay más contenido */
-}
+  min-height: 100vh;
+}*/
 
 .processor { grid-column: 1; grid-row: 1; }
 .program   { grid-column: 1; grid-row: 1; }
 .tutorial  { grid-column: 1; grid-row: 1; }
 .results   { grid-column: 2; grid-row: 1; min-width: 0;}
+.process   { grid-column: 1; grid-row: 1; min-width: 0;}
 
 .container.processor-fullscreen,
 .container.program-fullscreen,
@@ -399,18 +403,15 @@ nav ul li {
   min-width:     0;
 }
 
-.grid-item.processor,
-.grid-item.program,
-.grid-item.results,
-.grid-item.tutorial {
+.grid-item.process {
   /* display: grid; */
   margin-bottom: 0;
   overflow: auto;
 }
 
-.grid-item.processor.fullscreen,
-.grid-item.program.fullscreen,
-.grid-item.tutorial.fullscreen {
+.grid-item.processor,
+.grid-item.program,
+.grid-item.tutorial {
   grid-column:   1 / span 3;
   grid-row:      1;
   height:        100%;
@@ -437,6 +438,33 @@ nav ul li {
 .container.tutorial-fullscreen .grid-item.program,
 .container.tutorial-fullscreen .grid-item.results {
   display: none;
+}
+
+.grid-item.processor,
+.grid-item.program,
+.grid-item.tutorial {
+  padding:       0px;
+  max-height: 2400px;
+  margin:     0 auto;
+}
+
+.grid-item.processor::-webkit-scrollbar,
+.grid-item.program::-webkit-scrollbar,
+.grid-item.tutorial::-webkit-scrollbar {
+  width: 10px;
+}
+
+.grid-item.processor::-webkit-scrollbar-track,
+.grid-item.program::-webkit-scrollbar-track,
+.grid-item.tutorial::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+.grid-item.processor::-webkit-scrollbar-thumb,
+.grid-item.program::-webkit-scrollbar-thumb,
+.grid-item.tutorial::-webkit-scrollbar-thumb {
+  background:    #888;
+  border-radius: 5px;
 }
 
 .blur-overlay {
@@ -476,38 +504,6 @@ nav ul li {
 
 @keyframes spin {
   to { transform: rotate(360deg); }
-}
-
-.grid-item.processor.fullscreen,
-.grid-item.program.fullscreen  {
-  padding:       0px;
-  max-height: 2400px;
-  margin:     0 auto;
-}
-
-.grid-item.tutorial.fullscreen  {
-  padding:       0px;
-  max-height: 2400px;
-  margin:     0 auto;
-}
-
-.grid-item.processor.fullscreen::-webkit-scrollbar,
-.grid-item.program.fullscreen::-webkit-scrollbar,
-.grid-item.tutorial.fullscreen::-webkit-scrollbar {
-  width: 10px;
-}
-
-.grid-item.processor.fullscreen::-webkit-scrollbar-track,
-.grid-item.program.fullscreen::-webkit-scrollbar-track,
-.grid-item.tutorial.fullscreen::-webkit-scrollbar-track {
-  background: #f1f1f1;
-}
-
-.grid-item.processor.fullscreen::-webkit-scrollbar-thumb,
-.grid-item.program.fullscreen::-webkit-scrollbar-thumb,
-.grid-item.tutorial.fullscreen::-webkit-scrollbar-thumb {
-  background:    #888;
-  border-radius: 5px;
 }
 
 </style>

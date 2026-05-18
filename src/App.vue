@@ -34,7 +34,7 @@
     height:   100%;
     width:    100%;
     overflow: auto;
-    padding:  2px 2px;
+    padding:  1px;
     z-index:  10;
     position: relative;
     background:    white;
