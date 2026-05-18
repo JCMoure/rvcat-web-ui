@@ -362,11 +362,11 @@ nav ul li {
 }
 
 .container.processor {
-  height:  fit-content;
+  height:  max-content;
 }
 
 .container.program {
-  height:  fit-content;
+  height:  max-content;
 }
 
 .container.results {
