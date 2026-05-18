@@ -607,13 +607,14 @@
       op_rows += "</TR>"
     }
 
+    let cache_row = ""
     // ---- Cache configuration ----
     if (CacheBlocks > 0) {
-      let cache_row = `<TR>
+      cache_row = `<TR>
         <TD COLSPAN="${port_ids.length}" BGCOLOR="#eeeeee" HREF="#" ID="cache" TITLE="Edit cache configuration"><FONT POINT-SIZE="20">🔄&nbsp;<B>Cache:</B>&nbsp;${CacheBlocks} blocks&nbsp;x&nbsp;${CacheBlockSize} bytes&nbsp;&nbsp;Penalty: ${CachePenalty}&nbsp;IssueTime: ${CacheIssueTime}</FONT></TD>
       </TR>`
     } else {
-      let cache_row = `<TR>
+      cache_row = `<TR>
         <TD COLSPAN="${port_ids.length}" BGCOLOR="#eeeeee" HREF="#" ID="cache" TITLE="Edit cache configuration"><FONT POINT-SIZE="20">🔄&nbsp;<B>Cache:</B>&nbsp;No cache</FONT></TD>
       </TR>`
     }
