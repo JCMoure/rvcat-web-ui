@@ -244,7 +244,7 @@ onUnmounted(() => {
 
     <main class="container" :class="containerClasses">
 
-      <div v-if="checkOK" v-show="isNotFullscreen"
+      <div class="components-wrapper" v-if="checkOK" v-show="isNotFullscreen"
           class="grid-item process"
           id="process-panel"
         >
@@ -352,7 +352,6 @@ nav ul li {
   position:              relative;
   display:               grid;
   grid-template-columns: 33% 66.5%;
-  /* grid-auto-rows:        40% 60%; */
   gap:          0.3vh;
   width:        100vw;
   min-height:   130vh;
@@ -363,13 +362,6 @@ nav ul li {
   box-sizing:   border-box;
   transition:   all 0.3s ease;
 }
-
-/*
-.container.processor,
-.container.program,
-.container.results {
-  min-height: 100vh;
-}*/
 
 .processor { grid-column: 1; grid-row: 1; }
 .program   { grid-column: 1; grid-row: 1; }
@@ -403,10 +395,18 @@ nav ul li {
   min-width:     0;
 }
 
+.components-wrapper {
+  display: flex;
+  flex-direction: column;
+}
+
+.components-wrapper > * {
+  width: 100%;
+}
+
 .grid-item.process {
-  /* display: grid; */
   margin-bottom: 0;
-  overflow: auto;
+  overflow: hidden;
 }
 
 .grid-item.processor,
