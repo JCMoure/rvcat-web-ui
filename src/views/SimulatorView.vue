@@ -353,7 +353,7 @@ nav ul li {
   /* grid-auto-rows:        40% 60%; */
   gap:          0.3vh;
   width:        100vw;
-  min-height:   140vh;
+  min-height:   100vh;
   margin-top:   0.3vh;
   margin-right: 0.3vh;
   background:   #e3e3e3;
@@ -392,6 +392,7 @@ nav ul li {
 .grid-item {
   display:       flex;
   flex-direction: column;
+  flex-shrink:   0;
   position:      relative;
   background:    white;
   border-radius: 3px;
