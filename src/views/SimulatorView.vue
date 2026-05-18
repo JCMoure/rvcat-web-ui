@@ -397,10 +397,26 @@ nav ul li {
 .components-wrapper {
   display: flex;
   flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-start;
+  gap: 0;
 }
 
 .components-wrapper > * {
   width: 100%;
+  margin: 0;
+  padding: 0;
+  flex-shrink: 0;
+  flex-grow: 0;
+}
+
+.components-wrapper processorComponent,
+.components-wrapper programComponent {
+  align-self: flex-start;
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+  min-height: auto;
+  height: auto;
 }
 
 .grid-item.processor,
