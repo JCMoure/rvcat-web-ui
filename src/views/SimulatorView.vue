@@ -249,8 +249,12 @@ onUnmounted(() => {
           id="processor-panel"
         >
         <processorComponent :is-fullscreen="isProcessorFullscreen" @requestSwitchFull="toggleFullScreen"/>
+        <programComponent :is-fullscreen="isProgramFullscreen" :active-view="currentKey"
+                          @requestSwitchFull="toggleFullScreen"
+        />
       </div>
 
+      <!--
       <div v-if="checkOK" v-show="isProgramFullscreen || isNotFullscreen"
         class="grid-item program" :class="{ 'fullscreen': isProgramFullscreen }"
         id="program-panel"
@@ -259,6 +263,7 @@ onUnmounted(() => {
                           @requestSwitchFull="toggleFullScreen"
         />
       </div>
+       -->
 
       <div v-if="checkOK" v-show="isTutorialFullscreen"
         class="grid-item tutorial" :class="{ 'fullscreen': isTutorialFullscreen }"
@@ -345,7 +350,7 @@ nav ul li {
   position:              relative;
   display:               grid;
   grid-template-columns: 34% 65.5%;
-  grid-auto-rows:        40% 60%;
+  /* grid-auto-rows:        40% 60%; */
   gap:          0.3vh;
   width:        100vw;
   margin-top:   0.3vh;
@@ -369,9 +374,9 @@ nav ul li {
 }
 
 .processor { grid-column: 1; grid-row: 1; }
-.program   { grid-column: 1; grid-row: 2; }
+.program   { grid-column: 1; grid-row: 1; }
 .tutorial  { grid-column: 1; grid-row: 1; }
-.results   { grid-column: 2; grid-row: 1 / 3; min-width: 0;}
+.results   { grid-column: 2; grid-row: 1; min-width: 0;}
 
 .container.processor-fullscreen,
 .container.program-fullscreen,
