@@ -361,16 +361,10 @@ nav ul li {
   transition:   all 0.3s ease;
 }
 
-.container.processor {
-  height:  max-content;
-}
-
-.container.program {
-  height:  max-content;
-}
-
+.container.processor,
+.container.program,
 .container.results {
-  height:  max-content;
+  min-height: 100vh; /* Mínimo toda la ventana, pero crece si hay más contenido */
 }
 
 .processor { grid-column: 1; grid-row: 1; }
