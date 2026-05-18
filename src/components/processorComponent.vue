@@ -461,6 +461,10 @@
     const sched    = process.sched
     const dispatch = process.dispatch || 1
     const retire   = process.retire || 1
+    const CachePenalty   = process.mPenalty || 1
+    const CacheIssueTime = process.mIssueTime || 1
+    const CacheBlocks    = process.nBlocks || 0
+    const CacheBlockSize = process.blkSize || 32
 
     function type_color(type) {
       if (type === "INT")    return "#d6e4ff"
@@ -596,6 +600,11 @@
       op_rows += "</TR>"
     }
 
+    // ---- Cache configuration ----
+    let cache_row = `<TR>
+       <TD COLSPAN="${port_ids.length}" BGCOLOR="#eeeeee" HREF="#" ID="cache" TITLE="Edit cache configuration"><FONT POINT-SIZE="20">🔄&nbsp;<B>Cache:</B>&nbsp;${CacheBlocks} blocks&nbsp;x&nbsp;${CacheBlockSize} bytes&nbsp;&nbsp;Penalty: ${CachePenalty}&nbsp;IssueTime: ${CacheIssueTime}</FONT></TD>
+    </TR>`
+
     // ---- Retire ----
     let reg_row = `<TR>
       <TD WIDTH="538" COLSPAN="${port_ids.length}" BGCOLOR="#eeeeee" HREF="#" ID="retire" TITLE="Edit retire width"><FONT POINT-SIZE="20">🔄&nbsp;<B>Retire:</B>&nbsp;${retire}/cycle&nbsp;&nbsp;<B>(Architected Registers)</B></FONT></TD>
@@ -611,6 +620,7 @@
               ${wb_row}
               ${port_header}
               ${op_rows}
+              ${cache_row}
               ${reg_row}
             </TABLE>
           >
