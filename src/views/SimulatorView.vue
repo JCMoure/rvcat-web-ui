@@ -353,10 +353,11 @@ nav ul li {
   /* grid-auto-rows:        40% 60%; */
   gap:          0.3vh;
   width:        100vw;
+  min-height:   140vh;
   margin-top:   0.3vh;
   margin-right: 0.3vh;
   background:   #e3e3e3;
-  overflow:     hidden;
+  overflow:     auto;
   box-sizing:   border-box;
   transition:   all 0.3s ease;
 }
@@ -389,6 +390,8 @@ nav ul li {
 }
 
 .grid-item {
+  display:       flex;
+  flex-direction: column;
   position:      relative;
   background:    white;
   border-radius: 3px;
@@ -399,8 +402,9 @@ nav ul li {
 .grid-item.program,
 .grid-item.results,
 .grid-item.tutorial {
-  display: grid;
-  overflow: hidden;
+  /* display: grid; */
+  margin-bottom: 0;
+  overflow: auto;
 }
 
 .grid-item.processor.fullscreen,
