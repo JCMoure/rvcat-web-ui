@@ -245,7 +245,6 @@ onUnmounted(() => {
     <main class="container" :class="containerClasses">
 
       <div class="components-wrapper" v-if="checkOK" v-show="isNotFullscreen"
-          class="grid-item process"
           id="process-panel"
         >
         <processorComponent @requestSwitchFull="toggleFullScreen"/>
@@ -402,11 +401,6 @@ nav ul li {
 
 .components-wrapper > * {
   width: 100%;
-}
-
-.grid-item.process {
-  margin-bottom: 0;
-  overflow: hidden;
 }
 
 .grid-item.processor,
