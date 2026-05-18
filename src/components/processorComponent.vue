@@ -66,6 +66,8 @@
   }
 
   const activeField = ref("rob");
+  let cacheConfigOptions = ["cache_nBlk", "cache_BlkSz", "cache_mPenalty", "cache_mIssueTime"]
+  let currentCacheOption = 0
 
   const FIELD_CONFIG = {
     rob: {
@@ -82,12 +84,33 @@
       max: 9,
       model: "dispatch"
     },
-    cache: {
-      label: "Cache:",
-      title: "Cache configuration",
+    cache_nBlk: {
+      label: "nBlocks:",
+      title: "Number of Cache blocks (0 to 32)",
       min: 0,
-      max: 100,
+      max: 32,
       model: "nBlocks"
+    },
+    cache_BlkSz: {
+      label: "BlkSize:",
+      title: "Cache block size (1 to 128 bytes)",
+      min: 1,
+      max: 128,
+      model: "blkSize"
+    },
+    cache_mPenalty: {
+      label: "missPenalty:",
+      title: "Cache Miss penalty (cycles added to memory operations when cache miss, 1 to 99)",
+      min: 1,
+      max: 99,
+      model: "mPenalty"
+    },
+    cache_mIssueTime: {
+      label: "mIssueTime:",
+      title: "Memory Issue Time (minimum time between memory accesses, 1 to 99)",
+      min: 1,
+      max: 99,
+      model: "mIssueTime"
     },
     retire: {
       label: "Retire:",
@@ -666,7 +689,6 @@
               case 'dispatch':
               case 'rob':
               case 'retire':
-              case 'cache':
                 activeField.value = action
                 break
 
@@ -681,6 +703,11 @@
               case 'port':
                 const port = g.id.slice(2)
                 console.log('Port clicked:', port)
+                break
+
+              case 'cache':
+                currentCacheOption = (currentCacheOption + 1) % cacheConfigOptions.length;
+                activeField.value  = cacheConfigOptions[currentCacheOption];
                 break
 
               case 'op':
