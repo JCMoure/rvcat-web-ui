@@ -82,6 +82,13 @@
       max: 9,
       model: "dispatch"
     },
+    cache: {
+      label: "Cache:",
+      title: "Cache configuration",
+      min: 0,
+      max: 100,
+      model: "nBlocks"
+    },
     retire: {
       label: "Retire:",
       title: "Retire width (1 to 9)",
@@ -601,9 +608,15 @@
     }
 
     // ---- Cache configuration ----
-    let cache_row = `<TR>
-       <TD COLSPAN="${port_ids.length}" BGCOLOR="#eeeeee" HREF="#" ID="cache" TITLE="Edit cache configuration"><FONT POINT-SIZE="20">🔄&nbsp;<B>Cache:</B>&nbsp;${CacheBlocks} blocks&nbsp;x&nbsp;${CacheBlockSize} bytes&nbsp;&nbsp;Penalty: ${CachePenalty}&nbsp;IssueTime: ${CacheIssueTime}</FONT></TD>
-    </TR>`
+    if (CacheBlocks > 0) {
+      let cache_row = `<TR>
+        <TD COLSPAN="${port_ids.length}" BGCOLOR="#eeeeee" HREF="#" ID="cache" TITLE="Edit cache configuration"><FONT POINT-SIZE="20">🔄&nbsp;<B>Cache:</B>&nbsp;${CacheBlocks} blocks&nbsp;x&nbsp;${CacheBlockSize} bytes&nbsp;&nbsp;Penalty: ${CachePenalty}&nbsp;IssueTime: ${CacheIssueTime}</FONT></TD>
+      </TR>`
+    } else {
+      let cache_row = `<TR>
+        <TD COLSPAN="${port_ids.length}" BGCOLOR="#eeeeee" HREF="#" ID="cache" TITLE="Edit cache configuration"><FONT POINT-SIZE="20">🔄&nbsp;<B>Cache:</B>&nbsp;No cache</FONT></TD>
+      </TR>`
+    }
 
     // ---- Retire ----
     let reg_row = `<TR>
@@ -652,6 +665,7 @@
               case 'dispatch':
               case 'rob':
               case 'retire':
+              case 'cache':
                 activeField.value = action
                 break
 
