@@ -914,7 +914,7 @@
           <span id="WrMiss-output" title="Total Cache Write Misses (Misses per Iteration)">{{ formattedResults.stores }}</span>
         </div>
         <div class="simulation-inline-item">
-          <label for="MM">MM usage:</label>
+          <label for="MM">MM:</label>
           <span id="MM-output" title="MM accesses (Read+Write) & BW usage (%)">{{ formattedResults.MM }}</span>
         </div>
       </div>
