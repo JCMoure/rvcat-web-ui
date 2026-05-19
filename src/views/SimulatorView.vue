@@ -247,7 +247,7 @@ onUnmounted(() => {
       <div class="components-wrapper" v-if="checkOK" v-show="isNotFullscreen"
           id="process-panel"
         >
-        <processorComponent @requestSwitchFull="toggleFullScreen"/>
+        <processorComponent :active-view="currentKey" @requestSwitchFull="toggleFullScreen"/>
         <programComponent :active-view="currentKey" @requestSwitchFull="toggleFullScreen"/>
       </div>
 
