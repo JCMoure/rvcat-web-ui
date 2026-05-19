@@ -390,7 +390,7 @@
         drawEditedProcessor()
       }
       Object.assign(simState.simulatedProcess, data)
-      simState.processorName= processorOptions.processorName;
+      simState.processorName= processorOptions.processorName
       drawProcessor()
     } catch (error) {
       console.error('💻❌ Failed to set processor:', error)
@@ -459,7 +459,7 @@
 
   const drawProcessor = async () => {
     try {
-      const dotCode      = get_processor_dot (simState.simulatedProcess, simState.highlightedPort, simState.executionResults)
+      const dotCode      = get_processor_dot (simState.simulatedProcess, simState.highlightedPort)
       // console.log('💻🔄Redrawing simulated processor', dotCode);
       const svg          = await createGraphVizGraph(dotCode);
       // console.log('💻🔄Redrawing SVG', svg);
@@ -591,7 +591,7 @@
     for (let p of port_ids) {
       const isHighlighted = (p === highlight)
       const style = isHighlighted
-        ? ' BGCOLOR="#ffcccc" BORDER="3" COLOR="red"'
+        ? ' BGCOLOR="#ffcccc" COLOR="red"'
         : ' BGCOLOR="#f5f5f5"'
 
       port_header += `<TD ${style} HREF="#" ID="port:${p}" TITLE="Select port ${p}"><FONT POINT-SIZE="20"><B>P${p}</B></FONT></TD>`
@@ -609,7 +609,7 @@
       for (let p of port_ids) {
         const isHighlighted = (p === highlight)
         const highlightAttr = isHighlighted
-          ? ' BORDER="3" COLOR="red"'
+          ? ' BGCOLOR="#ffcccc" COLOR="red"'
           : ''
 
         const op = port_ops[p][i]

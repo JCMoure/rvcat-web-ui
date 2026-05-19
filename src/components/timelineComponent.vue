@@ -575,7 +575,7 @@
 
       if (simState.instrHighlightedIdx !== instrIdx)
         simState.instrHighlightedIdx = instrIdx
-      if (char !== 'E')
+      if (char !== 'E' && char !== 'L' && char !== 'S')
         simState.highlightedPort = -1
       else if (simState.highlightedPort !== port)
         simState.highlightedPort = port
@@ -660,7 +660,7 @@
         <span ref="helpIcon1" class="info-icon" @click="openHelp1" title="Show help">
           <img src="/img/info.png" class="info-img">
         </span>
-        <span class="header-title">Execution Timeline - <strong>{{  simState.programName }}</strong></span>
+        <span class="header-title">Execution Timeline - {{ simState.programName }} on {{ simState.processorName }}</span>
       </div>
 
       <div class="timeline-controls">

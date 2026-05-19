@@ -364,7 +364,7 @@
   * Simulation options: UI actions
   * ------------------------------------------------------------------ */
 
-  function toggleAutorun()  { simulationOptions.autorun      = !simulationOptions.autorun }
+  function toggleAutorun()  { simulationOptions.autorun = !simulationOptions.autorun }
 
   const formattedResults = computed(() => {
     const results = simState.executionResults || {};
@@ -486,7 +486,6 @@
     if (step > 1) newValue = roundToStep(newValue, step, 'down')
     simulationOptions.iters = Math.max(newValue, 1)
   }
-
 
   const ipcColor = computed(() => {
     const ipc = simState.executionResults?.["ipc"] ?? 0
