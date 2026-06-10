@@ -660,7 +660,7 @@
         <span ref="helpIcon1" class="info-icon" @click="openHelp1" title="Show help">
           <img src="/img/info.png" class="info-img">
         </span>
-        <span class="header-title">Execution Timeline - {{ simState.programName }} on {{ simState.processorName }}</span>
+        <span class="header-title">Execution Timeline - {{ simState.simulatedProcess.name }} on {{ simState.processorName }}</span>
       </div>
 
       <div class="timeline-controls">

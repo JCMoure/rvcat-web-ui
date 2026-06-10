@@ -55,8 +55,9 @@
   }
 
   const displayText = computed(() => {
-    return `Simulate Execution of ${simState.programName} on ${simState.processorName}`
+    return `Simulate Execution of ${simState.simulatedProcess.name} on ${simState.processorName}`
   })
+
 /* ------------------------------------------------------------------
   * Simulation Results (persistent in localStorage)
   * ------------------------------------------------------------------ */
@@ -339,11 +340,6 @@
   watch( () => simState.simulatedProcess, () => { updateResults() },
     { deep: true, immediate: false }
   )
-
-  watch(() => simState.programName, (newValue, oldValue) => {
-    console.log(`Program name changed from ${oldValue} to ${newValue}`)
-    // Forzar actualización si es necesario
-  }, { immediate: true })
 
   // Handler for 'get_execution_results' message (fired by RVCAT getPerformanceAnalysis function)
   const handleResults = async (data, dataType) => {

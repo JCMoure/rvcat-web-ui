@@ -75,7 +75,6 @@ const STORAGE_KEY = 'programOptions'
     }
   }
 
-
 // ============================================================================
 // Draggable & resizable full-screen graph container
 // ============================================================================
@@ -224,7 +223,6 @@ function loadEditedMemory() {
       if (simState.state > 2) {
         console.log('📄🔄 Refreshing program latencies & ports on simulated process');
         updateProcess(simState.simulatedProcess) // recompute instruction latencies & ports
-        simState.programName = programOptions.currentProgram
       }
     },
     { deep: true, immediate: false }
@@ -271,7 +269,6 @@ function loadEditedMemory() {
       const jsonString = localStorage.getItem(`program.${programOptions.currentProgram}`)
       const data       = JSON.parse(jsonString)
       Object.assign(simState.simulatedProcess, data)
-      simState.programName  = programOptions.currentProgram;  // fire other components
       if (simState.state == 2) {  // This is an initialization step
         simState.state = 3;       // Change to next initialization step
         console.log('📄✅ Initialization step (3): program loaded')

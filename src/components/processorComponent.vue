@@ -297,7 +297,6 @@
 
   watch( () => ({ state: simState.state,
       processorName:     simState.processorName,
-      programName:       simState.programName,
       simulatedProcess:  simState.simulatedProcess
     }),
     saveSimState,
