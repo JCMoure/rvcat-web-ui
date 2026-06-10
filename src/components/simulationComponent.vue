@@ -340,6 +340,11 @@
     { deep: true, immediate: false }
   )
 
+  watch(() => simState.programName, (newValue, oldValue) => {
+    console.log(`Program name changed from ${oldValue} to ${newValue}`)
+    // Forzar actualización si es necesario
+  }, { immediate: true })
+
   // Handler for 'get_execution_results' message (fired by RVCAT getPerformanceAnalysis function)
   const handleResults = async (data, dataType) => {
     if (dataType === 'error') {
@@ -818,7 +823,7 @@
         <span ref="helpIcon1" class="info-icon" @click="openHelp1" title="Show help">
            <img src="/img/info.png" class="info-img">
         </span>
-        <span class="header-title">{{ displayText}}</span>
+        <span class="header-title">{{displayText}}</span>
       </div>
       <div class="iters-run">
         <button class="blue-button" @click="reloadExecutionResults"
