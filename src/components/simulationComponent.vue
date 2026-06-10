@@ -54,6 +54,9 @@
     }
   }
 
+  const displayText = computed(() => {
+    return `Simulate Execution of ${simState.programName} on ${simState.processorName}`
+  })
 /* ------------------------------------------------------------------
   * Simulation Results (persistent in localStorage)
   * ------------------------------------------------------------------ */
@@ -815,7 +818,7 @@
         <span ref="helpIcon1" class="info-icon" @click="openHelp1" title="Show help">
            <img src="/img/info.png" class="info-img">
         </span>
-        <span class="header-title">Simulate Execution of {{ simState.programName }} on {{ simState.processorName }}</span>
+        <span class="header-title">{{ displayText}}</span>
       </div>
       <div class="iters-run">
         <button class="blue-button" @click="reloadExecutionResults"
