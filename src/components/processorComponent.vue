@@ -388,6 +388,7 @@
         console.log('💻✅ Initialization step (2): processor configuration loaded')
         drawEditedProcessor()
       }
+      data.name = simState.simulatedProcess.name || 'unknown'
       Object.assign(simState.simulatedProcess, data)
       simState.processorName= processorOptions.processorName
       drawProcessor()
@@ -960,9 +961,10 @@
           return
         }
         saveToLocalStorage('processor', data.name, data, processorOptions.availableProcessors)
-        Object.assign(simState.simulatedProcess, data)
         simState.processorName = data.name
         processorOptions.processorName = data.name
+        data.name = simState.simulatedProcess.name || 'unknown'
+        Object.assign(simState.simulatedProcess, data)
         return
       }
     } catch (error) {
