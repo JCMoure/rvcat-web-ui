@@ -1,9 +1,10 @@
 <script setup>
 import { ref, shallowRef, onMounted, onUnmounted, inject, nextTick, watch, computed } from 'vue';
 
-import processor      from '@/components/processor.vue';
-import program        from '@/components/program.vue';
-import programEditor  from '@/components/programEditor.vue';
+import processor       from '@/components/processor.vue';
+import program         from '@/components/program.vue';
+import programEditor   from '@/components/programEditor.vue';
+import processorEditor from '@/components/processorEditor.vue';
 
 import tutorialComponent       from '@/components/tutorialComponent.vue';
 import tutorialEditor          from '@/components/tutorialEditor.vue';
@@ -250,14 +251,12 @@ onUnmounted(() => {
         <program :active-view="currentKey" @requestSwitchFull="toggleFullScreen"/>
       </div>
 
-      <div v-if="checkOK" v-show="isProcessorFullscreen" class="grid-item processor"
-        id="processorEditor-panel">
-        <processor :is-fullscreen="isProcessorFullscreen" @requestSwitchFull="toggleFullScreen"/>
+      <div v-if="checkOK" v-show="isProcessorFullscreen" class="grid-item processor" id="processorEditor-panel">
+        <processorEditor :is-fullscreen="isProcessorFullscreen" @requestSwitchFull="toggleFullScreen"/>
       </div>
-      <div v-if="checkOK" v-show="isProgramFullscreen" class="grid-item program"
-           id="programEditor-panel">
-        <programEditor :is-fullscreen="isProgramFullscreen" @requestSwitchFull="toggleFullScreen"
-        />
+
+      <div v-if="checkOK" v-show="isProgramFullscreen"   class="grid-item program"   id="programEditor-panel">
+        <programEditor   :is-fullscreen="isProgramFullscreen"   @requestSwitchFull="toggleFullScreen"/>
       </div>
 
       <div v-if="checkOK" v-show="isTutorialFullscreen"
