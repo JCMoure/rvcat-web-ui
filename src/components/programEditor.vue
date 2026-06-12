@@ -11,27 +11,16 @@
   const { registerHandler } = inject('worker');
   const simState            = inject('simulationState');
 
-  const props = defineProps({
-    isFullscreen: {
-      type:    Boolean,
-      default: false
-    },
-    activeView: String
-  })
-
 // ============================================================================
 // Program options & localStorage
 // ============================================================================
 
-const STORAGE_KEY = 'programOptions'
+const STORAGE_KEY = 'programEditOptions'
 
   const defaultOptions = {
-    currentProgram:    '',
-    availablePrograms: [],
     showInOut:         true,
     showActions:       true,
     showGraph:         false,
-    showLat:           true,
     windowWidth:       500,
     windowHeight:      300,
     x_pos:             10,
@@ -46,7 +35,7 @@ const STORAGE_KEY = 'programOptions'
     }
   }
 
-  const programOptions = reactive(defaultOptions)
+  const programEditOptions = reactive(defaultOptions)
   const programSvg     = ref('')
   const showFullScreen = ref(false)
   let   graphTimeout   = null
@@ -55,12 +44,12 @@ const STORAGE_KEY = 'programOptions'
     try {
       const saved = localStorage.getItem(STORAGE_KEY)
       if (saved) {
-        Object.assign(programOptions, JSON.parse(saved))
-        console.log('📄load options')
+        Object.assign(programEditOptions, JSON.parse(saved))
+        console.log('📄load program edit options')
       }
       else {
         saveOptions() // Save defaults if no options were saved before
-        console.log('📄default load options')
+        console.log('📄default load program edit options')
       }
     } catch (error) {
       console.error('📄❌ Failed to load:', error)
@@ -69,7 +58,7 @@ const STORAGE_KEY = 'programOptions'
 
   const saveOptions = () => {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(programOptions))
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(programEditOptions))
     } catch (error) {
       console.error('📄❌ Failed to save:', error)
     }
@@ -86,16 +75,16 @@ const STORAGE_KEY = 'programOptions'
   const headerRef  = ref(null)
   const contentRef = ref(null)
 
-  const x = toRef(programOptions, 'x_pos')
-  const y = toRef(programOptions, 'y_pos')
+  const x = toRef(programEditOptions, 'x_pos')
+  const y = toRef(programEditOptions, 'y_pos')
 
   const { isDragging } = useDraggable(headerRef, {
-    initialValue: { x: programOptions.x_pos, y: programOptions.y_pos },
+    initialValue: { x: programEditOptions.x_pos, y: programEditOptions.y_pos },
 
     onMove(pos) {
 
-      const w = programOptions.windowWidth
-      const h = programOptions.windowHeight
+      const w = programEditOptions.windowWidth
+      const h = programEditOptions.windowHeight
 
       const maxX = window.innerWidth  - w
       const maxY = window.innerHeight - HEADER_HEIGHT
@@ -108,17 +97,17 @@ const STORAGE_KEY = 'programOptions'
   useResizeObserver(contentRef, (entries) => {
     const { width: w, height: h } = entries[0].contentRect
 
-    const maxWidth  = window.innerWidth  - programOptions.x_pos
-    const maxHeight = window.innerHeight - programOptions.y_pos
+    const maxWidth  = window.innerWidth  - programEditOptions.x_pos
+    const maxHeight = window.innerHeight - programEditOptions.y_pos
 
-    programOptions.windowWidth  = Math.max(MIN_W, Math.min(w, maxWidth))
-    programOptions.windowHeight = Math.max(MIN_H, Math.min(h, maxHeight))
+    programEditOptions.windowWidth  = Math.max(MIN_W, Math.min(w, maxWidth))
+    programEditOptions.windowHeight = Math.max(MIN_H, Math.min(h, maxHeight))
   })
 
   window.addEventListener("resize", () => {
 
-    const w = programOptions.windowWidth
-    const h = programOptions.windowHeight
+    const w = programEditOptions.windowWidth
+    const h = programEditOptions.windowHeight
 
     x.value = Math.min(x.value, window.innerWidth - w)
     y.value = Math.min(y.value, window.innerHeight - HEADER_HEIGHT)
@@ -129,8 +118,6 @@ const STORAGE_KEY = 'programOptions'
 // ============================================================================
 
 const editedProgram = ref([]);
-const editedMemory  = ref([]);
-
 function loadEditedProgram() {
   const stored = localStorage.getItem('programTemp');
   if (!stored) return;
@@ -148,39 +135,11 @@ function loadEditedProgram() {
   }
 }
 
-function loadEditedMemory() {
-  const stored = localStorage.getItem('memoryTemp');
-  if (!stored) return;
-  try {
-    const data = JSON.parse(stored);
-    editedMemory.value = (data.memory_list || []).map(mem => {
-      return {
-        name:    mem.name || '',    pattern:    mem.pattern    || ''
-      };
-    });
-  } catch (e) {
-    console.error('📄❌ Failed to load edited memory from localStorage:', e);
-  }
-}
-
 // ============================================================================
 // WATCHES: program, globalStat  HANDLERS: setProgram, showProgram
 // ============================================================================
- const ADD_NEW_OPTION = '_add_new_'
-
-  // Watch for program changes
-  watch(() => programOptions.currentProgram, (newProgram, oldProgram) => {
-    if (newProgram === ADD_NEW_OPTION)
-      return uploadProgram(oldProgram)
-
-    console.log(`📄✅ Program changed from "${oldProgram}" to "${newProgram}"`);
-    saveOptions()
-    if (simState.state > 1)
-      reloadProgram()
-  })
-
-  watch( () => [programOptions.showInOut, programOptions.showActions, programOptions.showGraph,
-           programOptions.showLat,   programOptions.windowWidth, programOptions.windowHeight],
+  watch( () => [programEditOptions.showInOut, programEditOptions.showActions, programEditOptions.showGraph,
+           programEditOptions.windowWidth, programEditOptions.windowHeight],
     () => { saveOptions() }
   )
 
@@ -195,39 +154,6 @@ function loadEditedMemory() {
     { deep: true }
   )
 
-  watch( () => snapshotMemory(), (val) => {
-      try {
-        localStorage.setItem('memoryTemp', JSON.stringify(val));
-        console.log('📄✅ Saved edited memory')
-      } catch (e) {
-        console.error('📄❌ Failed to persist memory to localStorage:', e);
-      }
-    },
-    { deep: true }
-  )
-
-  watch( () => simState.state, (newValue, oldValue) => {
-      if (newValue === 2 && oldValue !== 2) {
-        initProgram()
-      }
-    }
-  )
-
-  let updateCritical= false
-
-  watch( () => simState.simulatedProcess, () => {
-      if (updateCritical) {
-        updateCritical = false;
-        return
-      }
-      if (simState.state > 2) {
-        console.log('📄🔄 Refreshing program latencies & ports on simulated process');
-        updateProcess(simState.simulatedProcess) // recompute instruction latencies & ports
-      }
-    },
-    { deep: true, immediate: false }
-  )
-
 // ============================================================================
 // LIFECYCLE:  Mount/unMount
 // ============================================================================
@@ -237,8 +163,7 @@ function loadEditedMemory() {
     loadOptions()
     cleanupHandleGraph = registerHandler('get_prog_graph', handleGraph);
     loadEditedProgram()
-    loadEditedMemory()
-    console.log('📄🎯 ProgramComponent mounted')
+    console.log('📄🎯 Program Editor Component mounted')
   });
 
   onUnmounted(() => {
@@ -246,70 +171,8 @@ function loadEditedMemory() {
        cleanupHandleGraph();
        cleanupHandleGraph= null
     }
-    console.log('📄👋 ProgramComponent unmounted')
-    localStorage.removeItem('programTemp')
+    console.log('📄👋 Program Editor Component unmounted')
   });
-
-
-// ============================================================================
-// PROGRAM ACTIONS: InitProgram, reloadProgram, editProgram, removeProgram,
-//               uploadForEdition
-// ============================================================================
-
-  const initProgram = async () => {
-    const savedProgram = programOptions.currentProgram
-    await initResource('program', programOptions, 'currentProgram', 'availablePrograms')
-    if (savedProgram === programOptions.currentProgram)
-      reloadProgram()   // On initialization, if currentProgram not modified, force program reloading
-  };
-
-  const reloadProgram = async () => {
-    console.log('📄🔄 Reloading program with:', programOptions.currentProgram);
-    try {
-      const jsonString = localStorage.getItem(`program.${programOptions.currentProgram}`)
-      const data       = JSON.parse(jsonString)
-      Object.assign(simState.simulatedProcess, data)
-      if (simState.state == 2) {  // This is an initialization step
-        simState.state = 3;       // Change to next initialization step
-        console.log('📄✅ Initialization step (3): program loaded')
-      }
-    } catch (error) {
-      console.error('📄❌ Failed to set program:', error)
-    }
-  }
-
-  const emit = defineEmits(['requestSwitchFull'])
-
-  function editProgram () {
-    if (simState.simulatedProcess) {
-
-      const cleanProgram = {
-        name: simState.simulatedProcess.name,
-        instruction_list: JSON.parse(
-          JSON.stringify(simState.simulatedProcess.instruction_list)
-        )
-      }
-
-      localStorage.setItem('programTemp', JSON.stringify(cleanProgram));
-      loadEditedProgram()
-      if (editedProgram.value.length > 0)
-        editedProgram.value.pop()
-      localStorage.setItem('programTemp', JSON.stringify(editedProgram.value));
-      emit('requestSwitchFull', 'program')
-      console.log('📄 Emit requestSwitchFull for program edition:')
-    }
-  }
-
-  function removeProgram () {
-    removeFromLocalStorage('program', programOptions.currentProgram, programOptions.availablePrograms)
-    if ( programOptions.availablePrograms.length > 0)
-      programOptions.currentProgram = programOptions.availablePrograms[0]
-    else {
-      programOptions.currentProgram = ''
-      alert("Removing all programs forces to load the original programs provided in the distribution")
-      initProgram()
-    }
-  }
 
   const uploadForEdition = async () => {
     try {
@@ -394,27 +257,12 @@ function snapshotProgram() {
   };
 }
 
-function normalizeMemory(mem) {
-  return {
-    name:     (mem.name    || '').trim(),
-    pattern:  (mem.pattern || '').trim()
-  };
-}
-
-function snapshotMemory() {
-  return {
-    name:       'memoryTemp',
-    memory_list: editedMemory.value.map(mem => normalizeMemory(mem))
-  };
-}
-
 // ============================================================================
 // viewColumns
 // ============================================================================
 
-  function toggleInOut  () { programOptions.showInOut   = !programOptions.showInOut }
-  function toggleActions() { programOptions.showActions = !programOptions.showActions }
-  function toggleLatency() { programOptions.showLat     = !programOptions.showLat }
+  function toggleInOut  () { programEditOptions.showInOut   = !programEditOptions.showInOut }
+  function toggleActions() { programEditOptions.showActions = !programEditOptions.showActions }
 
   // Handler for 'get_prog_graph' message (fired by RVCAT getProgGraph function)
   const handleGraph = async (data, dataType) => {
@@ -432,19 +280,7 @@ function snapshotMemory() {
     }
   }
 
-  function portsMaskToString(mask) {
-    const ports = []
-    let   i     = 0
-    while (mask > 0) {
-      if (mask & 1)
-        ports.push(`P${i}`)
-      mask >>= 1
-      i++
-    }
-    return ports.join(',')
-  }
-
-  function openFullScreen() {
+   function openFullScreen() {
     showFullScreen.value = true;
     console.log('📄🔄Drawing edited program');
     clearTimeout(graphTimeout)
@@ -470,13 +306,13 @@ function snapshotMemory() {
         editedProgram.value.pop()
       }, 75)
       console.log('📄✅ Graph drawn')
-      programOptions.showGraph = true
+      programEditOptions.showGraph = true
     } catch (error) {
       console.error('📄❌Failed to generate program graph:', error)
     }
   }
 
-  function closeFullScreen()   { showFullScreen.value = false;  programOptions.showGraph = false}
+  function closeFullScreen()   { showFullScreen.value = false;  programEditOptions.showGraph = false}
 
 // ============================================================================
 // confirmDownload, uploadProgram, clearProgram
@@ -508,32 +344,8 @@ function snapshotMemory() {
     showModalDownload.value = false;
   }
 
-  const uploadProgram = async (oldProgram) => {
-    try {
-      const data = await uploadJSON(null, 'program')
-      if (data) {
-
-        const exists = programOptions.availablePrograms.includes(data.name)
-        if (exists && !confirm(`A program with the name "${data.name}" is already loaded. Do you want to overwrite it?`)) {
-          alert('Upload cancelled.')
-          programOptions.currentProgram = oldProgram
-          return
-        }
-        // TODO: Check here if it is a valid program
-        saveToLocalStorage('program', data.name, data, programOptions.availablePrograms)
-        programOptions.currentProgram = data.name;
-        Object.assign(simState.simulatedProcess, data)
-        return
-      }
-    } catch (error) {
-      console.error('📄❌ Failed to upload program:', error)
-    }
-    programOptions.currentProgram = oldProgram
-  }
-
   function clearProgram() {
     editedProgram.value  = [];
-    editedMemory.value   = [];
     showModalClear.value = false;
     addInstruction(0);
   }
@@ -548,41 +360,11 @@ function snapshotMemory() {
   function openHelp()  { nextTick(() => { showHelp.value = true }) }
   function closeHelp() { showHelp.value  = false }
 
-  function percentageToColor(p) {
-    if (p == null || isNaN(p)) return ''
-    p = Math.max(0, Math.min(100, p))
-
-    // Colores originales más saturados
-    const r = Math.round(Math.min(255, (p / 50) * 255))
-    const g = Math.round(p < 50 ? (p / 50) * 255 : ((100 - p) / 50) * 255)
-    const b = Math.round(Math.max(0, (1 - p / 50) * 255))
-
-    // Mezclar con blanco (70% color original, 30% blanco)
-    const mixWhite = 0.7 // Ajusta este valor (mayor = más claro)
-    const r2 = Math.round(r + (255 - r) * mixWhite)
-    const g2 = Math.round(g + (255 - g) * mixWhite)
-    const b2 = Math.round(b + (255 - b) * mixWhite)
-
-    return `rgb(${r2}, ${g2}, ${b2})`
-  }
-
-  function rowStyle(index) {
-    if (simState.executionResults == null || !simState.executionResults?.critical_path?.instructions)
-      return {}
-    const percentage = simState.executionResults?.critical_path?.instructions?.[index]?.percentage;
-    if (percentage == null || isNaN(percentage))
-      return {}
-    return {
-      backgroundColor: percentageToColor(percentage),
-      color: percentage > 50 ? 'white' : 'black'
-    }
-  }
-
 </script>
 
 <template>
   <div>
-    <div v-if="isFullscreen" class="header">
+    <div class="header">
       <div class="section-title-and-info">
         <span ref="helpIcon" class="info-icon" @click="openHelp" title="Show help">
            <img src="/img/info.png" class="info-img">
@@ -590,27 +372,27 @@ function snapshotMemory() {
         <span class="header-title">Program Editor</span>
       </div>
 
-      <button class="blue-button add-prev-margin" :class="{ active: programOptions.showInOut }"
+      <button class="blue-button add-prev-margin" :class="{ active: programEditOptions.showInOut }"
           title="Show/Hide instruction Input/Output operands"
           id="show-inout-operands"
         @click="toggleInOut">
-        <span v-if="programOptions.showInOut">✔ </span>
+        <span v-if="programEditOptions.showInOut">✔ </span>
         InOut
       </button>
 
-      <button class="blue-button add-margin" :class="{ active: programOptions.showActions }"
+      <button class="blue-button add-margin" :class="{ active: programEditOptions.showActions }"
           title="Show/Hide column with buttons for moving/adding/removing instructions"
           id="show-instruction-actions"
           @click="toggleActions">
-        <span v-if="programOptions.showActions">✔ </span>
+        <span v-if="programEditOptions.showActions">✔ </span>
         Actions
       </button>
 
-      <button class="blue-button add-prev-margin" :class="{ active: programOptions.showGraph }"
+      <button class="blue-button add-prev-margin" :class="{ active: programEditOptions.showGraph }"
           title="View/Update program's dependence graph on full-screen"
           id="open-edited-program-graph"
           @click="openFullScreen">
-        <span v-if="programOptions.showGraph">✔ </span>
+        <span v-if="programEditOptions.showGraph">✔ </span>
         View Graph
       </button>
 
@@ -638,225 +420,191 @@ function snapshotMemory() {
       </div>
     </div>
 
-    <div v-if="isFullscreen" class="instructions-section">
+    <div class="instructions-section">
       <div class="horizontal-layout">
+        <div class="table-container">
+          <table class="instructions-table">
+            <thead>
+              <tr>
+                <th style="width: 20px;">  # </th>
+                <th v-if="programEditOptions.visibleCols.text"     style="width: 600px;"> Text    </th>
+                <th v-if="programEditOptions.visibleCols.type"     style="width: 100px;"> Type    </th>
+                <th v-if="programEditOptions.visibleCols.oper"     style="width: 100px;"> Oper    </th>
+                <th v-if="programEditOptions.visibleCols.size"     style="width: 100px;"> Size    </th>
+                <th v-if="programEditOptions.showInOut"   style="width: 80px;">  Destin  </th>
+                <th v-if="programEditOptions.showInOut"   style="width: 80px;">  Source1 </th>
+                <th v-if="programEditOptions.showInOut"   style="width: 80px;">  Source2 </th>
+                <th v-if="programEditOptions.showInOut"   style="width: 80px;">  Source3 </th>
+                <th v-if="programEditOptions.showInOut"   style="width: 80px;">  Constant</th>
+                <th v-if="programEditOptions.showActions" style="width: 100px;"> Actions </th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="(inst, index) in editedProgram" :key="index">
+                <td>{{ index }}</td>
 
-        <div class="instruction-side-container">
+                <td v-if="programEditOptions.visibleCols.text">
+                  <input type="text" v-model="inst.text" class="table-input" title="Free text describing instruction" />
+                </td>
 
-          <div class="table-container">
-            <table class="instructions-table">
-              <thead>
-                <tr>
-                  <th style="width: 20px;">  # </th>
-                  <th v-if="programOptions.visibleCols.text"     style="width: 600px;"> Text    </th>
-                  <th v-if="programOptions.visibleCols.type"     style="width: 100px;"> Type    </th>
-                  <th v-if="programOptions.visibleCols.oper"     style="width: 100px;"> Oper    </th>
-                  <th v-if="programOptions.visibleCols.size"     style="width: 100px;"> Size    </th>
-                  <th v-if="programOptions.showInOut"   style="width: 80px;">  Destin  </th>
-                  <th v-if="programOptions.showInOut"   style="width: 80px;">  Source1 </th>
-                  <th v-if="programOptions.showInOut"   style="width: 80px;">  Source2 </th>
-                  <th v-if="programOptions.showInOut"   style="width: 80px;">  Source3 </th>
-                  <th v-if="programOptions.showInOut"   style="width: 80px;">  Constant</th>
-                  <th v-if="programOptions.showActions" style="width: 100px;"> Actions </th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-for="(inst, index) in editedProgram" :key="index">
-                  <td>{{ index }}</td>
+                <td v-if="programEditOptions.visibleCols.type">
+                  <select v-model="inst.type" class="table-select" title="Select instruction type">
+                    <option value="">Select...</option>
+                    <option v-for="type in instructionTypes" :key="type" :value="type">
+                      {{ type }}
+                    </option>
+                  </select>
+                </td>
 
-                  <td v-if="programOptions.visibleCols.text">
-                    <input type="text" v-model="inst.text" class="table-input" title="Free text describing instruction" />
-                  </td>
-
-                  <td v-if="programOptions.visibleCols.type">
-                    <select v-model="inst.type" class="table-select" title="Select instruction type">
-                      <option value="">Select...</option>
-                      <option v-for="type in instructionTypes" :key="type" :value="type">
-                        {{ type }}
-                      </option>
-                    </select>
-                  </td>
-
-                  <td v-if="programOptions.visibleCols.oper">
-                    <select v-model="inst.oper" :disabled="!inst.type || typeOperations[inst.type].length === 0"
-                      class="table-select" title="Select operation for this type"
+                <td v-if="programEditOptions.visibleCols.oper">
+                  <select v-model="inst.oper" :disabled="!inst.type || typeOperations[inst.type].length === 0"
+                    class="table-select" title="Select operation for this type"
+                  >
+                    <option value="">Select...</option>
+                    <option
+                      v-for="operation in typeOperations[inst.type]"
+                      :key="operation"
+                      :value="operation"
                     >
-                      <option value="">Select...</option>
-                      <option
-                        v-for="operation in typeOperations[inst.type]"
-                        :key="operation"
-                        :value="operation"
-                      >
-                        {{ operation }}
-                      </option>
-                    </select>
-                  </td>
+                      {{ operation }}
+                    </option>
+                  </select>
+                </td>
 
-                  <td v-if="programOptions.visibleCols.size">
-                    <select v-model="inst.size" :disabled="!inst.type || !inst.oper || typeSizes[inst.type].length === 0"
-                      class="table-select" title="Select size for this instruction type & operations"
+                <td v-if="programEditOptions.visibleCols.size">
+                  <select v-model="inst.size" :disabled="!inst.type || !inst.oper || typeSizes[inst.type].length === 0"
+                    class="table-select" title="Select size for this instruction type & operations"
+                  >
+                    <option value="">Select...</option>
+                    <option
+                      v-for="size in typeSizes[inst.type]"
+                      :key="size"
+                      :value="size"
                     >
-                      <option value="">Select...</option>
-                      <option
-                        v-for="size in typeSizes[inst.type]"
-                        :key="size"
-                        :value="size"
-                      >
-                        {{ size }}
-                      </option>
-                    </select>
-                  </td>
+                      {{ size }}
+                    </option>
+                  </select>
+                </td>
 
-                  <td v-if="programOptions.showInOut">
-                    <input type="text" v-model="inst.destin" class="table-input" />
-                  </td>
+                <td v-if="programEditOptions.showInOut">
+                  <input type="text" v-model="inst.destin" class="table-input" />
+                </td>
 
-                  <td v-if="programOptions.showInOut">
-                    <input type="text" v-model="inst.source1" class="table-input" />
-                  </td>
+                <td v-if="programEditOptions.showInOut">
+                  <input type="text" v-model="inst.source1" class="table-input" />
+                </td>
 
-                  <td v-if="programOptions.showInOut">
-                    <input type="text" v-model="inst.source2" class="table-input" />
-                  </td>
+                <td v-if="programEditOptions.showInOut">
+                  <input type="text" v-model="inst.source2" class="table-input" />
+                </td>
 
-                  <td v-if="programOptions.showInOut">
-                    <input type="text" v-model="inst.source3" class="table-input" />
-                  </td>
+                <td v-if="programEditOptions.showInOut">
+                  <input type="text" v-model="inst.source3" class="table-input" />
+                </td>
 
-                  <td v-if="programOptions.showInOut">
-                    <input type="text" v-model="inst.constant" class="table-input" />
-                  </td>
+                <td v-if="programEditOptions.showInOut">
+                  <input type="text" v-model="inst.constant" class="table-input" />
+                </td>
 
-                  <td v-if="programOptions.showActions" class="actions-cell">
+                <td v-if="programEditOptions.showActions" class="actions-cell">
 
-                    <button
-                      @click="moveInstructionUp(index)"
-                      :disabled="index === 0"
-                      class="action-btn"
-                      title="Move up"
-                    >
-                      ▲
-                    </button>
+                  <button
+                    @click="moveInstructionUp(index)"
+                    :disabled="index === 0"
+                    class="action-btn"
+                    title="Move up"
+                  >
+                    ▲
+                  </button>
 
-                    <button
-                      @click="moveInstructionDown(index)"
-                      :disabled="index === editedProgram.length - 1"
-                      class="action-btn"
-                      title="Move down"
-                    >
-                      ▼
-                    </button>
+                  <button
+                    @click="moveInstructionDown(index)"
+                    :disabled="index === editedProgram.length - 1"
+                    class="action-btn"
+                    title="Move down"
+                  >
+                    ▼
+                  </button>
 
-                    <button
-                      @click="removeInstruction(index)"
-                      :disabled="editedProgram.length === 1"
-                      class="action-btn delete"
-                      title="Delete"
-                    >
-                      ✕
-                    </button>
+                  <button
+                    @click="removeInstruction(index)"
+                    :disabled="editedProgram.length === 1"
+                    class="action-btn delete"
+                    title="Delete"
+                  >
+                    ✕
+                  </button>
 
-                    <button
-                      @click="addInstruction(index)"
-                      :disabled="editedProgram.length === 1"
-                      class="action-btn"
-                      title="Insert new instruction before this one"
-                    >
-                      ▶️
-                    </button>
+                  <button
+                    @click="addInstruction(index)"
+                    :disabled="editedProgram.length === 1"
+                    class="action-btn"
+                    title="Insert new instruction before this one"
+                  >
+                    ▶️
+                  </button>
 
-                  </td>
-                </tr>
+                </td>
+              </tr>
 
-                <!-- 🔒 Fila fija final -->
-                <tr class="fixed-row">
-                  <td> {{editedProgram.length}} </td>
+              <!-- 🔒 Fila fija final -->
+              <tr class="fixed-row">
+                <td> {{editedProgram.length}} </td>
 
-                  <td v-if="programOptions.visibleCols.text" title="This final conditional branch is fixed">
-                    <span class="table-input readonly">if c go back</span>
-                  </td>
+                <td v-if="programEditOptions.visibleCols.text" title="This final conditional branch is fixed">
+                  <span class="table-input readonly">if c go back</span>
+                </td>
 
-                  <td v-if="programOptions.visibleCols.type">
-                    <span class="table-select readonly">BRANCH</span>
-                  </td>
+                <td v-if="programEditOptions.visibleCols.type">
+                  <span class="table-select readonly">BRANCH</span>
+                </td>
 
-                  <td v-if="programOptions.visibleCols.oper">
-                    <span class="table-select readonly"> </span>
-                  </td>
+                <td v-if="programEditOptions.visibleCols.oper">
+                  <span class="table-select readonly"> </span>
+                </td>
 
-                  <td v-if="programOptions.visibleCols.size">
-                    <span class="table-select readonly"> </span>
-                  </td>
+                <td v-if="programEditOptions.visibleCols.size">
+                  <span class="table-select readonly"> </span>
+                </td>
 
-                  <td v-if="programOptions.showInOut">
-                    <span class="table-input readonly"> </span>
-                  </td>
+                <td v-if="programEditOptions.showInOut">
+                  <span class="table-input readonly"> </span>
+                </td>
 
-                  <td v-if="programOptions.showInOut">
-                    <span class="table-input readonly">c</span>
-                  </td>
+                <td v-if="programEditOptions.showInOut">
+                  <span class="table-input readonly">c</span>
+                </td>
 
-                  <td v-if="programOptions.showInOut">
-                    <span class="table-input readonly"> </span>
-                  </td>
+                <td v-if="programEditOptions.showInOut">
+                  <span class="table-input readonly"> </span>
+                </td>
 
-                  <td v-if="programOptions.showInOut">
-                    <span class="table-input readonly"> </span>
-                  </td>
+                <td v-if="programEditOptions.showInOut">
+                  <span class="table-input readonly"> </span>
+                </td>
+                <td v-if="programEditOptions.showInOut">
+                  <span class="table-input readonly"> </span>
+                </td>
 
-                  <td v-if="programOptions.showInOut">
-                    <span class="table-input readonly"> </span>
-                  </td>
-
-                  <td v-if="programOptions.showActions" class="actions-cell">
-                    <span class="table-input readonly"> 🔒 </span>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
+                <td v-if="programEditOptions.showActions" class="actions-cell">
+                  <span class="table-input readonly"> 🔒 </span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
-
-        <div class="memory-side-container">
-
-          <div class="table-container">
-            <table class="instructions-table">
-              <thead>
-                <tr>
-                  <th v-if="programOptions.visibleCols.name"     style="width: 60px;">  Name </th>
-                  <th v-if="programOptions.visibleCols.pattern"  style="width: 200px;"> Memory Pattern </th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-for="(mem, index) in editedMemory" :key="index">
-
-                  <td v-if="programOptions.visibleCols.name"
-                      title="Memory array name">
-                    <input type="text" v-model="mem.name" class="table-input" />
-                  </td>
-                  <td v-if="programOptions.visibleCols.pattern"
-                      title="Memory access pattern for this array">
-                    <input type="text" v-model="mem.pattern" class="table-input" />
-                  </td>
-
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-
       </div>
     </div>
   </div>
 
-  <div v-if="showFullScreen && isFullscreen" class="fullscreen-overlay" @click.self="closeFullScreen">
+  <div v-if="showFullScreen" class="fullscreen-overlay" @click.self="closeFullScreen">
     <div class="fullscreen-content"
       ref="contentRef"
       :style="{
         left: x + 'px',
         top: y + 'px',
-        width: programOptions.windowWidth + 'px',
-        height: programOptions.windowHeight + 'px'
+        width: programEditOptions.windowWidth + 'px',
+        height: programEditOptions.windowHeight + 'px'
       }"
     >
       <div class="fullscreen-header" ref="headerRef">
@@ -898,30 +646,14 @@ function snapshotMemory() {
   <Teleport to="body">
     <HelpComponent v-if="showHelp" :position="helpPosition"
     text="The simulated program consists of a <em>fixed-iteration</em> loop executing a sequence of <strong>machine instructions</strong>, each described in a high-level,
-       informal language. The <em>type</em>, execution <em>latency</em> and eligible <em>execution ports</em> are shown for each instruction.
-        <p>The simulation tracks <strong>data dependencies</strong> but omits detailed architectural state: it <strong>does not</strong> model processor registers, memory states,
-      branch outcomes, or memory dependencies (e.g., store-load interactions).</p>
-        Programs can be uploaded or downloaded in JSON format."
-      title="Program Loop"
+       informal language. The description of each instruction can be modified: text, type, input/destination operands, constants.
+        Programs can be edited/uploaded/downloaded in JSON format."
+      title="Program Edition"
     @close="closeHelp"  />
   </Teleport>
 </template>
 
 <style scoped>
-  .main-box {
-    overflow:      auto;
-    scroll-behavior: smooth;
-    margin-top:    0px;
-    background:    #f0f0f0;
-    padding:       0px;
-    font-size:     2.0vh;
-    border-radius: 10px;
-  }
-
-  ::-webkit-scrollbar {
-    width: 5px;
-  }
-
   .horizontal-layout {
     display:     flex;
     gap:         6px; /* Espacio entre tabla e imagen */

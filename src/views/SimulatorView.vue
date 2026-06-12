@@ -256,8 +256,7 @@ onUnmounted(() => {
       </div>
       <div v-if="checkOK" v-show="isProgramFullscreen" class="grid-item program"
            id="programEditor-panel">
-        <programEditor :is-fullscreen="isProgramFullscreen" :active-view="currentKey"
-                        @requestSwitchFull="toggleFullScreen"
+        <programEditor @requestSwitchFull="toggleFullScreen"
         />
       </div>
 

@@ -127,12 +127,15 @@ const STORAGE_KEY = 'programOptions'
   function editProgram () { // switch to full-screen program editor, sending current program data for edition
     if (simState.simulatedProcess) {
 
-      const cleanProgram = {
+      let cleanProgram = {
         name: simState.simulatedProcess.name,
         instruction_list: JSON.parse(
           JSON.stringify(simState.simulatedProcess.instruction_list)
         )
       }
+
+      if (cleanProgram.instruction_list.length > 0)
+        cleanProgram.instruction_list.pop()
 
       localStorage.setItem('programTemp', JSON.stringify(cleanProgram));
       emit('requestSwitchFull', 'program')
@@ -328,8 +331,8 @@ const STORAGE_KEY = 'programOptions'
        informal language. The <em>type</em>, execution <em>latency</em> and eligible <em>execution ports</em> are shown for each instruction.
         <p>The simulation tracks <strong>data dependencies</strong> but omits detailed architectural state: it <strong>does not</strong> model processor registers, memory states,
       branch outcomes, or memory dependencies (e.g., store-load interactions).</p>
-        Programs can be uploaded or downloaded in JSON format."
-      title="Program Loop"
+        Programs can be edited/uploaded/downloaded in JSON format."
+      title="Program Description"
     @close="closeHelp"  />
   </Teleport>
 </template>
