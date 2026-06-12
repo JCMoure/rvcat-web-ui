@@ -1,8 +1,8 @@
 <script setup>
 import { ref, shallowRef, onMounted, onUnmounted, inject, nextTick, watch, computed } from 'vue';
 
-import processorComponent      from '@/components/processorComponent.vue';
-import programComponent        from '@/components/programComponent.vue';
+import processor      from '@/components/processor.vue';
+import program        from '@/components/program.vue';
 
 import tutorialComponent       from '@/components/tutorialComponent.vue';
 import tutorialEditor          from '@/components/tutorialEditor.vue';
@@ -51,10 +51,10 @@ const { importRVCAT }               = useRVCAT_Api();
 // ============================================================================
 // Map of component keys -> component definitions
 const components = {
+  simulationComponent,
   timelineComponent,
   staticAnalysisComponent,
-  aboutComponent,
-  simulationComponent
+  aboutComponent
 };
 
 // Navigation state
@@ -244,24 +244,16 @@ onUnmounted(() => {
 
     <main class="container" :class="containerClasses">
 
-      <div class="components-wrapper" v-if="checkOK" v-show="isNotFullscreen"
-          id="process-panel"
-        >
-        <processorComponent :active-view="currentKey" @requestSwitchFull="toggleFullScreen"/>
-        <programComponent :active-view="currentKey" @requestSwitchFull="toggleFullScreen"/>
+      <div class="components-wrapper" v-if="checkOK" v-show="isNotFullscreen" id="process-panel">
+        <processor :active-view="currentKey" @requestSwitchFull="toggleFullScreen"/>
+        <program :active-view="currentKey" @requestSwitchFull="toggleFullScreen"/>
       </div>
 
-      <div v-if="checkOK" v-show="isProcessorFullscreen"
-          class="grid-item processor"
-          id="processor-panel"
-        >
-        <processorComponent :is-fullscreen="isProcessorFullscreen" @requestSwitchFull="toggleFullScreen"/>
+      <div v-if="checkOK" v-show="isProcessorFullscreen" class="grid-item processor" id="processor-panel">
+        <processor :is-fullscreen="isProcessorFullscreen" @requestSwitchFull="toggleFullScreen"/>
       </div>
-      <div v-if="checkOK" v-show="isProgramFullscreen"
-        class="grid-item program"
-        id="program-panel"
-        >
-        <programComponent :is-fullscreen="isProgramFullscreen" :active-view="currentKey"
+      <div v-if="checkOK" v-show="isProgramFullscreen" class="grid-item program" id="program-panel">
+        <program :is-fullscreen="isProgramFullscreen" :active-view="currentKey"
                           @requestSwitchFull="toggleFullScreen"
         />
       </div>
@@ -282,9 +274,7 @@ onUnmounted(() => {
       </div>
 
       <div v-if="checkOK">
-        <tutorialComponent
-          :activeView="currentKey"
-          :activeFull="currentFullKey"
+        <tutorialComponent :activeView="currentKey" :activeFull="currentFullKey"
           id="tutorial-activation"
           @requestSwitchPanel="onRequestSwitch"
           @requestSwitchFull="toggleFullScreen"
