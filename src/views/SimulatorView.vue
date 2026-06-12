@@ -3,6 +3,7 @@ import { ref, shallowRef, onMounted, onUnmounted, inject, nextTick, watch, compu
 
 import processor      from '@/components/processor.vue';
 import program        from '@/components/program.vue';
+import programEditor  from '@/components/programEditor.vue';
 
 import tutorialComponent       from '@/components/tutorialComponent.vue';
 import tutorialEditor          from '@/components/tutorialEditor.vue';
@@ -249,12 +250,14 @@ onUnmounted(() => {
         <program :active-view="currentKey" @requestSwitchFull="toggleFullScreen"/>
       </div>
 
-      <div v-if="checkOK" v-show="isProcessorFullscreen" class="grid-item processor" id="processor-panel">
+      <div v-if="checkOK" v-show="isProcessorFullscreen" class="grid-item processor"
+        id="processorEditor-panel">
         <processor :is-fullscreen="isProcessorFullscreen" @requestSwitchFull="toggleFullScreen"/>
       </div>
-      <div v-if="checkOK" v-show="isProgramFullscreen" class="grid-item program" id="program-panel">
-        <program :is-fullscreen="isProgramFullscreen" :active-view="currentKey"
-                          @requestSwitchFull="toggleFullScreen"
+      <div v-if="checkOK" v-show="isProgramFullscreen" class="grid-item program"
+           id="programEditor-panel">
+        <programEditor :is-fullscreen="isProgramFullscreen" :active-view="currentKey"
+                        @requestSwitchFull="toggleFullScreen"
         />
       </div>
 
