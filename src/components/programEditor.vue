@@ -1,15 +1,21 @@
 <script setup>
-  import { ref, toRef, toRaw, onMounted, onUnmounted, nextTick, inject, reactive, watch }  from "vue"
-  import { useDraggable, useResizeObserver}                                       from '@vueuse/core'
-  import HelpComponent                                          from '@/components/helpComponent.vue'
-  import { useRVCAT_Api }                                                           from '@/rvcatAPI'
-  import { downloadJSON, uploadJSON, initResource, createGraphVizGraph,
-           saveToLocalStorage, removeFromLocalStorage, updateProcess,
-           instructionTypes, typeOperations, typeSizes                             }  from '@/common'
+  import { ref, toRef, toRaw, watchEffect, onMounted, onUnmounted,
+           nextTick, inject, reactive, watch }                       from "vue"
+  import { useDraggable, useResizeObserver}                 from '@vueuse/core'
+  import HelpComponent                    from '@/components/helpComponent.vue'
+  import { useRVCAT_Api }                                     from '@/rvcatAPI'
+  import { downloadJSON, uploadJSON, createGraphVizGraph,
+           instructionTypes, typeOperations, typeSizes       }  from '@/common'
 
   const { getProgGraph }    = useRVCAT_Api();
   const { registerHandler } = inject('worker');
-  const simState            = inject('simulationState');
+
+  const props = defineProps({
+    isFullscreen: {
+      type: Boolean,
+      default: false
+    }
+  });
 
 // ============================================================================
 // Program options & localStorage
@@ -63,6 +69,16 @@ const STORAGE_KEY = 'programEditOptions'
       console.error('📄❌ Failed to save:', error)
     }
   }
+
+  watchEffect(() => { // Dependences: re-evaluated when they change
+    const fullscreen = props.isFullscreen;
+
+    if (fullscreen) { // maybe edited program has changed
+      nextTick(() => {
+        loadEditedProgram();
+      })
+    }
+  })
 
 // ============================================================================
 // Draggable & resizable full-screen graph container
@@ -130,13 +146,14 @@ function loadEditedProgram() {
         source2: inst.source2 || '', source3: inst.source3 || '',  constant: inst.constant || ''
       };
     });
+    console.log('📄Edited Program Reloaded from local storage')
   } catch (e) {
     console.error('📄❌ Failed to load edited program from localStorage:', e);
   }
 }
 
 // ============================================================================
-// WATCHES: program, globalStat  HANDLERS: setProgram, showProgram
+// WATCHES
 // ============================================================================
   watch( () => [programEditOptions.showInOut, programEditOptions.showActions, programEditOptions.showGraph,
            programEditOptions.windowWidth, programEditOptions.windowHeight],
@@ -194,8 +211,7 @@ function loadEditedProgram() {
 // Program handling:
 //        addInstruction,       removeInstruction,
 //        moveInstructionUp,    moveInstructionDown,
-//        normalizeInstruction, snapshotProgram,
-//        normalizeMemory,      snapshotMemory
+//        normalizeInstruction, snapshotProgram
 // ============================================================================
 
 // Add just at index position
@@ -257,10 +273,6 @@ function snapshotProgram() {
   };
 }
 
-// ============================================================================
-// viewColumns
-// ============================================================================
-
   function toggleInOut  () { programEditOptions.showInOut   = !programEditOptions.showInOut }
   function toggleActions() { programEditOptions.showActions = !programEditOptions.showActions }
 
@@ -280,7 +292,7 @@ function snapshotProgram() {
     }
   }
 
-   function openFullScreen() {
+  function openFullScreen() {
     showFullScreen.value = true;
     console.log('📄🔄Drawing edited program');
     clearTimeout(graphTimeout)
@@ -396,7 +408,7 @@ function snapshotProgram() {
         View Graph
       </button>
 
-      <div class="settings-container fullscreen-settings">
+      <div class="settings-container">
         <div class="buttons">
           <button class="blue-button" @click="showModalDownload = true"
                title="Save current edited program"
@@ -672,15 +684,9 @@ function snapshotProgram() {
   .settings-container {
     display: flex;
     align-items: center;
-    gap: 3px;
+    gap: 10px;
     flex: 1;
     justify-content: center;
-  }
-
-  .fullscreen-settings {
-    display:     flex;
-    align-items: center;
-    gap:         10px;
   }
 
   .table-container {
@@ -867,56 +873,6 @@ function snapshotProgram() {
     border-radius: 4px;
   }
 
-  .form-select {
-    width:            100%;
-    padding:          1px 1px;
-    margin-bottom:    2px;
-    border:           2px solid #ddd;
-    border-radius:    6px;
-    font-size:        medium;
-    background-color: white;
-    transition:       border-color 0.3s;
-  }
-  .form-select:focus {
-    outline:      none;
-    border-color: #4a6cf7;
-  }
-  .form-select option[value="_add_new_"] {
-    color:            #4a6cf7;
-    font-weight:      bold;
-    background-color: #f0f5ff;
-  }
-
-  .instruction-side-container {
-    display:        flex;
-    min-width:      0;
-    box-sizing:     border-box;
-    flex-direction: column;
-    align-items:    center;
-    border:         1px solid #ccc;
-    border-radius:  8px;
-    padding:        0.3rem;
-    background:     #fafafa;
-    flex:           1 1 70%;
-  }
-
-  .memory-side-container {
-    flex:       1 1 30%;
-    min-width:  0;
-    box-sizing: border-box;
-    display:    flex;
-    padding:    3px;
-    flex-direction: column;
-    border:        1px solid #ddd;
-    background:    #f8f9fa;
-    border-radius: 8px;
-  }
-
-  .instruction-side-container .table-container,
-  .memory-side-container      .table-container {
-    flex: 0 0 auto;
-  }
-
   .fullscreen-overlay {
     position: fixed;
     top: 0;
@@ -1000,12 +956,6 @@ function snapshotProgram() {
     width: auto;
     height: auto;
     display: block;
-  }
-
-  .highlighted {
-    background-color: rgba(255, 0, 0, 0.15);
-    transition:       background-color 0.05s linear;
-    outline:          2px solid red;
   }
 
   tr:hover {
