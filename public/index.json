@@ -5,10 +5,10 @@
     "B4"
   ],
   "program": [
+    "BaseSIMD",
     "Base",
     "V1",
-    "V2",
-    "BaseSIMD"
+    "V2"
   ],
    "tutorial": [
     "navigation-tour"
