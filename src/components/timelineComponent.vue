@@ -371,6 +371,17 @@
     const lengthRowList = []
     const portsUsedList = []
 
+    // First cell is empty (top-left corner)
+    ctx.fillStyle   = "#ffffff"
+    ctx.strokeStyle = "#bbb"
+    ctx.lineWidth   = 1
+    ctx.fillRect    (x, y, cellW, cellH)
+    ctx.strokeRect  (x, y, cellW, cellH)
+
+    ctx.fillStyle = "#000"
+    ctx.fillText    (' ', x + fontXOffset, y + fontYOffset)
+    x += cellW
+
     for (let i = 0; i < totalCycles; ) {
       let ch          = String(i % 10)
       ctx.fillStyle   = "#ffffff"
@@ -435,6 +446,16 @@
 
       let initCol   = startCycle
       let lengthCol = states.length
+
+      // First cell is instruction number
+      ctx.fillStyle   = rowBg;
+      ctx.strokeStyle = "#bbb";
+      ctx.lineWidth   = 1;
+      ctx.fillRect    (x, y, cellW, cellH);
+      ctx.strokeRect  (x, y, cellW, cellH);
+      ctx.fillStyle = "#000"
+      ctx.fillText    (String(instrIdx % 10), x + fontXOffset, y + fontYOffset)
+      x += cellW
 
       for (let i = 0; i < totalCycles; ) {
         let ch        = ' '
