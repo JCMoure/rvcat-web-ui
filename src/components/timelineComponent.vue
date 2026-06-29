@@ -448,7 +448,7 @@
                                  (ch == 'L' && states[i-startCycle-1] != 'L') ||
                                  (ch == 'S' && states[i-startCycle-1] != 'S')
 
-          if (critical) currColor = "red"
+          if (critical && timelineOptions.full) currColor = "red"
 
           interactiveCells.push({
             x, y,
