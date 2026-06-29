@@ -605,7 +605,7 @@
         x:        e.clientX + 10,
         y:        e.clientY + 10,
         state:    charToProcessingState(char, first_exec_stage ? port : null, addr),
-        critical: critical
+        critical: critical && timelineOptions.full
       }
       adjustTooltipPosition(e)
 
