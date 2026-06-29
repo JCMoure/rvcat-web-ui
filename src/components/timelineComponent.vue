@@ -514,7 +514,7 @@
     // highlight column (cycle)
     if (col !== null) {
       let length = Math.min(lengthRow, totalInstr-initRow)
-      ctx.strokeRect( padX + col*cellW, padX + (initRow+1) * cellH,  cellW, length*cellH)
+      ctx.strokeRect( padX + (col+1)*cellW, padX + (initRow+1) * cellH,  cellW, length*cellH)
 
       // highlight specific positions (cells)
       if (portsUsed && portsUsed.length > 0) {
@@ -523,7 +523,7 @@
           if (row >= initRow && row < initRow + lengthRow) {
             ctx.save();
             ctx.fillStyle = 'rgba(255, 0, 0, 0.2)';
-            ctx.fillRect(padX + col * cellW, padX + (row + 1) * cellH, cellW, cellH);
+            ctx.fillRect(padX + (col + 1) * cellW, padX + (row + 1) * cellH, cellW, cellH);
             ctx.restore();
           }
         });
@@ -533,7 +533,7 @@
     // highlight row (instruction)
     if (row !== null) {
       let length = Math.min(lengthCol, totalCycles-initCol)
-      ctx.strokeRect( padY + initCol*cellW, padY + (row+1) * cellH, length*cellW, cellH )
+      ctx.strokeRect( padY + (initCol+1)*cellW, padY + (row+1) * cellH, length*cellW, cellH )
     }
   }
 
