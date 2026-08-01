@@ -1,6 +1,5 @@
 <template>
   <div class="tutorial-system">
-
     <!-- Tutorial Overlay for Steps -->
     <div v-if="currentTutorial && isActive && !isQuestionStep" class="tutorial-overlay">
       <!-- Tooltip -->
@@ -8,7 +7,8 @@
         <div class="tutorial-content">
           <h3 v-html="currentStep?.title"></h3>
           <p class="step-description" v-html="currentStep?.description"></p>
-          <div v-if="currentStep?.image" class="step-image" @click="openLightbox(currentStep.image)">
+          <div v-if="currentStep?.image" class="step-image"
+            @click="openLightbox(currentStep.image)">
             <img :src="currentStep.image" alt="Step image">
             <span class="image-hint">Click to enlarge</span>
           </div>
@@ -23,14 +23,14 @@
             </span>
             <button v-if="stepIndex < currentTutorial.steps.length - 1"
                     @click="nextStep"
-                    title="Go to next step on the tutorial.\n If disabled, then an action must be done first."
+                    title="Go next step; disabled if an action must be done first"
                     :disabled="!canProceed"
                     :class="['tutorial-btn', canProceed ? 'tutorial-btn-primary' : 'tutorial-btn-disabled']">
               Next
             </button>
             <button v-else
                     @click="completeTutorial"
-                    title="Finish tutorial.\n If disabled, then an action must be done first."
+                    title="Finish tutorial; disabled if an action must be done first"
                     :disabled="!canProceed"
                     :class="['tutorial-btn', canProceed ? 'tutorial-btn-primary' : 'tutorial-btn-disabled']">
               Finish
@@ -75,12 +75,18 @@
               >
                 <span class="answer-letter">{{ String.fromCharCode(65 + index) }}</span>
                 <span class="answer-text" v-html="answer.text"></span>
-                <span v-if="questionAnswered && isQuestionCorrect  && answer.isCorrect" class="answer-indicator correct">✓</span>
-                <span v-if="questionAnswered && !isQuestionCorrect && selectedAnswers.includes(answer.originalIndex) && !answer.isCorrect" class="answer-indicator wrong">✗</span>
-                <span v-if="questionAnswered && !isQuestionCorrect && selectedAnswers.includes(answer.originalIndex) && answer.isCorrect" class="answer-indicator partial-correct">✓</span>
+                <span v-if="questionAnswered && isQuestionCorrect  &&
+                            answer.isCorrect" class="answer-indicator correct">✓</span>
+                <span v-if="questionAnswered && !isQuestionCorrect &&
+                            selectedAnswers.includes(answer.originalIndex) && !answer.isCorrect"
+                            class="answer-indicator wrong">✗</span>
+                <span v-if="questionAnswered && !isQuestionCorrect &&
+                            selectedAnswers.includes(answer.originalIndex) && answer.isCorrect"
+                            class="answer-indicator partial-correct">✓</span>
               </button>
               <!-- Inline feedback below each answer -->
-              <div v-if="questionAnswered && selectedAnswers.includes(answer.originalIndex) && answer.explanation"
+              <div v-if="questionAnswered && selectedAnswers.includes(answer.originalIndex)
+                         && answer.explanation"
                    :class="['answer-feedback', answer.isCorrect ? 'feedback-correct' : 'feedback-wrong']"
                    v-html="answer.explanation">
               </div>
