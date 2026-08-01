@@ -291,17 +291,16 @@ const STORAGE_KEY = 'programOptions'
               :style="activeView === 'simulationComponent' ? rowStyle(index) : {}"
               :class="{ highlighted: index === simState.instrHighlightedIdx }"
             >
-              <td title="Instruction Number/Percentage of time aggregated to in critical path">
-                <section v-if="activeView === 'simulationComponent' && simState.executionResults?.critical_path?.instructions?.[index]?.percentage != null">
-                  {{ simState.executionResults.critical_path.instructions[index].percentage.toFixed(0) }}%
-                </section>
-                <section v-else>
-                 {{ index }}
-                </section>
+              <td v-if="activeView != 'simulationComponent' || simState.executionResults?.critical_path?.instructions?.[index]?.percentage === null"
+                  title="Instruction Number">
+                {{ index }}
               </td>
-
+              <td v-if="activeView === 'simulationComponent' && simState.executionResults?.critical_path?.instructions?.[index]?.percentage != null"
+                 title="Percentage of time aggregated to in critical path">
+                {{ simState.executionResults.critical_path.instructions[index].percentage.toFixed(0) }}%
+              </td>
               <td title="Instruction description">
-                 {{ inst.text }}
+                {{ inst.text }}
               </td>
               <td v-if="!programOptions.showLat" title="Instruction type">
                 {{ inst.type }}
