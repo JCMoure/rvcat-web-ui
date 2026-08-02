@@ -1179,12 +1179,13 @@ onUnmounted(() => {
   position: relative;
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 10px;
   margin-bottom: 10px;
 }
 
 .tutorial-delete-btn {
-  background: #ff4444;
+  background: #eed1d1;
   color: white;
   border: none;
   border-radius: 50%;
@@ -1200,7 +1201,7 @@ onUnmounted(() => {
 }
 
 .tutorial-delete-btn:hover {
-  background: #cc0000;
+  background: #ff0000;
   transform: scale(1.1);
 }
 
