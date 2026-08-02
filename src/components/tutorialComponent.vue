@@ -225,7 +225,7 @@
 <script setup>
 
 import { ref, computed, inject, reactive, watch, nextTick, onMounted, onUnmounted } from 'vue'
-import {  initResource, uploadJSON, removeFromLocalStorage }                   from '@/common'
+import {  initResource, uploadJSON }                                           from '@/common'
 const simState = inject('simulationState');
 
 // ============================================================================
@@ -955,28 +955,28 @@ onUnmounted(() => {
   box-shadow:  0 8px 24px rgba(0, 0, 0, 0.3);
   padding:     0;
   opacity:     0;
-  width:       400px;
+  width:       600px;
   max-width:   calc(100vw - 40px);
   z-index:     10001;
   pointer-events: all;
   transition:    all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-  border-radius: 12px;
+  border-radius: 10px;
   transform:     translateY(-10px) scale(0.95);
   animation:     tutorial-tooltip-appear 0.4s ease-out forwards;
 }
 
 .tutorial-content {
-  padding: 10px;
+  padding: 12px;
 }
 
 .tutorial-content h3 {
-  margin:    0 0 10px 0;
+  margin:    0 0 5px 0;
   color:     #333;
   font-size: large;
 }
 
 .tutorial-content p {
-  margin:      0 0 20px 0;
+  margin:      0 0 10px 0;
   color:       #666;
   line-height: 1.5;
   font-size:   medium;
@@ -998,7 +998,7 @@ onUnmounted(() => {
 }
 
 .tutorial-btn {
-  padding:       8px 16px;
+  padding:       4px 16px;
   border:        1px solid #ddd;
   border-radius: 4px;
   background:    white;
@@ -1053,8 +1053,8 @@ onUnmounted(() => {
 
 .tutorial-close {
   position:    absolute;
-  top:         10px;
-  right:       15px;
+  top:         0px;
+  right:       0px;
   background:  none;
   border:      none;
   font-size:   large;
@@ -1102,7 +1102,7 @@ onUnmounted(() => {
 .tutorial-menu {
   bottom:  20px;
   right:   20px;
-  padding: 12px;
+  padding: 8px;
   width:      360px;
   max-height: 500px;
   position:   absolute;
@@ -1120,14 +1120,14 @@ onUnmounted(() => {
 
 .tutorial-list {
   display: flex;
-  gap:     8px;
+  gap:     4px;
   flex-direction: column;
 }
 
 .tutorial-menu-item {
   background: none;
-  border:     1px solid #ddd;
-  padding:    10px;
+  border:     2px solid #ddd;
+  padding:    5px;
   cursor:     pointer;
   text-align: left;
   transition: all 0.2s;
@@ -1142,7 +1142,7 @@ onUnmounted(() => {
 .tutorial-item-content strong {
   display:       block;
   color:         #333;
-  margin-bottom: 5px;
+  margin-bottom: 2px;
   font-size:     medium;
 }
 
@@ -1161,15 +1161,13 @@ onUnmounted(() => {
 }
 
 .tutorial-menu-separator {
-  height:     1px;
+  height:     3px;
   background: #eee;
-  margin:     5px 0;
+  margin:     4px 0;
 }
 
 .tutorial-paused-section {
   border-bottom:  2px solid #eee;
-  margin-bottom:  8px;
-  padding-bottom: 8px;
 }
 
 .tutorial-paused-header {
@@ -1187,7 +1185,7 @@ onUnmounted(() => {
 .tutorial-paused-info {
   margin:     0;
   color:      #666;
-  font-size:  small;
+  font-size:  medium;
   font-style: italic;
 }
 
@@ -1314,8 +1312,8 @@ onUnmounted(() => {
 
 .question-close {
   position: absolute;
-  top:      10px;
-  right:    12px;
+  top:      0px;
+  right:    0px;
   background:  none;
   border:      none;
   font-size:   24px;
@@ -1331,24 +1329,24 @@ onUnmounted(() => {
 }
 
 .question-header {
-  padding:       4px 18px 6px;
+  padding:       4px 8px;
   border-bottom: 1px solid #f0f0f0;
   background:    linear-gradient(135deg, #8b5cf6, #7c3aed);
   color:         white;
   display:       flex;
   align-items:   center;
-  gap:           10px;
+  gap:           12px;
   width:         100%;
 }
 
 .question-badge {
   display:       inline-block;
   background:    rgba(255, 255, 255, 0.2);
-  padding:       3px 10px;
+  padding:       3px 3px;
   border-radius: 16px;
   font-size:     small;
   font-weight:   bold;
-  margin-bottom: 20px;
+  margin-bottom: 0px;
   background:    #007bff;
   color:         white;
   flex-shrink:   0;
@@ -1356,6 +1354,7 @@ onUnmounted(() => {
 
 .question-header h2 {
   margin:      0;
+  margin-right: 30px;
   font-size:   medium;
   font-weight: 600;
   flex:        1;
@@ -1366,7 +1365,7 @@ onUnmounted(() => {
 }
 
 .question-body {
-  padding:    10px 20px;
+  padding:    10px 10px;
   overflow-y: auto;
   flex:       1;
 }
@@ -1375,7 +1374,7 @@ onUnmounted(() => {
   font-size: medium;
   line-height: 1.6;
   color: #333;
-  margin: 0 0 6px 0;
+  margin: 0 0 3px 0;
 }
 
 .question-text :deep(code) {
@@ -1386,14 +1385,14 @@ onUnmounted(() => {
 }
 
 .question-image {
-  margin-bottom: 6px;
+  margin-bottom: 5px;
   text-align:    center;
   cursor:        pointer;
   position:      relative;
 }
 
 .step-image {
-  margin:     6px 0;
+  margin:     5px 0;
   text-align: center;
   cursor:     pointer;
   position:   relative;
@@ -1486,24 +1485,24 @@ onUnmounted(() => {
 
 .question-mode-info {
   background: #f5f3ff;
-  padding: 10px 14px;
+  padding: 6px 14px;
   border-radius: 8px;
   font-size: 13px;
   color: #6b7280;
-  margin-bottom: 16px;
+  margin-bottom: 8px;
 }
 
 .answers-list {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 6px;
 }
 
 .answer-option {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 12px 16px;
+  gap: 10px;
+  padding: 4px 16px;
   border: 2px solid #e5e7eb;
   border-radius: 10px;
   background: white;
@@ -1612,7 +1611,7 @@ onUnmounted(() => {
 .answer-feedback {
   margin-top: 6px;
   margin-left: 40px;
-  padding: 8px 12px;
+  padding: 0px 12px;
   border-radius: 6px;
   font-size: 13px;
   line-height: 1.4;
@@ -1639,17 +1638,17 @@ onUnmounted(() => {
 }
 
 .feedback-section {
-  margin-top: 16px;
+  margin-top: 4px;
   animation: fadeIn 0.3s ease-out;
 }
 
 .feedback-box {
-  padding: 12px 16px;
+  padding: 2px 16px;
   border-radius: 8px;
 }
 
 .feedback-box h4 {
-  margin: 0 0 8px 0;
+  margin: 0 0 0px 0;
   font-size: 14px;
   font-weight: 600;
 }
@@ -1673,7 +1672,7 @@ onUnmounted(() => {
 }
 
 .question-actions {
-  padding: 14px 20px;
+  padding: 6px 20px;
   border-top: 1px solid #f0f0f0;
   display: flex;
   justify-content: space-between;
