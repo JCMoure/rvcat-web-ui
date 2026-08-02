@@ -194,7 +194,7 @@
 
         <div v-else class="tutorial-list">
           <div
-            v-for="tutorial in tutorialOptions.available"
+            v-for="tutorial in availableTutorials"
             :key="tutorial.id"
             class="tutorial-item-wrapper"
           >
@@ -283,6 +283,10 @@ const isActive        = ref(false)
       console.error('👨‍🎓❌ Failed to save (core):', error)
     }
   }
+
+const availableTutorials = computed(() =>
+   this.tutorialOptions.available;
+)
 
 // ============================================================================
 // PROPS & EMITS
@@ -868,7 +872,7 @@ const addTutorial = async () => {
 function deleteTutorial (tutorialId) {
   removeFromLocalStorage('tutorial', tutorialId, tutorialOptions.available)
   tutorialOptions.inProgressID = ''
-  if ( tutorialOptions.available.length === 0)
+  if ( tutorialOptions.available.length == 0)
   {
     alert("Removing all tutorial configurations forces to load the original tutorials provided in the distribution")
     initTutorial()
