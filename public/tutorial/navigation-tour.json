@@ -14,24 +14,24 @@
       "title": "Simulation Results",
       "description": "Here you can run simulations of your code. You get global performance metrics, usage percentage of the main elements of the execution engine, and the breakdown of the critical path of the total execution.",
       "selector": ".results",
-      "position": "left",
+      "position": "bottom",
       "action": "switchTo:simulationComponent"
-    },
-    {
-      "type": "step",
-      "title": "Static Analysis",
-      "description": "The static performance analysis of the program's code detects potential bottlenecks and visualizes the data dependence graph.",
-      "selector": ".results",
-      "position": "left",
-      "action": "switchTo:analysisComponent"
     },
     {
       "type": "step",
       "title": "Timeline",
       "description": "The Timeline shows the temporal evolution of the program's execution.",
       "selector": ".results",
-      "position": "left",
+      "position": "bottom",
       "action": "switchTo:timelineComponent"
+    },
+    {
+      "type": "step",
+      "title": "Static Analysis",
+      "description": "The static performance analysis of the program's code detects potential bottlenecks and visualizes the data dependence graph.",
+      "selector": ".results",
+      "position": "bottom",
+      "action": "switchTo:staticAnalysisComponent"
     },
     {
       "type": "step",
