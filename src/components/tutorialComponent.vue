@@ -251,7 +251,7 @@ const defaultOptions = {
 const tutorialOptions  = reactive(defaultOptions)
 
 const TOOLTIP_WIDTH  = 400
-const TOOLTIP_HEIGHT = 200
+const TOOLTIP_HEIGHT = 300
 
 // Core tutorial state
 const currentTutorial = ref(null)
@@ -397,11 +397,14 @@ const tooltipStyle = computed(() => {
 
   tooltipPositionTrigger.value // Force reactivity
 
-  if (!highlightElement.value || !currentStep.value) return { display: 'none' }
+  if (!highlightElement.value || !currentStep.value) {
+    showTutorialMenu.value = true
+    return { display: 'none' }
+  }
 
   const rect = highlightElement.value.getBoundingClientRect()
   const pos  = currentStep.value.position || 'bottom'
-  const margin = 25
+  const margin = 15
 
   let top, left
   const centerX = rect.left + rect.width / 2  - TOOLTIP_WIDTH / 2
@@ -978,7 +981,7 @@ onUnmounted(() => {
   box-shadow:  0 8px 24px rgba(0, 0, 0, 0.3);
   padding:     0;
   opacity:     0;
-  width:       600px;
+  width:       400px;
   max-width:   calc(100vw - 40px);
   z-index:     10001;
   pointer-events: all;
@@ -1315,7 +1318,6 @@ onUnmounted(() => {
   }
 }
 
-/* Question Overlay Styles */
 .question-overlay {
   display:  flex;
   position: fixed;
