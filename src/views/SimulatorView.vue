@@ -1,14 +1,12 @@
 <script setup>
 import { ref, shallowRef, onMounted, onUnmounted, inject, nextTick, watch, computed } from 'vue';
 
-import processor       from '@/components/processor.vue';
-import program         from '@/components/program.vue';
-import programEditor   from '@/components/programEditor.vue';
-import processorEditor from '@/components/processorEditor.vue';
-
+import processor               from '@/components/processor.vue';
+import program                 from '@/components/program.vue';
+import programEditor           from '@/components/programEditor.vue';
+import processorEditor         from '@/components/processorEditor.vue';
 import tutorialComponent       from '@/components/tutorialComponent.vue';
 import tutorialEditor          from '@/components/tutorialEditor.vue';
-
 import timelineComponent       from '@/components/timelineComponent.vue';
 import aboutComponent          from '@/components/aboutComponent.vue';
 import staticAnalysisComponent from '@/components/staticAnalysisComponent.vue';

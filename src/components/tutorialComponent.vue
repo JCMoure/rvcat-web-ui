@@ -190,9 +190,6 @@
           <div class="tutorial-menu-separator"></div>
         </div>
 
-        <div v-if="isLoading" class="tutorial-loading">
-          Loading tutorials...
-        </div>
         <div v-else class="tutorial-list">
           <button
             v-for="tutorial in tutorialOptions.available"
@@ -225,7 +222,7 @@
 <script setup>
 
 import { ref, computed, inject, reactive, watch, nextTick, onMounted, onUnmounted } from 'vue'
-import {  initResource, uploadJSON }                                           from '@/common'
+import { initResource, uploadJSON }                                            from '@/common'
 const simState = inject('simulationState');
 
 // ============================================================================
@@ -247,9 +244,7 @@ const TOOLTIP_HEIGHT = 200
 // Core tutorial state
 const currentTutorial = ref(null)
 const stepIndex       = ref(0)
-
-const isActive  = ref(false)
-const isLoading = ref(false)
+const isActive        = ref(false)
 
   const loadOptions = () => {
     try {
@@ -292,7 +287,6 @@ const emit  = defineEmits(['requestSwitchPanel', 'requestSwitchFull'])
 
 // refer to this variable to force evaluation of validation state
 const validationState  = ref({})
-
 const showTutorialMenu = ref(false)
 const highlightElement = ref(null)
 
@@ -481,87 +475,6 @@ const shuffleAnswers = () => {
     ;[indices[i], indices[j]] = [indices[j], indices[i]]
   }
   shuffledAnswerIndices.value = indices
-}
-
-// ============================================================================
-// TUTORIAL LOADING
-// ============================================================================
-
-const initTutorial = async () => {
-  const inProgressID = tutorialOptions.inProgressID  // Copy before modification by InitResource
-  await initResource('tutorial', tutorialOptions, 'inProgressID', 'available')
-
-  // replace list of tutorial names by list of tutorial descriptions
-  const tutorials = []
-  for (const name of tutorialOptions.available) {
-    try {
-      const jsonString = localStorage.getItem(`tutorial.${name}`)
-      const tutorial   = JSON.parse(jsonString)
-      tutorial.id      = name
-      tutorials.push({
-        id:          name,
-        name:        tutorial.name,
-        description: tutorial.description
-      })
-    } catch (e) {
-      console.error(`👨‍🎓❌ Failed to load tutorial: ${name}`, e)
-    }
-  }
-  tutorialOptions.available  = tutorials   // fire options saving
-  await loadCurrentTutorial (inProgressID)
-  isLoading.value            = false
-}
-
-const loadCurrentTutorial = async (ID) => {
-  let tutorial = null
-  if ( ID !== "")
-    tutorial = tutorialOptions.available.find(t => t.id === ID)
-
-  if ( ID === "" || tutorial === null) { // no tutorial in progress
-    tutorialOptions.inProgressID = ""
-    tutorialOptions.progressStep =  0
-    currentTutorial.value         = null
-    stepIndex.value               = 0
-    console.log('👨‍🎓🚦No tutorial in progress')
-    return
-  }
-
-  const jsonString      = localStorage.getItem(`tutorial.${ID}`)
-  const fullTutorial    = JSON.parse(jsonString)
-  fullTutorial.steps    = processStepActions(fullTutorial.steps)
-  fullTutorial.id       = ID
-  currentTutorial.value = fullTutorial
-  stepIndex.value       = (tutorialOptions.inProgressID === ID) ? tutorialOptions.progressStep : 0
-  tutorialOptions.inProgressID = ID
-  tutorialOptions.progressStep = stepIndex.value
-  console.log(`👨‍🎓🔄 Tutorial in progress: ${ID} (Step ${stepIndex.value+1})`)
-}
-
-const addTutorial = async () => {
-  try {
-    const data   = await uploadJSON(null, 'tutorial');
-    let included = false
-
-    for (const tut of tutorialOptions.available) {
-      if (tut.id === data.id)
-        included = true
-    }
-    if (included) {
-      alert(`A tutorial with name: "${data.id}" has been already loaded.`)
-      return
-    }
-    tutorialOptions.available.push({
-      id:          data.id,
-      name:        data.name,
-      description: data.description
-    })
-    const key    = `tutorial.${data.id}`;
-    const str    = JSON.stringify(data, null, 2);
-    localStorage.setItem(key, str);
-    console.log(`👨‍🎓✅ Added tutorial to local storage: ${data.id}`);
-  } catch (error) {
-    console.error('👨‍🎓❌ Failed to upload/save tutorial', error);
-  }
 }
 
 // ============================================================================
@@ -859,6 +772,86 @@ const toggleTutorialMenu = () => {
 }
 
 // ============================================================================
+// TUTORIAL: Init, loadCurrent & add
+// ============================================================================
+
+const initTutorial = async () => {
+  const inProgressID = tutorialOptions.inProgressID  // Copy before modification by InitResource
+  await initResource('tutorial', tutorialOptions, 'inProgressID', 'available')
+
+  // replace list of tutorial names by list of tutorial descriptions
+  const tutorials = []
+  for (const name of tutorialOptions.available) {
+    try {
+      const jsonString = localStorage.getItem(`tutorial.${name}`)
+      const tutorial   = JSON.parse(jsonString)
+      tutorial.id      = name
+      tutorials.push({
+        id:          name,
+        name:        tutorial.name,
+        description: tutorial.description
+      })
+    } catch (e) {
+      console.error(`👨‍🎓❌ Failed to load tutorial: ${name}`, e)
+    }
+  }
+  tutorialOptions.available = tutorials   // fire options saving
+  await loadCurrentTutorial (inProgressID)
+}
+
+const loadCurrentTutorial = async (ID) => {
+  let tutorial = null
+  if ( ID !== "")
+    tutorial = tutorialOptions.available.find(t => t.id === ID)
+
+  if ( ID === "" || tutorial === null) { // no tutorial in progress
+    tutorialOptions.inProgressID = ""
+    tutorialOptions.progressStep =  0
+    currentTutorial.value         = null
+    stepIndex.value               = 0
+    console.log('👨‍🎓🚦No tutorial in progress')
+    return
+  }
+
+  const jsonString      = localStorage.getItem(`tutorial.${ID}`)
+  const fullTutorial    = JSON.parse(jsonString)
+  fullTutorial.steps    = processStepActions(fullTutorial.steps)
+  fullTutorial.id       = ID
+  currentTutorial.value = fullTutorial
+  stepIndex.value       = (tutorialOptions.inProgressID === ID) ? tutorialOptions.progressStep : 0
+  tutorialOptions.inProgressID = ID
+  tutorialOptions.progressStep = stepIndex.value
+  console.log(`👨‍🎓🔄 Tutorial in progress: ${ID} (Step ${stepIndex.value+1})`)
+}
+
+const addTutorial = async () => {
+  try {
+    const data   = await uploadJSON(null, 'tutorial');
+    let included = false
+
+    for (const tut of tutorialOptions.available) {
+      if (tut.id === data.id)
+        included = true
+    }
+    if (included) {
+      alert(`A tutorial with name: "${data.id}" has been already loaded.`)
+      return
+    }
+    tutorialOptions.available.push({
+      id:          data.id,
+      name:        data.name,
+      description: data.description
+    })
+    const key    = `tutorial.${data.id}`;
+    const str    = JSON.stringify(data, null, 2);
+    localStorage.setItem(key, str);
+    console.log(`👨‍🎓✅ Added tutorial to local storage: ${data.id}`);
+  } catch (error) {
+    console.error('👨‍🎓❌ Failed to upload/save tutorial', error);
+  }
+}
+
+// ============================================================================
 // EVENT HANDLERS: click, windowChange;  WATCHES: tutorial, globalState
 // ============================================================================
 
@@ -914,8 +907,6 @@ onMounted(async () => {
   document.addEventListener('click', handleClickOutside)
   window.addEventListener  ('resize', handleWindowChange)
   window.addEventListener  ('scroll', handleWindowChange, true)
-  // isLoading.value = true
-  //await initTutorial()
   console.log('👨‍🎓🎯 TutorialEngine mounted')
 })
 
@@ -924,8 +915,7 @@ onUnmounted(() => {
   document.removeEventListener('click', handleClickOutside)
   window.removeEventListener ('resize', handleWindowChange)
   window.removeEventListener ('scroll', handleWindowChange, true)
-  cleanupValidationListeners ()
-  cleanupButtonClickTracking ()
+  cleanup ()
 })
 </script>
 
@@ -1150,13 +1140,6 @@ onUnmounted(() => {
   color:      #666;
   font-size:  small;
   line-height: 1.4;
-}
-
-.tutorial-loading {
-  padding:    10px;
-  text-align: center;
-  color:      #666;
-  font-style: italic;
 }
 
 .tutorial-menu-separator {
