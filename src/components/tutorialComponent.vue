@@ -294,7 +294,6 @@ const emit  = defineEmits(['requestSwitchPanel', 'requestSwitchFull'])
 const validationState  = ref({})
 
 const showTutorialMenu = ref(false)
-const showEditor       = ref(false)
 const highlightElement = ref(null)
 
 // Scroll position
@@ -915,8 +914,8 @@ onMounted(async () => {
   document.addEventListener('click', handleClickOutside)
   window.addEventListener  ('resize', handleWindowChange)
   window.addEventListener  ('scroll', handleWindowChange, true)
-  isLoading.value = true
-  await initTutorial()
+  // isLoading.value = true
+  //await initTutorial()
   console.log('👨‍🎓🎯 TutorialEngine mounted')
 })
 
