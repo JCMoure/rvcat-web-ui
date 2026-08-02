@@ -236,7 +236,7 @@
 <script setup>
 
 import { ref, computed, inject, reactive, watch, nextTick, onMounted, onUnmounted } from 'vue'
-import { initResource, uploadJSON }                                            from '@/common'
+import { initResource, removeFromLocalStorage, uploadJSON }                         from '@/common'
 const simState = inject('simulationState');
 
 // ============================================================================
