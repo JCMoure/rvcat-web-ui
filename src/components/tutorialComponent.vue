@@ -868,7 +868,14 @@ const addTutorial = async () => {
 }
 
 function deleteTutorial (tutorialId) {
-  removeFromLocalStorage('tutorial', tutorialId, tutorialOptions.available)
+  removeFromLocalStorage('tutorial', tutorialId)
+
+  const index = tutorialOptions.available.findIndex(
+    tutorial => tutorial.id === tutorialId
+  )
+  if (index !== -1) {
+    tutorialOptions.available.splice(index, 1);
+  }
   tutorialOptions.inProgressID = ''
   if ( tutorialOptions.available.length == 0)
   {
