@@ -190,8 +190,6 @@
           <div class="tutorial-menu-separator"></div>
         </div>
 
-
-
         <div v-else class="tutorial-list">
           <div
             v-for="tutorial in availableTutorials"
@@ -285,7 +283,7 @@ const isActive        = ref(false)
   }
 
 const availableTutorials = computed(() =>
-   this.tutorialOptions.available;
+   tutorialOptions.available
 )
 
 // ============================================================================
