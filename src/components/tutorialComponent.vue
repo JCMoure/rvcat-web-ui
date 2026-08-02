@@ -190,29 +190,43 @@
           <div class="tutorial-menu-separator"></div>
         </div>
 
+
+
         <div v-else class="tutorial-list">
-          <button
+          <div
             v-for="tutorial in tutorialOptions.available"
             :key="tutorial.id"
-            @click="startTutorial(tutorial.id)"
-            title="Start this tutorial"
-            class="tutorial-menu-item"
+            class="tutorial-item-wrapper"
           >
-            <div class="tutorial-item-content">
-              <strong v-html="tutorial.name"></strong>
-              <p v-html="tutorial.description"></p>
-            </div>
-          </button>
+            <button
+              @click="startTutorial(tutorial.id)"
+              title="Start this tutorial"
+              class="tutorial-menu-item"
+            >
+              <div class="tutorial-item-content">
+                <strong v-html="tutorial.name"></strong>
+                <p v-html="tutorial.description"></p>
+              </div>
+            </button>
+            <button
+              @click="deleteTutorial(tutorial.id)"
+              title="Delete this tutorial form list (and local storage)"
+              id="remove-tutorial-button"
+              class="tutorial-delete-btn"
+            >
+            🧹
+            </button>
+          </div>
+
           <button
             @click="addTutorial"
             title="Upload new tutorial"
             class="tutorial-menu-item"
           >
             <div class="tutorial-item-content">
-              <strong> ADD NEW TUTORIAL</strong>
+              <strong>ADD NEW TUTORIAL</strong>
             </div>
           </button>
-
         </div>
       </div>
     </div>
@@ -851,6 +865,16 @@ const addTutorial = async () => {
   }
 }
 
+function deleteTutorial (tutorialId) {
+  removeFromLocalStorage('tutorial', tutorialId, tutorialOptions.available)
+  tutorialOptions.inProgressID = ''
+  if ( tutorialOptions.available.length === 0)
+  {
+    alert("Removing all tutorial configurations forces to load the original tutorials provided in the distribution")
+    initTutorial()
+  }
+}
+
 // ============================================================================
 // EVENT HANDLERS: click, windowChange;  WATCHES: tutorial, globalState
 // ============================================================================
@@ -1140,6 +1164,39 @@ onUnmounted(() => {
   color:      #666;
   font-size:  small;
   line-height: 1.4;
+}
+
+.tutorial-item-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.tutorial-delete-btn {
+  background: #ff4444;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 30px;
+  height: 30px;
+  font-size: 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.tutorial-delete-btn:hover {
+  background: #cc0000;
+  transform: scale(1.1);
+}
+
+.tutorial-delete-btn:active {
+  transform: scale(0.95);
 }
 
 .tutorial-menu-separator {
