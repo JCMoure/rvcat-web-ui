@@ -882,6 +882,7 @@ function deleteTutorial (tutorialId) {
     alert("Removing all tutorial configurations forces to load the original tutorials provided in the distribution")
     initTutorial()
   }
+  showTutorialMenu.value = true
 }
 
 // ============================================================================
