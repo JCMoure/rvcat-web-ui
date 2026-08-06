@@ -3,7 +3,7 @@
   import HelpComponent                                     from '@/components/helpComponent.vue'
   import { uploadJSON, initResource, saveToLocalStorage, removeFromLocalStorage, updateProcess
                                                                               }  from '@/common'
-  const simState            = inject('simulationState');
+  const simState = inject('simulationState');
 
   const props = defineProps({
     activeView: String
@@ -678,7 +678,7 @@
   }
 
   .iters-group input {
-    width:         70px;
+    width:         60px;
     border:        1px solid #ccc;
     border-radius: 4px;
     text-align:    center;

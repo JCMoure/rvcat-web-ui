@@ -14,10 +14,8 @@
    * Simulation Results options (persistent in localStorage)
    * ------------------------------------------------------------------ */
   const STORAGE_KEY = 'simulationOptions'
-  const MAX_ITERS    = 2000
 
   const defaultOptions = {
-    iters:            100,
     autorun:          false,
     availableResults: [],
     resultName:       ''
@@ -127,77 +125,6 @@
   }
 
 // ============================================================================
-// INPUT VALIDATION: iterations field
-// ============================================================================
-
-  const inputValue   = ref('');
-  const isInvalid    = ref(false);
-  let   errorTimeout = null;
-
-  const validateField = () => {
-    const min = 1;
-    const max = MAX_ITERS;
-    let rawValue = inputValue.value;
-
-    if (errorTimeout) clearTimeout(errorTimeout);
-
-    if (rawValue === '' || rawValue === null || rawValue === undefined) {
-      const lastValidValue = simulationOptions.iters;
-      inputValue.value = lastValidValue ?? min;
-      isInvalid.value = false;
-      return;
-    }
-
-    let numValue = Number(rawValue);
-
-    if (isNaN(numValue)) {
-      const lastValidValue = simulationOptions.iters;
-      inputValue.value = lastValidValue ?? min;
-      isInvalid.value = false;
-      return;
-    }
-
-    if (numValue < min) {
-      numValue = min;
-      inputValue.value = numValue;
-      showTemporaryError(`Minimum is ${min}`);
-    } else if (numValue > max) {
-      numValue = max;
-      inputValue.value = numValue;
-      showTemporaryError(`Maximum is ${max}`);
-    }
-
-    if (simulationOptions.iters !== numValue) {
-      simulationOptions.iters = numValue;
-    }
-  }
-
-  const showTemporaryError = (message) => {
-    isInvalid.value = true;
-    errorTimeout = setTimeout(() => {
-      isInvalid.value = false;
-    }, 2000);
-    console.warn(message);
-  };
-
-  const handleKeyPress = (event) => {
-    if (event.key === 'Enter') {
-      event.target.blur();
-    }
-  };
-
-  const handleInput = (event) => {
-    if (isInvalid.value) {
-      isInvalid.value = false;
-    }
-    let value = event.target.value;
-    if (value !== '' && !/^\d*$/.test(value)) {
-      event.target.value = value.replace(/\D/g, '');
-      inputValue.value = event.target.value;
-    }
-  };
-
-// ============================================================================
 // LIFECYCLE:  Mount/unMount
 // ============================================================================
 
@@ -207,18 +134,17 @@
   const updateResults= () => {
     if (simState.state >= 3 && simState.simulatedProcess) {
       const equalProcs = areProcessorsEqual(simState.simulatedProcess, simProcess)
-      const equalIters = simResults.total_iterations == simulationOptions.iters
-      if (equalProcs && equalIters) {
+      if (equalProcs) {
         if (simState.executionResults == null) simState.executionResults = simResults
-        console.log('🕐✅ Same simulated proces && number of iterations: execution results are valid');
+        console.log('🕐✅ Same simulated proces: execution results are valid');
         drawProcessorResults();
       } else if (simulationOptions?.autorun) {
-        console.log('🕐🔄 Something changed: re-running simulation', equalProcs, equalIters)
+        console.log('🕐🔄 Something changed: re-running simulation', equalProcs)
         reloadExecutionResults()
       } else {
         simState.executionResults = null; // Clear results to avoid showing outdated data
         resultsSvg.value = ''; // Clear graph
-        console.log('🕐🧹 Process/Iterations changed but autorun is disabled: clear simulation results')
+        console.log('🕐🧹 Process changed but autorun is disabled: clear simulation results')
       }
     }
   }
@@ -237,18 +163,13 @@
     }
   }
 
-  const handleOptionsChange = (newVal, oldVal) => {
+  const handleOptionsChange = () => {
     // Verify that component is mounted and necessary data is available before executing the watch logic
     if (!isComponentMounted || !simulationOptions || !simState) {
       console.log('🕐 Component not ready, skipping watch execution')
       return
     }
     try {
-      if (newVal.iters !== oldVal?.iters) {
-        console.log('🕐🔄 Iterations changed:', newVal.iters);
-        if (inputValue) inputValue.value = newVal.iters ?? '';
-        if (typeof isInvalid !== 'undefined') isInvalid.value = false;
-      }
       updateResults()
       updateShowResults()
       saveOptions()
@@ -303,7 +224,6 @@
       isComponentMounted = true;
       unwatch = watch(
         () => ({
-          iters:        simulationOptions?.iters,
           autorun:      simulationOptions?.autorun,
           name:         simulationOptions?.resultName
         }),
@@ -416,80 +336,6 @@
     };
   });
 
-  let iterControl = {
-    lastTime:  0,
-    direction: null, // 'up' | 'down'
-    stepLevel: 0,    // 0:1, 1:10, 2:100, 3:1000
-    streak:    0
-  };
-
-  const STEP_VALUES     = [1, 10, 100];
-  const FAST_THRESHOLD  = 300;  // ms → considera "rápido"
-  const RESET_THRESHOLD = 1200; // ms → reinicia velocidad
-
-  function getStep(direction) {
-    const now = Date.now();
-
-    // Si pasa mucho tiempo → reset
-    if (now - iterControl.lastTime > RESET_THRESHOLD) {
-      iterControl.stepLevel = 0;
-      iterControl.streak    = 0;
-    }
-
-    // Si cambia la dirección → reset parcial
-    if (iterControl.direction !== direction) {
-      iterControl.stepLevel = 0;
-      iterControl.streak    = 0;
-      iterControl.direction = direction;
-    }
-
-    // Si es rápido → aumentar racha
-    if (now - iterControl.lastTime < FAST_THRESHOLD) {
-      iterControl.streak++;
-    } else {
-      iterControl.streak = 0;
-    }
-
-    // Increase step level every 6 rapid repetitions
-    if (iterControl.streak >= 6 && iterControl.stepLevel < STEP_VALUES.length - 1) {
-      iterControl.stepLevel++;
-      iterControl.streak = 0; // reset para siguiente escalado
-    }
-
-    iterControl.lastTime = now;
-
-    return STEP_VALUES[iterControl.stepLevel];
-  }
-
-  function roundToStep(value, step, direction) {
-    if (direction === 'up') {
-      return Math.ceil(value / step) * step;
-    } else {
-      return Math.floor(value / step) * step;
-    }
-  }
-
-  function increaseIterations() {
-    const step   = getStep('up')
-    let newValue = - + step
-    if (step > 1) newValue = roundToStep(newValue, step, 'up')
-    simulationOptions.iters = Math.min(newValue, MAX_ITERS)
-  }
-
-  function decreaseIterations() {
-    const step   = getStep('down')
-    if (simulationOptions.iters < step*2) {
-      if (iterControl.stepLevel > 0) {
-        iterControl.stepLevel--;
-        iterControl.streak = -10000; // disable scaling
-        step = STEP_VALUES[iterControl.stepLevel];
-      }
-    }
-    let newValue = simulationOptions.iters - step
-    if (step > 1) newValue = roundToStep(newValue, step, 'down')
-    simulationOptions.iters = Math.max(newValue, 1)
-  }
-
   const ipcColor = computed(() => {
     const ipc = simState.executionResults?.["ipc"] ?? 0
     const dw  = simState.simulatedProcess?.dispatch || 1
@@ -549,10 +395,10 @@
         document.getElementById('run-simulation-button').disabled       = true;
         resultsSvg.value = `<div class="error">Waiting to generate simulation results graph</div>`;
 
-        const { ROBsize, dispatch, retire, sched, blkSize, nBlocks, mPenalty, mIssueTime, instruction_list } = simState.simulatedProcess
+        const { iters, ROBsize, dispatch, retire, sched, blkSize, nBlocks, mPenalty, mIssueTime, instruction_list } = simState.simulatedProcess
         getExecutionResults(JSON.stringify( { ROBsize, dispatch, retire, sched, blkSize, nBlocks, mPenalty, mIssueTime,
                                               instruction_list: toRaw(instruction_list)}, null, 2),
-                            simulationOptions.iters) // Call Python RVCAT
+                            iters) // Call Python RVCAT
         console.log('🕐✅ Reloading execution results')
        }, 200)
     } catch (error) {
@@ -780,35 +626,6 @@
   function openHelp2()  { nextTick(() => { showHelp2.value = true }) }
   function closeHelp2() { showHelp2.value  = false }
 
-/* ------------------------------------------------------------------
- * Button Support: press & hold
- * ------------------------------------------------------------------ */
-  let holdTimeout = null;
-  let holdInterval= null;
-  let savedAutorun = false;
-
-  function startHold(action) {
-    const INITIAL_DELAY = 400;   // tiempo hasta que empieza la repetición
-    const REPEAT_INTERVAL = 250; // velocidad de repetición
-
-    savedAutorun = simulationOptions.autorun; // save autorun state to restore later
-    simulationOptions.autorun = false; // disable autorun while manually changing iterations
-    action()    // first click
-
-    // wait until repetition
-    holdTimeout = setTimeout(() => {
-      holdInterval = setInterval(() => {
-        action();
-      }, REPEAT_INTERVAL);
-    }, INITIAL_DELAY);
-  }
-
-  function stopHold() {
-    clearTimeout(holdTimeout);
-    clearInterval(holdInterval);
-    simulationOptions.autorun = savedAutorun; // restore autorun state after manual change
-  }
-
 </script>
 
 <template>
@@ -832,48 +649,6 @@
               :checked="simulationOptions.autorun"
               @change="toggleAutorun"
           />
-
-        <div class="iters-group">
-          <span class="iters-label" :title="`Rang: 1 - ${MAX_ITERS} iters`">
-            Iterations:
-          </span>
-          <input
-            type=      "text"
-            inputmode= "numeric"
-            pattern=   "[0-9]*"
-            :placeholder="100"
-            v-model=  "inputValue"
-            @blur=    "validateField"
-            @keypress="handleKeyPress"
-            @input=   "handleInput"
-            id=       "simulation-iterations"
-            :class=   "{ 'invalid': isInvalid }"
-            :title=   "`Rang: 1 - ${MAX_ITERS} iters`"
-          />
-          <button
-            class="blue-button small-btn"
-            @mousedown="startHold(increaseIterations)"
-            @mouseup="stopHold"
-            @mouseleave="stopHold"
-            @touchstart.prevent="startHold(increaseIterations)"
-            @touchend="stopHold"
-            title="Increase iterations (press and hold for faster incrementing)"
-          >
-            ▲
-          </button>
-
-          <button
-            class="blue-button small-btn"
-            @mousedown="startHold(decreaseIterations)"
-            @mouseup="stopHold"
-            @mouseleave="stopHold"
-            @touchstart.prevent="startHold(decreaseIterations)"
-            @touchend="stopHold"
-            title="Decrease iterations (press and hold for faster decrementing)"
-          >
-            ▼
-          </button>
-        </div>
       </div>
     </div>
 
@@ -1092,29 +867,6 @@
   .iters-run input[type="checkbox"]:hover {
     transform:  scale(1.05);
     transition: transform 0.2s ease;
-  }
-
-  .iters-group .iters-label {
-    white-space: nowrap;
-  }
-
-  .iters-group input {
-    width:         70px;
-    border:        1px solid #ccc;
-    border-radius: 4px;
-    text-align:    center;
-    transition:    all 0.2s ease;
-  }
-
-  .iters-group input:focus {
-    outline:       none;
-    border-color: #4a90e2;
-    box-shadow:    0 0 0 2px rgba(74, 144, 226, 0.2);
-  }
-
-  .iters-group input.invalid {
-    border-color: #ff4444;
-    background-color: #fff0f0;
   }
 
   .settings-container {
