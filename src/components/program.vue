@@ -13,11 +13,14 @@
 // Program options & localStorage
 // ============================================================================
 
-const STORAGE_KEY = 'programOptions'
+  const STORAGE_KEY = 'programOptions'
+
+  const MAX_N = 2000
 
   const defaultOptions = {
     currentProgram:    '',
     availablePrograms: [],
+    N:                 100,
     showLat:           true
   }
 
@@ -191,6 +194,176 @@ const STORAGE_KEY = 'programOptions'
     programOptions.currentProgram = oldProgram
   }
 
+  let iterControl = {
+    lastTime:  0,
+    direction: null, // 'up' | 'down'
+    stepLevel: 0,    // 0:1, 1:10, 2:100, 3:1000
+    streak:    0
+  };
+
+  const STEP_VALUES     = [1, 10, 100];
+  const FAST_THRESHOLD  = 300;  // ms → considera "rápido"
+  const RESET_THRESHOLD = 1200; // ms → reinicia velocidad
+
+  function getStep(direction) {
+    const now = Date.now();
+
+    // Si pasa mucho tiempo → reset
+    if (now - iterControl.lastTime > RESET_THRESHOLD) {
+      iterControl.stepLevel = 0;
+      iterControl.streak    = 0;
+    }
+
+    // Si cambia la dirección → reset parcial
+    if (iterControl.direction !== direction) {
+      iterControl.stepLevel = 0;
+      iterControl.streak    = 0;
+      iterControl.direction = direction;
+    }
+
+    // Si es rápido → aumentar racha
+    if (now - iterControl.lastTime < FAST_THRESHOLD) {
+      iterControl.streak++;
+    } else {
+      iterControl.streak = 0;
+    }
+
+    // Increase step level every 6 rapid repetitions
+    if (iterControl.streak >= 6 && iterControl.stepLevel < STEP_VALUES.length - 1) {
+      iterControl.stepLevel++;
+      iterControl.streak = 0; // reset para siguiente escalado
+    }
+
+    iterControl.lastTime = now;
+
+    return STEP_VALUES[iterControl.stepLevel];
+  }
+
+  function roundToStep(value, step, direction) {
+    if (direction === 'up') {
+      return Math.ceil(value / step) * step;
+    } else {
+      return Math.floor(value / step) * step;
+    }
+  }
+
+  function increaseN() {
+    const step   = getStep('up')
+    let newValue = programOptions.N + step
+    if (step > 1) newValue = roundToStep(newValue, step, 'up')
+    programOptions.N = Math.min(newValue, MAX_N)
+  }
+
+  function decreaseN() {
+    const step = getStep('down')
+    if (programOptions.N < step*2) {
+      if (iterControl.stepLevel > 0) {
+        iterControl.stepLevel--;
+        iterControl.streak = -10000; // disable scaling
+        step = STEP_VALUES[iterControl.stepLevel];
+      }
+    }
+    let newValue = programOptions.N - step
+    if (step > 1) newValue = roundToStep(newValue, step, 'down')
+    programOptions.N = Math.max(newValue, 1)
+  }
+
+// ============================================================================
+// INPUT VALIDATION: iterations field
+// ============================================================================
+
+  const inputValue   = ref('');
+  const isInvalid    = ref(false);
+  let   errorTimeout = null;
+
+  const validateField = () => {
+    const min = 1;
+    const max = MAX_N;
+    let rawValue = inputValue.value;
+
+    if (errorTimeout) clearTimeout(errorTimeout);
+
+    if (rawValue === '' || rawValue === null || rawValue === undefined) {
+      const lastValidValue = programOptions.N;
+      inputValue.value = lastValidValue ?? min;
+      isInvalid.value = false;
+      return;
+    }
+
+    let numValue = Number(rawValue);
+
+    if (isNaN(numValue)) {
+      const lastValidValue = programOptions.N;
+      inputValue.value = lastValidValue ?? min;
+      isInvalid.value = false;
+      return;
+    }
+
+    if (numValue < min) {
+      numValue = min;
+      inputValue.value = numValue;
+      showTemporaryError(`Minimum is ${min}`);
+    } else if (numValue > max) {
+      numValue = max;
+      inputValue.value = numValue;
+      showTemporaryError(`Maximum is ${max}`);
+    }
+
+    if (programOptions.N !== numValue) {
+      programOptions.N = numValue;
+    }
+  }
+
+  const showTemporaryError = (message) => {
+    isInvalid.value = true;
+    errorTimeout = setTimeout(() => {
+      isInvalid.value = false;
+    }, 2000);
+    console.warn(message);
+  };
+
+  const handleKeyPress = (event) => {
+    if (event.key === 'Enter') {
+      event.target.blur();
+    }
+  };
+
+  const handleInput = (event) => {
+    if (isInvalid.value) {
+      isInvalid.value = false;
+    }
+    let value = event.target.value;
+    if (value !== '' && !/^\d*$/.test(value)) {
+      event.target.value = value.replace(/\D/g, '');
+      inputValue.value = event.target.value;
+    }
+  };
+
+/* ------------------------------------------------------------------
+ * Button Support: press & hold
+ * ------------------------------------------------------------------ */
+  let holdTimeout = null;
+  let holdInterval= null;
+
+  function startHold(action) {
+    const INITIAL_DELAY = 400;   // tiempo hasta que empieza la repetición
+    const REPEAT_INTERVAL = 250; // velocidad de repetición
+
+    action()    // first click
+
+    // wait until repetition
+    holdTimeout = setTimeout(() => {
+      holdInterval = setInterval(() => {
+        action();
+      }, REPEAT_INTERVAL);
+    }, INITIAL_DELAY);
+  }
+
+  function stopHold() {
+    clearTimeout(holdTimeout);
+    clearInterval(holdInterval);
+  }
+
 // ============================================================================
 // Help support
 // ============================================================================
@@ -242,13 +415,7 @@ const STORAGE_KEY = 'programOptions'
       </div>
 
       <div class="settings-container">
-        <button class="blue-button" :class="{ active: programOptions.showLat }"
-            title="Toggle between showing latency & Ports / Instruction type"
-            id="show-latports-operands"
-          @click="toggleLatency">
-          <span v-if="programOptions.showLat">✔ </span>
-          latency
-        </button>
+
         <select v-model="programOptions.currentProgram" class="form-select"
             id="programs-list" title="Select Program">
           <option value="" disabled>Select</option>
@@ -267,6 +434,54 @@ const STORAGE_KEY = 'programOptions'
             title="Remove program from list (and local storage)">
           🧹
         </button>
+        <button class="blue-button" :class="{ active: programOptions.showLat }"
+            title="Toggle between showing latency & Ports / Instruction type"
+            id="show-latports-operands"
+          @click="toggleLatency">
+          <span v-if="programOptions.showLat">✔ </span>
+          lat
+        </button>
+        <div class="iters-group">
+          <span class="iters-label" :title="`Rang: 1 - ${MAX_N} iters`">
+            N:
+          </span>
+          <input
+            type=      "text"
+            inputmode= "numeric"
+            pattern=   "[0-9]*"
+            :placeholder="100"
+            v-model=  "inputValue"
+            @blur=    "validateField"
+            @keypress="handleKeyPress"
+            @input=   "handleInput"
+            id=       "program-iterations"
+            :class=   "{ 'invalid': isInvalid }"
+            :title=   "`Rang: 1 - ${MAX_N} iters`"
+          />
+          <button
+            class="blue-button small-btn"
+            @mousedown="startHold(increaseN)"
+            @mouseup="stopHold"
+            @mouseleave="stopHold"
+            @touchstart.prevent="startHold(increaseN)"
+            @touchend="stopHold"
+            title="Increase N (press and hold for faster incrementing)"
+          >
+            ▲
+          </button>
+
+          <button
+            class="blue-button small-btn"
+            @mousedown="startHold(decreaseN )"
+            @mouseup="stopHold"
+            @mouseleave="stopHold"
+            @touchstart.prevent="startHold(decreaseN)"
+            @touchend="stopHold"
+            title="Decrease N (press and hold for faster decrementing)"
+          >
+            ▼
+          </button>
+        </div>
       </div>
     </div>
 
@@ -453,4 +668,32 @@ const STORAGE_KEY = 'programOptions'
   tr:hover {
     background-color: rgba(0,0,0,0.05);
   }
+
+  .iters-group .iters-label {
+    white-space: nowrap;
+  }
+
+  .iters-group .iters-label {
+    white-space: nowrap;
+  }
+
+  .iters-group input {
+    width:         70px;
+    border:        1px solid #ccc;
+    border-radius: 4px;
+    text-align:    center;
+    transition:    all 0.2s ease;
+  }
+
+  .iters-group input:focus {
+    outline:       none;
+    border-color: #4a90e2;
+    box-shadow:    0 0 0 2px rgba(74, 144, 226, 0.2);
+  }
+
+  .iters-group input.invalid {
+    border-color: #ff4444;
+    background-color: #fff0f0;
+  }
+
 </style>

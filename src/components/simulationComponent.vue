@@ -367,7 +367,6 @@
  /* ------------------------------------------------------------------
   * Simulation options: UI actions
   * ------------------------------------------------------------------ */
-
   function toggleAutorun()  { simulationOptions.autorun = !simulationOptions.autorun }
 
   const formattedResults = computed(() => {
@@ -472,7 +471,7 @@
 
   function increaseIterations() {
     const step   = getStep('up')
-    let newValue = simulationOptions.iters + step
+    let newValue = - + step
     if (step > 1) newValue = roundToStep(newValue, step, 'up')
     simulationOptions.iters = Math.min(newValue, MAX_ITERS)
   }
