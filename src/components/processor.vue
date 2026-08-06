@@ -2,7 +2,7 @@
   import { ref, watch, watchEffect, onMounted, onUnmounted, nextTick, inject, computed, reactive } from 'vue'
   import HelpComponent                                                  from '@/components/helpComponent.vue'
   import { uploadJSON, saveToLocalStorage, removeFromLocalStorage, initResource,
-           createGraphVizGraph, typeOperations, get_processor_dot }                           from '@/common'
+           createGraphVizGraph, get_processor_dot }                                           from '@/common'
 
   const simState = inject('simulationState');
 
@@ -149,7 +149,7 @@
     }
 
     if (simState.simulatedProcess[currentConfig.value.model] !== numValue) {
-      simState.simulatedProcess[currentConfig.value.model] = numValue;
+        [currentConfig.value.model] = numValue;
     }
   }
 

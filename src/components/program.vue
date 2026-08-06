@@ -116,6 +116,7 @@
       const jsonString = localStorage.getItem(`program.${programOptions.currentProgram}`)
       const data       = JSON.parse(jsonString)
       Object.assign(simState.simulatedProcess, data)
+      simState.simulatedProcess.iters = programOptions.N
       if (simState.state == 2) {  // This is an initialization step
         simState.state = 3;       // Change to next initialization step
         console.log('📄✅ Initialization step (3): program loaded')
@@ -186,6 +187,7 @@
         saveToLocalStorage('program', data.name, data, programOptions.availablePrograms)
         programOptions.currentProgram = data.name;
         Object.assign(simState.simulatedProcess, data)
+        simState.simulatedProcess.iters = programOptions.N
         return
       }
     } catch (error) {
