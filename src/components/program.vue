@@ -15,7 +15,7 @@
 
   const STORAGE_KEY = 'programOptions'
 
-  const MAX_N = 2000
+  const MAX_N = 5000
 
   const defaultOptions = {
     currentProgram:    '',
