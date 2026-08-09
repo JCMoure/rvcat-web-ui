@@ -333,7 +333,8 @@
       ipc:          ipc.toFixed(3),
       loads:        rdMiss,
       stores:       wrMiss,
-      MM:           MM_usage
+      MM:           MM_usage,
+      MMper:        percentage
     };
   });
 
@@ -472,7 +473,7 @@
     // ---- Cache & Retire ----
     usage = 0
     if (results !== null)
-      usage = results.MM * 100
+      usage = results.MMper
     let cache_color = color[Math.floor(usage/5)]
 
     message =  usage !== 0
@@ -480,7 +481,7 @@
       : ""
 
     let cache_row = `<TR>
-      <TD WIDTH="538" COLSPAN="${port_ids.length}" BGCOLOR="#eeeeee" HREF="#" ID="cache" TITLE="Usage of cache capacity"><FONT POINT-SIZE="20"><B>Cache:&nbsp;</B>(${nblocks}, ${blkSize})${message}</FONT></TD>
+      <TD WIDTH="538" COLSPAN="${port_ids.length}" BGCOLOR="#eeeeee" HREF="#" ID="cache" TITLE="Usage of cache capacity"><FONT POINT-SIZE="20"><B>Cache:&nbsp;</B>(${nblocks}, ${blkSize}, ${mIssueTime}, ${mPenalty})${message}</FONT></TD>
     </TR>`
 
     usage = 0
