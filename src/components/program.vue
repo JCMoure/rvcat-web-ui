@@ -21,6 +21,7 @@
     currentProgram:    '',
     availablePrograms: [],
     N:                 100,
+    stride:            1,
     showLat:           true
   }
 
@@ -75,10 +76,7 @@
       console.log('📄🔄 N modified from', oldN, 'to', newN);
       if (inputValue) inputValue.value = newN ?? '';
       if (typeof isInvalid !== 'undefined') isInvalid.value = false;
-      let instrCount = simState.simulatedProcess.instruction_list.length
-      let stride     = simState.simulatedProcess.instruction_list[instrCount - 1].stride
-      console.log('📄✅ Program reloaded. STRIDE:', stride)
-      simState.simulatedProcess.iters = programOptions.N / stride
+      simState.simulatedProcess.iters = programOptions.N / programOptions.stride
       saveOptions()
     }
   })
@@ -130,9 +128,9 @@
       const data       = JSON.parse(jsonString)
       Object.assign(simState.simulatedProcess, data)
       let instrCount = simState.simulatedProcess.instruction_list.length
-      let stride = simState.simulatedProcess.instruction_list[instrCount - 1].stride
-      console.log('📄✅ Program reloaded. STRIDE:', stride)
-      simState.simulatedProcess.iters = programOptions.N / stride
+      programOptions.stride = simState.simulatedProcess.instruction_list[instrCount - 1].stride
+      console.log('📄✅ Program reloaded. STRIDE:', programOptions.stride)
+      simState.simulatedProcess.iters = programOptions.N / programOptions.stride
       if (simState.state == 2) {  // This is an initialization step
         simState.state = 3;       // Change to next initialization step
         console.log('📄✅ Initialization step (3): program loaded')
@@ -204,9 +202,9 @@
         programOptions.currentProgram = data.name;
         Object.assign(simState.simulatedProcess, data)
         let instrCount = simState.simulatedProcess.instruction_list.length
-        let stride = simState.simulatedProcess.instruction_list[instrCount - 1].stride
-        console.log('📄✅ Program uploaded. STRIDE:', stride)
-        simState.simulatedProcess.iters = programOptions.N / stride
+        programOptions.stride = simState.simulatedProcess.instruction_list[instrCount - 1].stride
+        console.log('📄✅ Program uploaded. STRIDE:', programOptions.stride)
+        simState.simulatedProcess.iters = programOptions.N / programOptions.stride
         return
       }
     } catch (error) {
@@ -270,14 +268,14 @@
 
   function increaseN() {
     const step   = getStep('up')
-    let newValue = programOptions.N + step
-    if (step > 1) newValue = roundToStep(newValue, step, 'up')
+    let newValue = programOptions.N + step*programOptions.stride
+    if (step > 1) newValue = roundToStep(newValue, step*programOptions.stride, 'up')
     programOptions.N = Math.min(newValue, MAX_N)
   }
 
   function decreaseN() {
     let step = getStep('down')
-    if (programOptions.N < step*2) {
+    if (programOptions.N < step*programOptions.stride*2) {
       if (iterControl.stepLevel > 0) {
         iterControl.stepLevel--;
         iterControl.streak = -10000; // disable scaling
@@ -285,8 +283,8 @@
       }
     }
     let newValue = programOptions.N - step
-    if (step > 1) newValue = roundToStep(newValue, step, 'down')
-    programOptions.N = Math.max(newValue, 1)
+    if (step > 1) newValue = roundToStep(newValue, step*programOptions.stride, 'down')
+    programOptions.N = Math.max(newValue, programOptions.stride)
   }
 
 // ============================================================================
