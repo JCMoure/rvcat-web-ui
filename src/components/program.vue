@@ -75,6 +75,7 @@
       console.log('📄🔄 N modified from', oldN, 'to', newN);
       if (inputValue) inputValue.value = newN ?? '';
       if (typeof isInvalid !== 'undefined') isInvalid.value = false;
+      simState.simulatedProcess.iters = programOptions.N
       saveOptions()
     }
   })
@@ -263,7 +264,6 @@
     let newValue = programOptions.N + step
     if (step > 1) newValue = roundToStep(newValue, step, 'up')
     programOptions.N = Math.min(newValue, MAX_N)
-    console.log('📄 N modified to', programOptions.N)
   }
 
   function decreaseN() {
@@ -278,7 +278,6 @@
     let newValue = programOptions.N - step
     if (step > 1) newValue = roundToStep(newValue, step, 'down')
     programOptions.N = Math.max(newValue, 1)
-    console.log('📄 N modified to', programOptions.N)
   }
 
 // ============================================================================
