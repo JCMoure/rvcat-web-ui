@@ -70,6 +70,11 @@
     () => { saveOptions() }
   )
 
+  watch( () => programOptions.N, (newN, oldN) => {
+    console.log('📄 N modified from', oldN, 'to', newN);
+    saveOptions()
+  })
+
   watch( () => simState.state, (newValue, oldValue) => {
       if (newValue === 2 && oldValue !== 2) {
         initProgram()
@@ -254,6 +259,7 @@
     let newValue = programOptions.N + step
     if (step > 1) newValue = roundToStep(newValue, step, 'up')
     programOptions.N = Math.min(newValue, MAX_N)
+    console.log('📄 N modified to', programOptions.N)
   }
 
   function decreaseN() {
@@ -268,6 +274,7 @@
     let newValue = programOptions.N - step
     if (step > 1) newValue = roundToStep(newValue, step, 'down')
     programOptions.N = Math.max(newValue, 1)
+    console.log('📄 N modified to', programOptions.N)
   }
 
 // ============================================================================
