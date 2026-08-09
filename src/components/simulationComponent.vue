@@ -74,7 +74,8 @@
   }
 
   const areProcessorsEqual = (proc1, proc2) => {
-    if (proc1 == {} || proc2 == {}) return false
+    if (proc1 == {} || proc2 == {})        return false
+    if (proc1.iters !== proc2.iters)       return false;
     if (proc1.dispatch !== proc2.dispatch) return false;
     if (proc1.retire !== proc2.retire)     return false;
     if (proc1.sched !== proc2.sched)       return false;
@@ -377,6 +378,7 @@
 
   const reloadExecutionResults = async () => {
     simProcess = {
+      iters:    simState.simulatedProcess.iters,
       dispatch: simState.simulatedProcess.dispatch,
       retire:   simState.simulatedProcess.retire,
       sched:    simState.simulatedProcess.sched,
