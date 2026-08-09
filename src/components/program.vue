@@ -130,6 +130,7 @@
       let instrCount = simState.simulatedProcess.instruction_list.length
       programOptions.stride = simState.simulatedProcess.instruction_list[instrCount - 1].stride
       console.log('📄✅ Program reloaded. STRIDE:', programOptions.stride)
+      programOptions.N = programOptions.N - (programOptions.N % programOptions.stride);
       simState.simulatedProcess.iters = programOptions.N / programOptions.stride
       if (simState.state == 2) {  // This is an initialization step
         simState.state = 3;       // Change to next initialization step
@@ -204,6 +205,7 @@
         let instrCount = simState.simulatedProcess.instruction_list.length
         programOptions.stride = simState.simulatedProcess.instruction_list[instrCount - 1].stride
         console.log('📄✅ Program uploaded. STRIDE:', programOptions.stride)
+        programOptions.N = programOptions.N - (programOptions.N % programOptions.stride);
         simState.simulatedProcess.iters = programOptions.N / programOptions.stride
         return
       }
@@ -282,7 +284,7 @@
         step = STEP_VALUES[iterControl.stepLevel];
       }
     }
-    let newValue = programOptions.N - step
+    let newValue = programOptions.N - step*programOptions.stride
     if (step > 1) newValue = roundToStep(newValue, step*programOptions.stride, 'down')
     programOptions.N = Math.max(newValue, programOptions.stride)
   }
