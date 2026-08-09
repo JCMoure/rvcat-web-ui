@@ -104,7 +104,6 @@
     } catch (error) {
       console.error('🕐❌ Failed to save:', error)
     }
-  }
 
   const loadResults = () => {
     let stored = localStorage.getItem('simResults');
@@ -225,8 +224,8 @@
       isComponentMounted = true;
       unwatch = watch(
         () => ({
-          autorun:      simulationOptions?.autorun,
-          name:         simulationOptions?.resultName
+          autorun:  simulationOptions?.autorun,
+          name:     simulationOptions?.resultName
         }),
         handleOptionsChange,
         {
