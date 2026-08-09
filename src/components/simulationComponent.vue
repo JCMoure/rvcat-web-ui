@@ -426,6 +426,10 @@
     const ROBsize  = process.ROBsize || 20
     const dispatch = process.dispatch
     const retire   = process.retire
+    const nblocks   = process.nBlocks
+    const blkSize   = process.blkSize
+    const mIssueTime = process.mIssueTime
+    const mPenalty   = process.mPenalty
 
     // Colorscale from grey to red
     const color = [
@@ -445,7 +449,7 @@
     // ---- Decode ----
     let decode_row = `<TR>
       <TD COLSPAN="${port_ids.length}" BGCOLOR="#eeeeee" HREF="#" ID="dispatch" TITLE="Usage of dispatch capacity"><FONT POINT-SIZE="20"><B>Dispatch:&nbsp;</B>&nbsp;${dispatch}/cycle${message}</FONT></TD>
-      <TD ROWSPAN="3" BGCOLOR="#f0f0f0" HREF="#" ID="rob" TITLE="Pending: usage of ROB capacity" ALIGN="CENTER" VALIGN="MIDDLE"><FONT POINT-SIZE="20"><B>ROB</B><BR/>${ROBsize}</FONT><BR/><FONT POINT-SIZE="16">entries</FONT></TD>
+      <TD ROWSPAN="4" BGCOLOR="#f0f0f0" HREF="#" ID="rob" TITLE="Pending: usage of ROB capacity" ALIGN="CENTER" VALIGN="MIDDLE"><FONT POINT-SIZE="20"><B>ROB</B><BR/>${ROBsize}</FONT><BR/><FONT POINT-SIZE="16">entries</FONT></TD>
     </TR>`
 
     // ---- Port headers ----
@@ -465,7 +469,20 @@
 
     port_header += "</TR>"
 
-    // ---- Registers & Retire ----
+    // ---- Cache & Retire ----
+    usage = 0
+    if (results !== null)
+      usage = results.MM * 100
+    let cache_color = color[Math.floor(usage/5)]
+
+    message =  usage !== 0
+      ? `&nbsp;&nbsp;Usage:<B><FONT COLOR="${cache_color}">${usage.toFixed(1)}%</FONT></B>`
+      : ""
+
+    let cache_row = `<TR>
+      <TD WIDTH="538" COLSPAN="${port_ids.length}" BGCOLOR="#eeeeee" HREF="#" ID="cache" TITLE="Usage of cache capacity"><FONT POINT-SIZE="20"><B>Cache:&nbsp;</B>(${nblocks}, ${blkSize})${message}</FONT></TD>
+    </TR>`
+
     usage = 0
     if (results !== null)
       usage = (results.ipc / retire) * 100
@@ -487,6 +504,7 @@
             <TABLE WIDTH="600" BORDER="2" CELLBORDER="1" CELLSPACING="2" CELLPADDING="1">
               ${decode_row}
               ${port_header}
+              ${cache_row}
               ${reg_row}
             </TABLE>
           >
