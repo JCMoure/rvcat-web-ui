@@ -333,8 +333,7 @@
       ipc:          ipc.toFixed(3),
       loads:        rdMiss,
       stores:       wrMiss,
-      MM:           MM_usage,
-      MMper:        percentage
+      MM:           MM_usage
     };
   });
 
@@ -431,6 +430,11 @@
     const blkSize   = process.blkSize
     const mIssueTime = process.mIssueTime
     const mPenalty   = process.mPenalty
+    const MM_reads   = results["MM_Reads"]
+    const MM_writes  = results["MM_Writes"]
+    const totalCycles = results["total_cycles"]
+
+    const percentage = (100 * (MM_reads + MM_writes) * mIssueTime / totalCycles)
 
     // Colorscale from grey to red
     const color = [
@@ -473,7 +477,7 @@
     // ---- Cache & Retire ----
     usage = 0
     if (results !== null)
-      usage = results.MMper
+      usage = percentage
     let cache_color = color[Math.floor(usage/5)]
 
     message =  usage !== 0
