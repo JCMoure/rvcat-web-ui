@@ -75,7 +75,10 @@
       console.log('📄🔄 N modified from', oldN, 'to', newN);
       if (inputValue) inputValue.value = newN ?? '';
       if (typeof isInvalid !== 'undefined') isInvalid.value = false;
-      simState.simulatedProcess.iters = programOptions.N
+      let instrCount = simState.simulatedProcess.instruction_list.length
+      let stride     = simState.simulatedProcess.instruction_list[instrCount - 1].stride
+      console.log('📄✅ Program reloaded. STRIDE:', stride)
+      simState.simulatedProcess.iters = programOptions.N / stride
       saveOptions()
     }
   })
@@ -126,7 +129,10 @@
       const jsonString = localStorage.getItem(`program.${programOptions.currentProgram}`)
       const data       = JSON.parse(jsonString)
       Object.assign(simState.simulatedProcess, data)
-      simState.simulatedProcess.iters = programOptions.N
+      let instrCount = simState.simulatedProcess.instruction_list.length
+      let stride = simState.simulatedProcess.instruction_list[instrCount - 1].stride
+      console.log('📄✅ Program reloaded. STRIDE:', stride)
+      simState.simulatedProcess.iters = programOptions.N / stride
       if (simState.state == 2) {  // This is an initialization step
         simState.state = 3;       // Change to next initialization step
         console.log('📄✅ Initialization step (3): program loaded')
@@ -197,7 +203,10 @@
         saveToLocalStorage('program', data.name, data, programOptions.availablePrograms)
         programOptions.currentProgram = data.name;
         Object.assign(simState.simulatedProcess, data)
-        simState.simulatedProcess.iters = programOptions.N
+        let instrCount = simState.simulatedProcess.instruction_list.length
+        let stride = simState.simulatedProcess.instruction_list[instrCount - 1].stride
+        console.log('📄✅ Program uploaded. STRIDE:', stride)
+        simState.simulatedProcess.iters = programOptions.N / stride
         return
       }
     } catch (error) {
