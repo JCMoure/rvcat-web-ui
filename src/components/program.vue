@@ -71,8 +71,12 @@
   )
 
   watch( () => programOptions.N, (newN, oldN) => {
-    console.log('📄 N modified from', oldN, 'to', newN);
-    saveOptions()
+    if (newN !== oldN) {
+      console.log('📄🔄 N modified from', oldN, 'to', newN);
+      if (inputValue) inputValue.value = newN ?? '';
+      if (typeof isInvalid !== 'undefined') isInvalid.value = false;
+      saveOptions()
+    }
   })
 
   watch( () => simState.state, (newValue, oldValue) => {
@@ -263,7 +267,7 @@
   }
 
   function decreaseN() {
-    const step = getStep('down')
+    let step = getStep('down')
     if (programOptions.N < step*2) {
       if (iterControl.stepLevel > 0) {
         iterControl.stepLevel--;
@@ -464,8 +468,8 @@
             @keypress="handleKeyPress"
             @input=   "handleInput"
             id=       "program-iterations"
-            :class=   "{ 'invalid': isInvalid }"
-            :title=   "`Rang: 1 - ${MAX_N} iters`"
+            :class=   "{'invalid': isInvalid}"
+            :title=   "`Rang: 1 - ${MAX_N}`"
           />
           <button
             class="blue-button small-btn"
