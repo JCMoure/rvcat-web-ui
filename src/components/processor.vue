@@ -149,7 +149,7 @@
     }
 
     if (simState.simulatedProcess[currentConfig.value.model] !== numValue) {
-        [currentConfig.value.model] = numValue;
+        simState.simulatedProcess[currentConfig.value.model] = numValue;
     }
   }
 
