@@ -104,6 +104,7 @@
     } catch (error) {
       console.error('🕐❌ Failed to save:', error)
     }
+  }
 
   const loadResults = () => {
     let stored = localStorage.getItem('simResults');
