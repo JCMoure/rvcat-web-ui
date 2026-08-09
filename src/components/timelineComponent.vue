@@ -57,11 +57,19 @@
 // WATCHES: timelineOptions, simulatedProcess, timeline  HANDLERS: getTimeline
 // ============================================================================
 
+  let timelinePending  = false
+  let lastPending      = false
+
   watch ([() => simState.simulatedProcess], () => { requestTimeline() },
     { deep: true, immediate: false })
 
   function requestTimeline() {
     if (simState.state >= 3) {
+      if (timelinePending) {
+        lastPending=true
+        return  // skip request if previous request is still pending
+      }
+      timelinePending = true
       console.log('📈🔄 Request timeline from RVCAT')
       const { iters, name, ROBsize, dispatch, retire, sched,
               blkSize, nBlocks, mPenalty, mIssueTime, instruction_list } = simState.simulatedProcess
@@ -79,14 +87,20 @@
       return;
     }
     try {
-      let timelineRVCAT       = JSON.parse(data)
+      let timelineRVCAT = JSON.parse(data)
       getPortUsage(timelineRVCAT);
       timeline.value = timelineRVCAT
       timelineOptions.canvasOffsetX = 0
       timelineOptions.canvasOffsetY = 0
       scheduleDraw()
+
     } catch (error) {
       console.error('📈❌Failed to process JSON timeline:', error)
+    }
+    timelinePending = false
+    if (lastPending) {
+      lastPending=false
+      requestTimeline()
     }
   }
 
