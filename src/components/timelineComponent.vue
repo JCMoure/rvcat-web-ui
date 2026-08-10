@@ -345,8 +345,28 @@
 
     const { cycles, instructions, portUsagePorts, portUsageInstr } = timeline.value
 
+    let first_instruction_cycles = instructions[0][2] + instructions[0][4].length
+
     totalCycles = Math.min(cycles, timelineOptions.cycles)
+    totalCycles = Math.max(first_instruction_cycles, totalCycles)
     totalInstr  = Math.min(instructions.length, timelineOptions.instructions)
+
+    // Compute cycles-instructions, so that cycles is the R stage of last instruction
+    do {
+      let last_cycle = instructions[totalInstr-1][2] + instructions[totalInstr-1][4].length - 1
+      if (totalCycles >= last_cycle + 1)
+        totalCycles = last_cycle + 1
+      else
+        totalInstr--
+    } while (totalCycles != last_cycle + 1)
+
+    if (totalCycles != timelineOptions.cycles) {
+      timelineOptions.cycles = totalCycles
+    }
+    if (totalInstr != timelineOptions.instructions) {
+      timelineOptions.instructions = totalInstr
+    }
+
     cellW = 14
     cellH = 20
     padX  = 10
