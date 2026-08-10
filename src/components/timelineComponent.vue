@@ -335,14 +335,12 @@
     totalInstr  = timelineOptions.instructions
 
     if (newCycles != oldCycles && newCycles != 0 && newCycles <= cycles) {
-      // change timeline
-
-      timelineOptions.cycles= newCycles
+      // change timeline size (cycles) and recompute totalInstr
       totalCycles = newCycles
 
       // Compute last instruction processed before newCycles
       let first_cycle = instructions[totalInstr-1][2]
-      if (totalCycles >= first_cycle) { // included & find more
+      if (totalCycles > first_cycle) { // included & find more
         do {
           totalInstr++
           first_cycle = instructions[totalInstr-1][2]
@@ -352,10 +350,11 @@
         do {
           totalInstr--
           first_cycle = instructions[totalInstr-1][2]
-        } while (totalCycles < first_cycle && totalInstr > 0)
+        } while (totalCycles <= first_cycle && totalInstr > 0)
         totalInstr++  // last instruction is included
       }
       timelineOptions.instructions = totalInstr
+      timelineOptions.cycles= newCycles
     }
 
     cellW = 14
