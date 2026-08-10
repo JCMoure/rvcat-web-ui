@@ -344,14 +344,13 @@
         do {
           totalInstr++
           first_cycle = instructions[totalInstr-1][2]
-        } while (totalCycles >= first_cycle && totalInstr < instructions.length)
+        } while (totalCycles > first_cycle && totalInstr < instructions.length)
         totalInstr--  // last instruction is not included
       } else { // not included & find less
         do {
           totalInstr--
           first_cycle = instructions[totalInstr-1][2]
         } while (totalCycles <= first_cycle && totalInstr > 0)
-        totalInstr++  // last instruction is included
       }
       timelineOptions.instructions = totalInstr
       timelineOptions.cycles= newCycles
