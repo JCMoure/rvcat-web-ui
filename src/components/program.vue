@@ -76,6 +76,7 @@
       console.log('📄🔄 N modified from', oldN, 'to', newN);
       if (inputValue) inputValue.value = newN ?? '';
       if (typeof isInvalid !== 'undefined') isInvalid.value = false;
+      programOptions.N = programOptions.N - (programOptions.N % programOptions.stride);
       simState.simulatedProcess.iters = programOptions.N / programOptions.stride
       saveOptions()
     }
@@ -270,9 +271,10 @@
 
   function increaseN() {
     const step   = getStep('up')
+    const MaxN   = MAX_N - (MAX_N % programOptions.stride)
     let newValue = programOptions.N + step*programOptions.stride
     if (step > 1) newValue = roundToStep(newValue, step*programOptions.stride, 'up')
-    programOptions.N = Math.min(newValue, MAX_N)
+    programOptions.N = Math.min(newValue, MaxN)
   }
 
   function decreaseN() {
