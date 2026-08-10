@@ -92,7 +92,7 @@
       timeline.value = timelineRVCAT
       timelineOptions.canvasOffsetX = 0
       timelineOptions.canvasOffsetY = 0
-      scheduleDraw(timelineOptions.cycles)
+      scheduleDraw(timelineOptions.cycles, 0)
 
     } catch (error) {
       console.error('📈❌Failed to process JSON timeline:', error)
@@ -123,7 +123,7 @@
                timelineOptions.canvasScale, timelineOptions.canvasOffsetX, timelineOptions.canvasOffsetY ],
             ([newInstructions, newCycles], [oldInstructions, oldCycles]) => {
               if (!timelineCanvas.value || !timeline.value) return
-              scheduleDraw(newCycles)
+              scheduleDraw(newCycles,oldCycles)
               saveOptions()
             }
           )
@@ -237,8 +237,8 @@
     let   startX, startY
 
     const observer = new ResizeObserver(() => {
-      toggleFull()  // forces watcher to re-draw canvas
-      toggleFull()  // forces watcher to re-draw canvas
+      toggleCritical()  // forces watcher to re-draw canvas
+      toggleCritical()  // forces watcher to re-draw canvas
     })
 
     observer.observe(wrapper)
@@ -307,17 +307,17 @@
   let hoverRow    = null
   let hoverCol    = null
 
-  function scheduleDraw(cycles) {
+  function scheduleDraw(cycles, oldCycles) {
     if (rafPending) return
     rafPending = true
 
     requestAnimationFrame(() => {
-      drawTimeline(cycles)
+      drawTimeline(cycles, oldCycles)
       rafPending = false
     })
   }
 
-  function drawTimeline(newCycles) {
+  function drawTimeline(newCycles, oldCycles) {
 
     const rect = timelineCanvas.value.getBoundingClientRect()
 
@@ -334,7 +334,7 @@
     totalCycles = timelineOptions.cycles
     totalInstr  = timelineOptions.instructions
 
-    if (newCycles != totalCycles && newCycles != 0 && newCycles <= cycles) {
+    if (newCycles != oldCycles && newCycles != 0 && newCycles <= cycles) {
       // change timeline
 
       timelineOptions.cycles= newCycles
