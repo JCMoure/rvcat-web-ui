@@ -16,7 +16,7 @@
 
   const defaultOptions = {
     instructions:  20,
-    cycles:        40,
+    cycles:        30,
     full:          false,
     canvasScale:   1,
     canvasOffsetX: 0,
@@ -92,7 +92,7 @@
       timeline.value = timelineRVCAT
       timelineOptions.canvasOffsetX = 0
       timelineOptions.canvasOffsetY = 0
-      scheduleDraw()
+      scheduleDraw(timelineOptions.cycles)
 
     } catch (error) {
       console.error('📈❌Failed to process JSON timeline:', error)
@@ -123,21 +123,8 @@
                timelineOptions.canvasScale, timelineOptions.canvasOffsetX, timelineOptions.canvasOffsetY ],
             ([newInstructions, newCycles], [oldInstructions, oldCycles]) => {
               if (!timelineCanvas.value || !timeline.value) return
-              if (newCycles != oldCycles) {
-                const clamped = Math.min(Math.max(newCycles, 1), 100)
-                if (clamped !== newCycles) {
-                  timelineOptions.cycles = clamped
-                  return
-                }
-              } else if (newInstructions != oldInstructions) {
-                const clamped = Math.min(Math.max(newInstructions, 1), 100)
-                if (clamped !== newInstructions) {
-                  timelineOptions.instructions = clamped
-                  return
-                }
-              }
+              scheduleDraw(newCycles)
               saveOptions()
-              scheduleDraw()
             }
           )
       console.log('📈🎯 Timeline Component mounted')
@@ -320,17 +307,17 @@
   let hoverRow    = null
   let hoverCol    = null
 
-  function scheduleDraw() {
+  function scheduleDraw(cycles) {
     if (rafPending) return
     rafPending = true
 
     requestAnimationFrame(() => {
-      drawTimeline()
+      drawTimeline(cycles)
       rafPending = false
     })
   }
 
-  function drawTimeline() {
+  function drawTimeline(newCycles) {
 
     const rect = timelineCanvas.value.getBoundingClientRect()
 
@@ -344,27 +331,30 @@
     overlayCanvas.value.height = rect.height
 
     const { cycles, instructions, portUsagePorts, portUsageInstr } = timeline.value
+    totalCycles = timelineOptions.cycles
+    totalInstr  = timelineOptions.instructions
 
-    let first_instruction_cycles = instructions[0][2] + instructions[0][4].length
+    if (newCycles != totalCycles && newCycles != 0 && newCycles <= cycles) {
+      // change timeline
 
-    totalCycles = Math.min(cycles, timelineOptions.cycles)
-    totalCycles = Math.max(first_instruction_cycles, totalCycles)
-    totalInstr  = Math.min(instructions.length, timelineOptions.instructions)
+      timelineOptions.cycles= newCycles
+      totalCycles = newCycles
 
-    // Compute cycles-instructions, so that cycles is the R stage of last instruction
-    let last_cycle = 0
-    do {
-      last_cycle = instructions[totalInstr-1][2] + instructions[totalInstr-1][4].length - 1
-      if (totalCycles >= last_cycle + 1)
-        totalCycles = last_cycle + 1
-      else
-        totalInstr--
-    } while (totalCycles != last_cycle + 1)
-
-    if (totalCycles != timelineOptions.cycles) {
-      timelineOptions.cycles = totalCycles
-    }
-    if (totalInstr != timelineOptions.instructions) {
+      // Compute last instruction processed before newCycles
+      let first_cycle = instructions[totalInstr-1][2]
+      if (totalCycles >= first_cycle) { // included & find more
+        do {
+          totalInstr++
+          first_cycle = instructions[totalInstr-1][2]
+        } while (totalCycles >= first_cycle && totalInstr < instructions.length)
+        totalInstr--  // last instruction is not included
+      } else { // not included & find less
+        do {
+          totalInstr--
+          first_cycle = instructions[totalInstr-1][2]
+        } while (totalCycles < first_cycle && totalInstr > 0)
+        totalInstr++  // last instruction is included
+      }
       timelineOptions.instructions = totalInstr
     }
 
