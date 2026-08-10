@@ -17,7 +17,7 @@
   const defaultOptions = {
     instructions:  20,
     cycles:        30,
-    full:          false,
+    critical:      false,
     canvasScale:   1,
     canvasOffsetX: 0,
     canvasOffsetY: 0
@@ -119,7 +119,7 @@
     nextTick(() => {
       isComponentMounted = true;
       unwatch = watch(
-        () => [timelineOptions.instructions, timelineOptions.cycles, timelineOptions.full,
+        () => [timelineOptions.instructions, timelineOptions.cycles, timelineOptions.critical,
                timelineOptions.canvasScale, timelineOptions.canvasOffsetX, timelineOptions.canvasOffsetY ],
             ([newInstructions, newCycles], [oldInstructions, oldCycles]) => {
               if (!timelineCanvas.value || !timeline.value) return
@@ -151,7 +151,7 @@
 * UI actions
 * ------------------------------------------------------------------ */
 
-  function toggleFull()  { timelineOptions.full = !timelineOptions.full }
+  function toggleCritical()  { timelineOptions.critical = !timelineOptions.critical }
 
   function getPortUsage(timeline) {
     const usagePorts = {};
@@ -496,7 +496,7 @@
                                  (ch == 'L' && states[i-startCycle-1] != 'L') ||
                                  (ch == 'S' && states[i-startCycle-1] != 'S')
 
-          if (critical && timelineOptions.full) currColor = "red"
+          if (critical && timelineOptions.critical) currColor = "red"
 
           interactiveCells.push({
             x, y,
@@ -632,7 +632,7 @@
         x:        e.clientX + 10,
         y:        e.clientY + 10,
         state:    charToProcessingState(char, first_exec_stage ? port : null, addr),
-        critical: critical && timelineOptions.full
+        critical: critical && timelineOptions.critical
       }
       adjustTooltipPosition(e)
 
@@ -713,25 +713,19 @@
 
       <div class="timeline-controls">
         <div class="iters-group">
-          <span class="iters-label">Instructions:</span>
-          <input type="number" min="1" max="100"  v-model.number="timelineOptions.instructions"
-            title="# instructions (1 to 100)"
-            id="timeline-instructions">
-        </div>
-        <div class="iters-group">
           <span class="iters-label">Cycles:</span>
-          <input type="number" min="1" max="100"  v-model.number="timelineOptions.cycles"
-            title="# cycles (1 to 100)"
+          <input type="number" min="1" v-model.number="timelineOptions.cycles"
+            title="# cycles"
             id="timeline-cycles">
         </div>
 
         <div class="iters-group">
-          <button class="blue-button" :class="{ active: timelineOptions.full }" :aria-pressed="timelineOptions.full"
-            title="Toggle Full Timeline View"
-            id="timeline-full"
-            @click="toggleFull">
-            <span v-if="timelineOptions.full">✔ </span>
-            Full Timeline
+          <button class="blue-button" :class="{ active: timelineOptions.critical }" :aria-pressed="timelineOptions.critical"
+            title="Toggle Critical Path View"
+            id="timeline-critical"
+            @click="toggleCritical">
+            <span v-if="timelineOptions.critical">✔ </span>
+            Show Critical
           </button>
         </div>
       </div>
