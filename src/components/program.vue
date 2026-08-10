@@ -77,6 +77,7 @@
       if (inputValue) inputValue.value = newN ?? '';
       if (typeof isInvalid !== 'undefined') isInvalid.value = false;
       programOptions.N = programOptions.N - (programOptions.N % programOptions.stride);
+      if (!programOptions.N) programOptions.N = programOptions.stride;
       simState.simulatedProcess.iters = programOptions.N / programOptions.stride
       saveOptions()
     }
@@ -132,6 +133,7 @@
       programOptions.stride = simState.simulatedProcess.instruction_list[instrCount - 1].stride
       console.log('📄✅ Program reloaded. STRIDE:', programOptions.stride)
       programOptions.N = programOptions.N - (programOptions.N % programOptions.stride);
+      if (!programOptions.N) programOptions.N = programOptions.stride;
       simState.simulatedProcess.iters = programOptions.N / programOptions.stride
       if (simState.state == 2) {  // This is an initialization step
         simState.state = 3;       // Change to next initialization step
@@ -207,6 +209,7 @@
         programOptions.stride = simState.simulatedProcess.instruction_list[instrCount - 1].stride
         console.log('📄✅ Program uploaded. STRIDE:', programOptions.stride)
         programOptions.N = programOptions.N - (programOptions.N % programOptions.stride);
+      if (!programOptions.N) programOptions.N = programOptions.stride;
         simState.simulatedProcess.iters = programOptions.N / programOptions.stride
         return
       }
