@@ -352,8 +352,9 @@
     totalInstr  = Math.min(instructions.length, timelineOptions.instructions)
 
     // Compute cycles-instructions, so that cycles is the R stage of last instruction
+    let last_cycle = 0
     do {
-      let last_cycle = instructions[totalInstr-1][2] + instructions[totalInstr-1][4].length - 1
+      last_cycle = instructions[totalInstr-1][2] + instructions[totalInstr-1][4].length - 1
       if (totalCycles >= last_cycle + 1)
         totalCycles = last_cycle + 1
       else
