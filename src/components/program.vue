@@ -22,8 +22,8 @@
     availablePrograms: [],
     N:                 100,
     stride:            1,
-    showLat:           true
-  }
+    show:              0  // 0: type/operands, 1: latency/ports, 2: InOut, 3: memory
+ }
 
   const programOptions = reactive(defaultOptions)
 
@@ -67,7 +67,7 @@
       reloadProgram()
   })
 
-  watch( () => [programOptions.showLat],
+  watch( () => [programOptions.show],
     () => { saveOptions() }
   )
 
@@ -176,7 +176,7 @@
     }
   }
 
-  function toggleLatency() { programOptions.showLat = !programOptions.showLat }
+  function toggleLatency() { programOptions.show = (programOptions.show + 1) % 4 }
 
   function portsMaskToString(mask) {
     const ports = []
@@ -460,12 +460,14 @@
             title="Remove program from list (and local storage)">
           🧹
         </button>
-        <button class="blue-button" :class="{ active: programOptions.showLat }"
+        <button class="blue-button"
             title="Toggle between: performance|type|input-output|memory"
             id="show-instr-operands"
           @click="toggleLatency">
-          <span v-if="programOptions.showLat">perf</span>
-          <span v-if="!programOptions.showLat">type</span>
+          <span v-if="programOptions.show === 0">perf</span>
+          <span v-if="programOptions.show === 1">type</span>
+          <span v-if="programOptions.show === 2">InOut</span>
+          <span v-if="programOptions.show === 3">memory</span>
         </button>
         <div class="iters-group">
           <span class="iters-label" :title="`Rang: 1 - ${MAX_N} iters`">
@@ -518,12 +520,18 @@
             <tr>
               <th style="width: 100px;">  #    </th>
               <th style="width: 600px;"> Inst </th>
-              <th v-if="!programOptions.showLat"  style="width: 100px;"> Type </th>
-              <th v-if="!programOptions.showLat"  style="width: 100px;"> Oper </th>
-              <th v-if="!programOptions.showLat"  style="width: 100px;"> Size </th>
-              <th v-if="programOptions.showLat"   style="width: 100px;"> Lat </th>
-              <th v-if="programOptions.showLat"   style="width: 200px;"> Ports </th>
-            </tr>
+              <th v-if="programOptions.show === 0"  style="width: 100px;"> Type </th>
+              <th v-if="programOptions.show === 0"  style="width: 100px;"> Oper </th>
+              <th v-if="programOptions.show === 0"  style="width: 100px;"> Size </th>
+              <th v-if="programOptions.show === 1"  style="width: 100px;"> Latency </th>
+              <th v-if="programOptions.show === 1"  style="width: 200px;"> Ports </th>
+              <th v-if="programOptions.show === 2"  style="width: 80px;"> Dst </th>
+              <th v-if="programOptions.show === 2"  style="width: 80px;"> Src1 </th>
+              <th v-if="programOptions.show === 2"  style="width: 80px;"> Src2 </th>
+              <th v-if="programOptions.show === 2"  style="width: 80px;"> Src3 </th>
+              <th v-if="programOptions.show === 3"  style="width: 150px;"> Address </th>
+              <th v-if="programOptions.show === 3"  style="width: 80px;"> Stride </th>
+              <th v-if="programOptions.show === 3"  style="width: 80px;"> Lanes </th>          </tr>
           </thead>
           <tbody v-if="simState.simulatedProcess !== null">
             <tr
@@ -542,20 +550,41 @@
               <td title="Instruction description">
                 {{ inst.text }}
               </td>
-              <td v-if="!programOptions.showLat" title="Instruction type">
+              <td v-if="programOptions.show === 0" title="Instruction type">
                 {{ inst.type }}
               </td>
-              <td v-if="!programOptions.showLat" title="Operation type">
+              <td v-if="programOptions.show === 0" title="Operation type">
                 {{ inst.oper }}
               </td>
-              <td v-if="!programOptions.showLat" title="Operation size">
+              <td v-if="programOptions.show === 0" title="Operation size">
                 {{ inst.size}}
               </td>
-              <td v-if="programOptions.showLat" title="Latency">
+              <td v-if="programOptions.show === 1" title="Latency">
                 {{ inst.latency }}
               </td>
-              <td v-if="programOptions.showLat" title="Available execution ports">
+              <td v-if="programOptions.show === 1" title="Available execution ports">
                 {{ portsMaskToString(inst.ports) }}
+              </td>
+              <td v-if="programOptions.show === 2" title="Destination operand">
+                {{ inst.destin }}
+              </td>
+              <td v-if="programOptions.show === 2" title="Source operand 1">
+                {{ inst.source1 }}
+              </td>
+              <td v-if="programOptions.show === 2" title="Source operand 2">
+                {{ inst.source2 }}
+              </td>
+              <td v-if="programOptions.show === 2" title="Source operand 3">
+                {{ inst.source3 }}
+              </td>
+              <td v-if="programOptions.show === 3" title="Memory address">
+                {{ inst.source2 }}
+              </td>
+              <td v-if="programOptions.show === 3" title="Memory stride">
+                {{ inst.stride }}
+              </td>
+              <td v-if="programOptions.show === 3" title="Number of lanes">
+                {{ inst.lanes }}
               </td>
             </tr>
           </tbody>

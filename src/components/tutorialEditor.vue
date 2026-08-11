@@ -403,7 +403,8 @@ const validationButtonSelectors = [
   { label: 'Clear Edited Program',       value: '#clear-processor-button' },
   { label: 'Clear Edited Proc. Config',  value: '#clear-program-button' },
   { label: 'Remove PortX',               value: '#remove-port0-button' },
-  { label: 'Add Port',                   value: '#add-port-button' }
+  { label: 'Add Port',                   value: '#add-port-button' },
+  { label: 'Toggle Instruction Operands', value: '#show-instr-operands' }
 ]
 
 // ============================================================================
