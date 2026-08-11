@@ -488,6 +488,12 @@
       <TD WIDTH="538" COLSPAN="${port_ids.length}" BGCOLOR="#eeeeee" HREF="#" ID="cache" TITLE="Usage of cache capacity"><FONT POINT-SIZE="20"><B>Cache:&nbsp;</B>(${nblocks}, ${blkSize}, ${mIssueTime}, ${mPenalty})${message}</FONT></TD>
     </TR>`
 
+    if (nblocks === 0) {
+      cache_row = `<TR>
+        <TD WIDTH="538" COLSPAN="${port_ids.length}" BGCOLOR="#eeeeee" HREF="#" ID="cache" TITLE="Cache always hit"><FONT POINT-SIZE="20"><B>Cache:&nbsp;</B>No Cache</FONT></TD>
+      </TR>`
+    }
+
     usage = 0
     if (results !== null)
       usage = (results.ipc / retire) * 100
