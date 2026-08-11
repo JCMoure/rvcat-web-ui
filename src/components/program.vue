@@ -577,13 +577,13 @@
               <td v-if="programOptions.show === 2" title="Source operand 3">
                 {{ inst.source3 }}
               </td>
-              <td v-if="programOptions.show === 3 && (inst.type === 'MEM' || inst.type === 'VMEM')"
+              <td v-if="programOptions.show === 3"
                   title="Memory address">
-                {{ inst.source2 }}
+                {{ (inst.type === 'MEM' || inst.type === 'VMEM') ? inst.source2 : ''}}
               </td>
-              <td v-if="programOptions.show === 3 && (inst.type === 'MEM' || inst.type === 'VMEM' || inst.type === 'BRANCH')"
+              <td v-if="programOptions.show === 3"
                   title="Memory & Loop stride">
-                {{ inst.stride }}
+                {{ (inst.type === 'MEM' || inst.type === 'VMEM' || inst.type === 'BRANCH') ? inst.stride : '' }}
               </td>
               <td v-if="programOptions.show === 3" title="Number of vector lanes">
                 {{ inst.lanes }}
