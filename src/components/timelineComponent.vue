@@ -424,11 +424,11 @@
         initRow++
       let lengthRow = 1
       let ROBused = 1
-      if (instructions[initRow][2] + instructions[initRow][4].length === i) {
+      if (instructions[initRow][2] + instructions[initRow][4].length === i+1) {
         ROBused = 0
       }
       while (initRow+lengthRow < totalInstr && instructions[initRow+lengthRow][2] <= i) {
-        if (instructions[initRow+lengthRow][2] + instructions[initRow+lengthRow][4].length > i) {
+        if (instructions[initRow+lengthRow][2] + instructions[initRow+lengthRow][4].length > i+1) {
           ROBused++
         }
         lengthRow++
