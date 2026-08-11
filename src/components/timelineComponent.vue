@@ -181,56 +181,6 @@
     timeline.portUsageInstr = usageInstr
   }
 
-  function buildPortTimelineMatrix(timeline) {
-
-    const portUsage = timeline.portUsagePorts;
-
-    // Determinar número de ciclos
-    const maxCycle = Math.max(
-      ...Object.values(portUsage).flat(),
-      0
-    );
-
-    const cycles = maxCycle + 1;
-    const ports = Object.keys(portUsage).sort((a,b)=>Number(a)-Number(b));
-    const matrix = {};
-
-    for (const p of ports) {
-      matrix[p] = new Array(cycles).fill(0);
-    }
-
-    for (const [port, usedCycles] of Object.entries(portUsage)) {
-      for (const c of usedCycles) {
-        matrix[port][c]++;
-      }
-    }
-
-    return { cycles, ports, matrix };
-    // {  cycles: 4, ports: ["0","1"], matrix: { "0": [0,1,1,0], "1": [0,0,0,1] }
-  }
-
-  function renderPortUsageASCII(portMatrix) {
-    //     0123
-    // P0  .XX.
-    // P1  ...X
-    const { cycles, ports, matrix } = portMatrix;
-    const lines = [];
-    let header = "    ";
-    for (let c = 0; c < cycles; c++) {
-      header += (c % 10);
-    }
-    lines.push(header);
-
-    for (const p of ports) {
-      let row = `P${p}  `;
-      for (let c = 0; c < cycles; c++) {
-        row += matrix[p][c] > 0 ? "X" : ".";
-      }
-      lines.push(row);
-    }
-    return lines.join("\n");
-  }
-
   function addCanvasWrapper () {
     const wrapper = document.getElementById("canvas-container")
     let   dragging  = false

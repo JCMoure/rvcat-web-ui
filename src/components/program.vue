@@ -559,7 +559,7 @@
               <td v-if="programOptions.show === 0" title="Operation size">
                 {{ inst.size}}
               </td>
-              <td v-if="programOptions.show === 1" title="InstructionLatency">
+              <td v-if="programOptions.show === 1" title="Instruction Latency">
                 {{ inst.latency }}
               </td>
               <td v-if="programOptions.show === 1" title="Available execution ports">
@@ -577,10 +577,12 @@
               <td v-if="programOptions.show === 2" title="Source operand 3">
                 {{ inst.source3 }}
               </td>
-              <td v-if="programOptions.show === 3" title="Memory address">
+              <td v-if="programOptions.show === 3 && (inst.type === 'MEM' || inst.type === 'VMEM')"
+                  title="Memory address">
                 {{ inst.source2 }}
               </td>
-              <td v-if="programOptions.show === 3" title="Memory stride">
+              <td v-if="programOptions.show === 3 && (inst.type === 'MEM' || inst.type === 'VMEM' || inst.type === 'BRANCH')"
+                  title="Memory & Loop stride">
                 {{ inst.stride }}
               </td>
               <td v-if="programOptions.show === 3" title="Number of vector lanes">
