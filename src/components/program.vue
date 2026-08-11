@@ -461,13 +461,13 @@
           🧹
         </button>
         <button class="blue-button"
-            title="Toggle between: performance|type|input-output|memory"
+            title="Toggle between: type|performance|input-output|memory"
             id="show-instr-operands"
           @click="toggleLatency">
-          <span v-if="programOptions.show === 0">perf</span>
-          <span v-if="programOptions.show === 1">type</span>
+          <span v-if="programOptions.show === 0">type</span>
+          <span v-if="programOptions.show === 1">perf</span>
           <span v-if="programOptions.show === 2">InOut</span>
-          <span v-if="programOptions.show === 3">memory</span>
+          <span v-if="programOptions.show === 3">mem</span>
         </button>
         <div class="iters-group">
           <span class="iters-label" :title="`Rang: 1 - ${MAX_N} iters`">
@@ -559,7 +559,7 @@
               <td v-if="programOptions.show === 0" title="Operation size">
                 {{ inst.size}}
               </td>
-              <td v-if="programOptions.show === 1" title="Latency">
+              <td v-if="programOptions.show === 1" title="InstructionLatency">
                 {{ inst.latency }}
               </td>
               <td v-if="programOptions.show === 1" title="Available execution ports">
@@ -583,7 +583,7 @@
               <td v-if="programOptions.show === 3" title="Memory stride">
                 {{ inst.stride }}
               </td>
-              <td v-if="programOptions.show === 3" title="Number of lanes">
+              <td v-if="programOptions.show === 3" title="Number of vector lanes">
                 {{ inst.lanes }}
               </td>
             </tr>
