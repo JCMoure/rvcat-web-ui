@@ -461,11 +461,11 @@
           🧹
         </button>
         <button class="blue-button" :class="{ active: programOptions.showLat }"
-            title="Toggle between showing latency & Ports / Instruction type"
-            id="show-latports-operands"
+            title="Toggle between: performance|type|input-output|memory"
+            id="show-instr-operands"
           @click="toggleLatency">
-          <span v-if="programOptions.showLat">✔ </span>
-          lat
+          <span v-if="programOptions.showLat">perf</span>
+          <span v-if="!programOptions.showLat">type</span>
         </button>
         <div class="iters-group">
           <span class="iters-label" :title="`Rang: 1 - ${MAX_N} iters`">
