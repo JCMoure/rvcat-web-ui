@@ -38,7 +38,6 @@ const STORAGE_KEY = 'programEditOptions'
   const programSvg     = ref('')
   const showFullScreen = ref(false)
   let   graphTimeout   = null
-  let  loopstride      = ref(1)
 
   const loadOptions = () => {
     try {
@@ -141,10 +140,6 @@ function loadEditedProgram() {
         stride:  inst.stride  || '', lanes:   inst.lanes   || ''
       };
     });
-    if (editedProgram.value.length > 0) {
-      loopstride.value = editedProgram.value[editedProgram.value.length - 1].stride || 1
-      editedProgram.value.pop()
-    }
     console.log('📄Edited Program Reloaded from local storage')
   } catch (e) {
     console.error('📄❌ Failed to load edited program from localStorage:', e);
@@ -162,19 +157,6 @@ function loadEditedProgram() {
 
   watch( () => snapshotProgram(), (val) => {
       try {
-        val.instruction_list.push( {
-          text:    'if c go back',
-          type:    'BRANCH',
-          oper:    '',
-          size:    '',
-          destin:  '',
-          source1: 'c',
-          source2: '',
-          source3: '',
-          constant: '',
-          stride:  loopstride.value,
-          lanes:   1
-        } );
         localStorage.setItem('programTemp', JSON.stringify(val));
         console.log('📄✅ Saved edited program')
       } catch (e) {
@@ -309,21 +291,6 @@ function snapshotProgram() {
     clearTimeout(graphTimeout)
     try {
       graphTimeout = setTimeout(() => {
-
-        editedProgram.value.push( {
-          text:    'if c go back',
-          type:    'BRANCH',
-          oper:    '',
-          size:    '',
-          destin:  '',
-          source1: 'c',
-          source2: '',
-          source3: '',
-          constant: '',
-          stride:  loopstride.value,
-          lanes:   1
-        } );
-
         getProgGraph(
           JSON.stringify( toRaw(editedProgram.value), null, 2),
           1, true, false, false, true
@@ -353,19 +320,6 @@ function snapshotProgram() {
     if (stored) {
       const data = JSON.parse(stored)
       data.name = name
-      data.instruction_list.push( {
-        text:    'if c go back',
-        type:    'BRANCH',
-        oper:    '',
-        size:    '',
-        destin:  '',
-        source1: 'c',
-        source2: '',
-        source3: '',
-        constant: '',
-        stride:  loopstride.value,
-        lanes:   1
-      } );
       await downloadJSON(data, name, 'program')
     }
     showModalDownload.value = false;
@@ -479,7 +433,7 @@ function snapshotProgram() {
               </tr>
             </thead>
             <tbody>
-              <tr v-for="(inst, index) in editedProgram" :key="index">
+              <tr v-for="(inst, index) in editedProgram.slice(0, editedProgram.length - 1)" :key="index">
                 <td>{{ index }}</td>
 
                 <td>
@@ -596,7 +550,7 @@ function snapshotProgram() {
 
               <!-- 🔒 Fila fija final -->
               <tr class="fixed-row">
-                <td> {{editedProgram.length}} </td>
+                <td> {{editedProgram.length-1}} </td>
 
                 <td title="This final conditional branch is fixed">
                   <span class="table-input readonly">if c go back</span>
@@ -630,12 +584,14 @@ function snapshotProgram() {
                   <span class="table-input readonly"> </span>
                 </td>
                 <td v-if="programEditOptions.showStrideLanes">
-                  <input type="number" v-model="loopstride" class="table-input" />
+                  <input type="number" v-model="editedProgram[editedProgram.length - 1].stride" class="table-input" />
                 </td>
-                <td v-if="programEditOptions.showStrideLanes">
+                <td v-if="programEditOptions.showStrideLanes"
+                title="This final conditional branch is fixed">
                   <span class="table-input readonly"> 1 </span>
                 </td>
-                <td v-if="programEditOptions.showActions" class="actions-cell">
+                <td v-if="programEditOptions.showActions" class="actions-cell"
+                  title="This final conditional branch is fixed">
                   <span class="table-input readonly"> 🔒 </span>
                 </td>
               </tr>
