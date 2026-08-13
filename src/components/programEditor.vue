@@ -137,7 +137,7 @@ function loadEditedProgram() {
         text:    inst.text    || '', type:    inst.type    || '',  oper:     inst.oper     || '',
         size:    inst.size    || '', destin:  inst.destin  || '',  source1:  inst.source1  || '',
         source2: inst.source2 || '', source3: inst.source3 || '',  constant: inst.constant || '',
-        stride:  inst.stride  || 1, lanes:   inst.lanes   || 1
+        stride:  inst.stride  || 1,  lanes:   inst.lanes   || 1
       };
     });
     console.log('📄Edited Program Reloaded from local storage')
@@ -256,7 +256,9 @@ function normalizeInstruction(inst) {
     source1:  (inst.source1  || '').trim(),
     source2:  (inst.source2  || '').trim(),
     source3:  (inst.source3  || '').trim(),
-    constant: (inst.constant || '').trim()
+    constant: (inst.constant || '').trim(),
+    stride:   inst.stride || 1,
+    lanes:    inst.lanes  || 1
   };
 }
 
@@ -523,7 +525,7 @@ function snapshotProgram() {
 
                   <button
                     @click="moveInstructionDown(index)"
-                    :disabled="index === editedProgram.length - 1"
+                    :disabled="index === editedProgram.length - 2"
                     class="action-btn"
                     title="Move down"
                   >
