@@ -38,6 +38,7 @@ const STORAGE_KEY = 'programEditOptions'
   const programSvg     = ref('')
   const showFullScreen = ref(false)
   let   graphTimeout   = null
+  let  loopstride      = ref(1)
 
   const loadOptions = () => {
     try {
@@ -615,7 +616,7 @@ function snapshotProgram() {
                   <span class="table-input readonly"> </span>
                 </td>
                 <td v-if="programEditOptions.showStrideLanes">
-                  <input type="number" v-model="inst.stride" class="table-input" />
+                  <input type="number" v-model="loopstride" class="table-input" />
                 </td>
                 <td v-if="programEditOptions.showStrideLanes">
                   <span class="table-input readonly"> 1 </span>
