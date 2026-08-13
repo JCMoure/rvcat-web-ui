@@ -458,6 +458,8 @@ function snapshotProgram() {
                 <th v-if="programEditOptions.showInOut"   style="width: 80px;">  Source2 </th>
                 <th v-if="programEditOptions.showInOut"   style="width: 80px;">  Source3 </th>
                 <th v-if="programEditOptions.showInOut"   style="width: 80px;">  Constant</th>
+                <th v-if="programEditOptions.showStrideLanes" style="width: 80px;">  Stride </th>
+                <th v-if="programEditOptions.showStrideLanes" style="width: 80px;">  Lanes  </th>
                 <th v-if="programEditOptions.showActions" style="width: 100px;"> Actions </th>
               </tr>
             </thead>
@@ -528,6 +530,14 @@ function snapshotProgram() {
                   <input type="text" v-model="inst.constant" class="table-input" />
                 </td>
 
+                <td v-if="programEditOptions.showStrideLanes">
+                  <input type="number" v-model="inst.stride" class="table-input" />
+                </td>
+
+                <td v-if="programEditOptions.showStrideLanes">
+                  <input type="number" v-model="inst.lanes" class="table-input" />
+                </td>
+
                 <td v-if="programEditOptions.showActions" class="actions-cell">
 
                   <button
@@ -592,22 +602,24 @@ function snapshotProgram() {
                 <td v-if="programEditOptions.showInOut">
                   <span class="table-input readonly"> </span>
                 </td>
-
                 <td v-if="programEditOptions.showInOut">
                   <span class="table-input readonly">c</span>
                 </td>
-
-                <td v-if="programEditOptions.showInOut">
-                  <span class="table-input readonly"> </span>
-                </td>
-
                 <td v-if="programEditOptions.showInOut">
                   <span class="table-input readonly"> </span>
                 </td>
                 <td v-if="programEditOptions.showInOut">
                   <span class="table-input readonly"> </span>
                 </td>
-
+                <td v-if="programEditOptions.showInOut">
+                  <span class="table-input readonly"> </span>
+                </td>
+                <td v-if="programEditOptions.showStrideLanes">
+                  <span class="table-input readonly"> 1 </span>
+                </td>
+                <td v-if="programEditOptions.showStrideLanes">
+                  <span class="table-input readonly"> 1 </span>
+                </td>
                 <td v-if="programEditOptions.showActions" class="actions-cell">
                   <span class="table-input readonly"> 🔒 </span>
                 </td>
