@@ -223,7 +223,7 @@ function addInstruction( index ) {
 }
 
 function removeInstruction(index) {
-  if (editedProgram.value.length > 1) {
+  if (editedProgram.value.length > 2) {
     editedProgram.value.splice(index, 1);
   }
 }
@@ -295,7 +295,6 @@ function snapshotProgram() {
           JSON.stringify( toRaw(editedProgram.value), null, 2),
           1, true, false, false, true
         )
-        editedProgram.value.pop()
       }, 75)
       console.log('📄✅ Graph drawn')
       programEditOptions.showGraph = true
@@ -326,7 +325,9 @@ function snapshotProgram() {
   }
 
   function clearProgram() {
-    editedProgram.value  = [];
+    editedProgram.value  = [{ text: "if c go back", type: "BRANCH", oper: "",
+      size: "", destin: "", source1: "c", source2: "", source3: "", constant: "",
+      stride: 2, lanes: 1}];
     showModalClear.value = false;
     addInstruction(0);
   }
@@ -520,7 +521,7 @@ function snapshotProgram() {
 
                   <button
                     @click="moveInstructionDown(index)"
-                    :disabled="index === editedProgram.length - 1"
+                    :disabled="index === editedProgram.length - 2"
                     class="action-btn"
                     title="Move down"
                   >
@@ -538,7 +539,6 @@ function snapshotProgram() {
 
                   <button
                     @click="addInstruction(index)"
-                    :disabled="editedProgram.length === 1"
                     class="action-btn"
                     title="Insert new instruction before this one"
                   >
