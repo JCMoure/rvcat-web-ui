@@ -615,7 +615,7 @@ function snapshotProgram() {
                   <span class="table-input readonly"> </span>
                 </td>
                 <td v-if="programEditOptions.showStrideLanes">
-                  <span class="table-input readonly"> 1 </span>
+                  <input type="number" v-model="inst.stride" class="table-input" />
                 </td>
                 <td v-if="programEditOptions.showStrideLanes">
                   <span class="table-input readonly"> 1 </span>
