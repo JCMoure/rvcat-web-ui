@@ -141,6 +141,10 @@ function loadEditedProgram() {
         stride:  inst.stride  || '', lanes:   inst.lanes   || ''
       };
     });
+    if (editedProgram.value.length > 0) {
+      loopstride.value = editedProgram.value[editedProgram.value.length - 1].stride || 1
+      editedProgram.value.pop()
+    }
     console.log('📄Edited Program Reloaded from local storage')
   } catch (e) {
     console.error('📄❌ Failed to load edited program from localStorage:', e);
@@ -158,6 +162,19 @@ function loadEditedProgram() {
 
   watch( () => snapshotProgram(), (val) => {
       try {
+        val.instruction_list.push( {
+          text:    'if c go back',
+          type:    'BRANCH',
+          oper:    '',
+          size:    '',
+          destin:  '',
+          source1: 'c',
+          source2: '',
+          source3: '',
+          constant: '',
+          stride:  loopstride.value,
+          lanes:   1
+        } );
         localStorage.setItem('programTemp', JSON.stringify(val));
         console.log('📄✅ Saved edited program')
       } catch (e) {
@@ -194,9 +211,6 @@ function loadEditedProgram() {
         // TODO: Check here if it is a valid program
         localStorage.setItem('programTemp', JSON.stringify(data));
         loadEditedProgram()
-        if (editedProgram.value.length > 0)
-          editedProgram.value.pop()
-        localStorage.setItem('programTemp', JSON.stringify(editedProgram.value));
       }
     } catch (error) {
       console.error('📄❌ Failed to upload program for edition:', error)
@@ -306,7 +320,7 @@ function snapshotProgram() {
           source2: '',
           source3: '',
           constant: '',
-          stride:  1,
+          stride:  loopstride.value,
           lanes:   1
         } );
 
@@ -349,7 +363,7 @@ function snapshotProgram() {
         source2: '',
         source3: '',
         constant: '',
-        stride:  1,
+        stride:  loopstride.value,
         lanes:   1
       } );
       await downloadJSON(data, name, 'program')
