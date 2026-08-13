@@ -137,7 +137,7 @@ function loadEditedProgram() {
         text:    inst.text    || '', type:    inst.type    || '',  oper:     inst.oper     || '',
         size:    inst.size    || '', destin:  inst.destin  || '',  source1:  inst.source1  || '',
         source2: inst.source2 || '', source3: inst.source3 || '',  constant: inst.constant || '',
-        stride:  inst.stride  || '', lanes:   inst.lanes   || ''
+        stride:  inst.stride  || 1, lanes:   inst.lanes   || 1
       };
     });
     console.log('📄Edited Program Reloaded from local storage')
@@ -217,13 +217,15 @@ function addInstruction( index ) {
       source1: '',
       source2: '',
       source3: '',
-      constant: ''
+      constant: '',
+      stride: 1,
+      lanes:  1
     }
   );
 }
 
 function removeInstruction(index) {
-  if (editedProgram.value.length > 2) {
+  if (editedProgram.value.length > 1) {
     editedProgram.value.splice(index, 1);
   }
 }
@@ -327,7 +329,7 @@ function snapshotProgram() {
   function clearProgram() {
     editedProgram.value  = [{ text: "if c go back", type: "BRANCH", oper: "",
       size: "", destin: "", source1: "c", source2: "", source3: "", constant: "",
-      stride: 2, lanes: 1}];
+      stride: 1, lanes: 1}];
     showModalClear.value = false;
     addInstruction(0);
   }
@@ -521,7 +523,7 @@ function snapshotProgram() {
 
                   <button
                     @click="moveInstructionDown(index)"
-                    :disabled="index === editedProgram.length - 2"
+                    :disabled="index === editedProgram.length - 1"
                     class="action-btn"
                     title="Move down"
                   >
@@ -530,7 +532,7 @@ function snapshotProgram() {
 
                   <button
                     @click="removeInstruction(index)"
-                    :disabled="editedProgram.length === 1"
+                    :disabled="editedProgram.length === 2"
                     class="action-btn delete"
                     title="Delete"
                   >
