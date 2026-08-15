@@ -1898,6 +1898,12 @@ onUnmounted(() => {
     transform-origin: center center !important;
   }
 
+  div#top.tutorial-highlighted.header-title {
+    color: #333 !important;
+    transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
+    transform-origin: center center !important;
+  }
+
   .tutorial-highlighted button {
     color:      #333 !important;
     transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
