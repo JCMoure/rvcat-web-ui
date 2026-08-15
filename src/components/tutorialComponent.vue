@@ -1077,7 +1077,7 @@ onUnmounted(() => {
   }
 
   .tutorial-tooltip .tutorial-header {
-    padding: 16px 20px 12px 20px;
+    padding: 6px 20px 6px 20px;
     border-bottom: 1px solid #e9ecef;
     display: flex;
     justify-content: space-between;
@@ -1086,7 +1086,7 @@ onUnmounted(() => {
   }
 
   .tutorial-tooltip .tutorial-content {
-    padding: 20px;
+    padding: 10px;
     flex: 1;
     overflow-y: auto;
     word-wrap: break-word;
@@ -1098,16 +1098,11 @@ onUnmounted(() => {
   }
 
   .tutorial-header {
-    display:         flex;
-    justify-content: space-between;
-    align-items:     center;
-    padding:         6px 8px;
     background:  white;
     font-weight:    600;
     border-radius:  8px 8px 0 0;
     cursor:         grab;
     user-select:    none;
-    flex-shrink:    0;
   }
 
   .tutorial-header h3 {
@@ -1123,10 +1118,6 @@ onUnmounted(() => {
   .tutorial-header span {
     flex: 1;
     text-align: center;
-  }
-
-  .tutorial-content {
-    padding: 10px;
   }
 
   .tutorial-content h3 {
