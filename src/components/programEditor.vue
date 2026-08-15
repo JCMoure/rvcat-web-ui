@@ -367,7 +367,7 @@ function snapshotProgram() {
         InOut
       </button>
 
-      <button class="blue-button add-prev-margin"
+      <button class="blue-button add-margin"
               :class="{ active: programEditOptions.showStrideLanes }"
           title="Show/Hide instruction Stride & vector lanes"
           id="show-mem-operands"
