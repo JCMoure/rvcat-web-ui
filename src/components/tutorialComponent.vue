@@ -1039,7 +1039,8 @@ onUnmounted(() => {
 }
 
 .tutorial-tooltip {
-  position:    absolute;
+  position:    fixed; /* absolute */
+  overflow:    auto;  /* added to allow resizing content */
   background:  white;
   box-shadow:  0 8px 24px rgba(0, 0, 0, 0.3);
   padding:     0;
@@ -1047,25 +1048,13 @@ onUnmounted(() => {
   width:       400px;
   max-width:   calc(100vw - 40px);
   z-index:     10001;
-  pointer-events: all;
+  /* pointer-events: all; */
+  pointer-events: auto;
+  resize: both;
   transition:    all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
   border-radius: 10px;
   transform:     translateY(-10px) scale(0.95);
   animation:     tutorial-tooltip-appear 0.4s ease-out forwards;
-}
-
-.tutorial-window {
-    position: fixed;
-    border: 1px solid #ccc;
-    display: flex;
-    flex-direction: column;
-    min-width: 400px;
-    min-height: 300px;
-    height: 600px;
-    resize: both;
-    overflow: auto;
-    pointer-events: auto; /* IMPORTANTE: el contenido puede recibir clicks */
-    z-index: 1000;
 }
 
   .tutorial-header {
