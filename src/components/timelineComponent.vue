@@ -297,6 +297,8 @@
           totalInstr++
           first_cycle = instructions[totalInstr-1][2]
         }
+        if (totalCycles <= first_cycle)
+          totalInstr--
       } else { // not included & find less
         do {
           totalInstr--
