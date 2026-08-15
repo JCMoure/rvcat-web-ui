@@ -296,8 +296,9 @@
         do {
           totalInstr++
           first_cycle = instructions[totalInstr-1][2]
-        } while (totalCycles > first_cycle && totalInstr < (instructions.length+1))
-        totalInstr--  // last instruction is not included
+        } while (totalCycles > first_cycle && totalInstr < instructions.length)
+        if (totalCycles <= first_cycle)
+          totalInstr--  // last instruction is not included
       } else { // not included & find less
         do {
           totalInstr--
