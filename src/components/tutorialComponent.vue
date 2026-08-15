@@ -259,8 +259,8 @@ const defaultOptions = {
   available:      [],
   inProgressID:   "",
   progressStep:    0,
-  windowWidth:   500,
-  windowHeight:  300,
+  windowWidth:   200,
+  windowHeight:  200,
   x_pos:          10,
   y_pos:          10
 }
@@ -317,9 +317,9 @@ const emit  = defineEmits(['requestSwitchPanel', 'requestSwitchFull'])
 // Draggable & resizable full-screen graph container
 // ============================================================================
 
-  const HEADER_HEIGHT = 40
-  const MIN_W = 200
-  const MIN_H = 200
+  const HEADER_HEIGHT = 20
+  const MIN_W = 100
+  const MIN_H = 100
 
   const headerRef  = ref(null)
   const contentRef = ref(null)
@@ -1077,28 +1077,29 @@ onUnmounted(() => {
     justify-content: space-between;
     align-items: center;
     padding: 12px 16px;
-    background: #2c3e50;
-    color: white;
+    background:  white;
     font-weight: 600;
     border-radius: 8px 8px 0 0;
     cursor: grab;
     user-select: none;
     flex-shrink: 0; /* Evita que el header se encoja */
   }
+
   .tutorial-header:active {
     cursor: grabbing;
   }
+
   .tutorial-header span {
     flex: 1;
     text-align: center;
   }
 
 .tutorial-content {
-  padding: 12px;
+  padding: 10px;
 }
 
 .tutorial-content h3 {
-  margin:    0 0 5px 0;
+  margin:    0 0 1px 0;
   color:     #333;
   font-size: large;
 }
