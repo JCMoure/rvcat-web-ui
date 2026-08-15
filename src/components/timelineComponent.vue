@@ -293,12 +293,10 @@
       // Compute last instruction processed before newCycles
       let first_cycle = instructions[totalInstr-1][2]
       if (totalCycles > first_cycle) { // included & find more
-        do {
+        while (totalCycles > first_cycle && totalInstr < instructions.length) {
           totalInstr++
           first_cycle = instructions[totalInstr-1][2]
-        } while (totalCycles > first_cycle && totalInstr < instructions.length)
-        if (totalCycles <= first_cycle)
-          totalInstr--  // last instruction is not included
+        }
       } else { // not included & find less
         do {
           totalInstr--
