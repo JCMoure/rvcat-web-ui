@@ -1051,9 +1051,9 @@ onUnmounted(() => {
     /* pointer-events: all; */
     pointer-events: auto;
     resize: both;
-    transition: opacity 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+    /* transition: opacity 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94),
               transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94),
-              box-shadow 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+              box-shadow 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94); */
 
     border-radius: 10px;
     transform:     translateY(-10px) scale(0.95);
