@@ -1045,25 +1045,24 @@ onUnmounted(() => {
     box-shadow:  0 8px 24px rgba(0, 0, 0, 0.3);
     padding:     0;
     opacity:     0;
-    /*width:       400px;
-    max-width:   calc(100vw - 40px); */
 
-    min-width: 300px;     /* En lugar de width fijo */
-    min-height: 200px;    /* Altura mínima */
+    min-width:  300px;
+    min-height: 200px;
     max-width: calc(100vw - 40px);
     max-height: calc(100vh - 40px);
 
-    z-index:     10001;
-    /* pointer-events: all; */
+    z-index:    10001;
     pointer-events: auto;
-    resize: both;
+    resize:     both;
     transition: opacity 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94),
-              transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94),
-              box-shadow 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+              transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 
     border-radius: 10px;
     transform:     translateY(-10px) scale(0.95);
     animation:     tutorial-tooltip-appear 0.4s ease-out forwards;
+
+    will-change:   transform, opacity;
+    box-sizing:    border-box;
   }
 
   @keyframes tutorial-tooltip-appear {
@@ -1077,18 +1076,38 @@ onUnmounted(() => {
     }
   }
 
-
-  .tutorial-header {
+  .tutorial-tooltip .tutorial-header {
+    padding: 16px 20px 12px 20px;
+    border-bottom: 1px solid #e9ecef;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 12px 16px;
+    flex-shrink: 0;
+  }
+
+  .tutorial-tooltip .tutorial-content {
+    padding: 20px;
+    flex: 1;
+    overflow-y: auto;
+    word-wrap: break-word;
+  }
+
+  .tutorial-tooltip {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .tutorial-header {
+    display:         flex;
+    justify-content: space-between;
+    align-items:     center;
+    padding:         6px 8px;
     background:  white;
-    font-weight: 600;
-    border-radius: 8px 8px 0 0;
-    cursor: grab;
-    user-select: none;
-    flex-shrink: 0; /* Evita que el header se encoja */
+    font-weight:    600;
+    border-radius:  8px 8px 0 0;
+    cursor:         grab;
+    user-select:    none;
+    flex-shrink:    0;
   }
 
   .tutorial-header h3 {
@@ -1106,321 +1125,321 @@ onUnmounted(() => {
     text-align: center;
   }
 
-.tutorial-content {
-  padding: 10px;
-}
+  .tutorial-content {
+    padding: 10px;
+  }
 
-.tutorial-content h3 {
-  margin:    0 0 1px 0;
-  color:     #333;
-  font-size: large;
-}
+  .tutorial-content h3 {
+    margin:    0 0 1px 0;
+    color:     #333;
+    font-size: large;
+  }
 
-.tutorial-content p {
-  margin:      0 0 10px 0;
-  color:       #666;
-  line-height: 1.5;
-  font-size:   medium;
-}
+  .tutorial-content p {
+    margin:      0 0 10px 0;
+    color:       #666;
+    line-height: 1.5;
+    font-size:   medium;
+  }
 
-.tutorial-content :deep(code) {
-  background:    #f4f4f4;
-  padding:       2px 4px;
-  border-radius: 3px;
-  font-family:   monospace;
-  font-size:     small;
-}
+  .tutorial-content :deep(code) {
+    background:    #f4f4f4;
+    padding:       2px 4px;
+    border-radius: 3px;
+    font-family:   monospace;
+    font-size:     small;
+  }
 
-.tutorial-actions {
-  gap:     10px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
+  .tutorial-actions {
+    gap:     10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
 
-.tutorial-btn {
-  padding:       4px 16px;
-  border:        1px solid #ddd;
-  border-radius: 4px;
-  background:    white;
-  cursor:        pointer;
-  font-size:     medium;
-  transition:    all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-  transform:     translateY(0);
-}
+  .tutorial-btn {
+    padding:       4px 16px;
+    border:        1px solid #ddd;
+    border-radius: 4px;
+    background:    white;
+    cursor:        pointer;
+    font-size:     medium;
+    transition:    all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    transform:     translateY(0);
+  }
 
-.tutorial-btn:hover:not(:disabled) {
-  background: #f5f5f5;
-  transform:  translateY(-1px);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
+  .tutorial-btn:hover:not(:disabled) {
+    background: #f5f5f5;
+    transform:  translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
 
-.tutorial-btn:disabled {
-  opacity: 0.5;
-  cursor:  not-allowed;
-}
+  .tutorial-btn:disabled {
+    opacity: 0.5;
+    cursor:  not-allowed;
+  }
 
-.tutorial-btn-primary {
-  background:   #007acc;
-  color:        white;
-  border-color: #007acc;
-}
+  .tutorial-btn-primary {
+    background:   #007acc;
+    color:        white;
+    border-color: #007acc;
+  }
 
-.tutorial-btn-primary:hover:not(:disabled) {
-  background: #005999;
-  transform:  translateY(-1px);
-  box-shadow: 0 2px 12px rgba(0, 122, 204, 0.3);
-}
+  .tutorial-btn-primary:hover:not(:disabled) {
+    background: #005999;
+    transform:  translateY(-1px);
+    box-shadow: 0 2px 12px rgba(0, 122, 204, 0.3);
+  }
 
-.tutorial-btn-disabled {
-  background:   #cccccc !important;
-  color:        #666666 !important;
-  border-color: #cccccc !important;
-  cursor:  not-allowed !important;
-  opacity: 0.7;
-}
+  .tutorial-btn-disabled {
+    background:   #cccccc !important;
+    color:        #666666 !important;
+    border-color: #cccccc !important;
+    cursor:  not-allowed !important;
+    opacity: 0.7;
+  }
 
-.tutorial-btn-disabled:hover {
-  background: #cccccc !important;
-  transform:  none !important;
-  box-shadow: none !important;
-}
+  .tutorial-btn-disabled:hover {
+    background: #cccccc !important;
+    transform:  none !important;
+    box-shadow: none !important;
+  }
 
-.tutorial-progress {
-  font-size:   small;
-  color:       #666;
-  white-space: nowrap;
-}
+  .tutorial-progress {
+    font-size:   small;
+    color:       #666;
+    white-space: nowrap;
+  }
 
-.tutorial-close {
-  position:    absolute;
-  top:         0px;
-  right:       0px;
-  background:  none;
-  border:      none;
-  font-size:   large;
-  cursor:      pointer;
-  color:       #999;
-  line-height: 0.8;
-}
+  .tutorial-close {
+    position:    absolute;
+    top:         0px;
+    right:       0px;
+    background:  none;
+    border:      none;
+    font-size:   large;
+    cursor:      pointer;
+    color:       #999;
+    line-height: 0.8;
+  }
 
-.tutorial-close:hover {
-  color: #333;
-}
+  .tutorial-close:hover {
+    color: #333;
+  }
 
-.tutorial-launcher {
-  position: fixed;
-  bottom:   20px;
-  right:    20px;
-  z-index:  10000;
-}
+  .tutorial-launcher {
+    position: fixed;
+    bottom:   20px;
+    right:    20px;
+    z-index:  10000;
+  }
 
-.tutorial-launcher-btn {
-  width:         50px;
-  height:        50px;
-  border-radius: 50%;
-  background:    #007acc;
-  color:         white;
-  border:        none;
-  cursor:        pointer;
-  box-shadow:    0 4px 12px rgba(0, 122, 204, 0.4);
-  transition:    all 0.3s;
-  display:       flex;
-  align-items:   center;
-  justify-content: center;
-}
+  .tutorial-launcher-btn {
+    width:         50px;
+    height:        50px;
+    border-radius: 50%;
+    background:    #007acc;
+    color:         white;
+    border:        none;
+    cursor:        pointer;
+    box-shadow:    0 4px 12px rgba(0, 122, 204, 0.4);
+    transition:    all 0.3s;
+    display:       flex;
+    align-items:   center;
+    justify-content: center;
+  }
 
-.tutorial-launcher-btn:hover {
-  background:  #005999;
-  transform:   scale(1.1);
-}
+  .tutorial-launcher-btn:hover {
+    background:  #005999;
+    transform:   scale(1.1);
+  }
 
-.tutorial-icon {
-  font-size:   xx-large;
-  font-weight: bolder;
-}
+  .tutorial-icon {
+    font-size:   xx-large;
+    font-weight: bolder;
+  }
 
-.tutorial-menu {
-  bottom:  20px;
-  right:   20px;
-  padding: 8px;
-  width:      360px;
-  max-height: 500px;
-  position:   absolute;
-  background: white;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-  overflow-y: auto;
-}
+  .tutorial-menu {
+    bottom:  20px;
+    right:   20px;
+    padding: 8px;
+    width:      360px;
+    max-height: 500px;
+    position:   absolute;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    overflow-y: auto;
+  }
 
-.tutorial-menu h4 {
-  margin:    0 0 10px 0;
-  color:     #333;
-  font-size: medium;
-}
+  .tutorial-menu h4 {
+    margin:    0 0 10px 0;
+    color:     #333;
+    font-size: medium;
+  }
 
-.tutorial-list {
-  display: flex;
-  gap:     4px;
-  flex-direction: column;
-}
+  .tutorial-list {
+    display: flex;
+    gap:     4px;
+    flex-direction: column;
+  }
 
-.tutorial-menu-item {
-  background: none;
-  border:     2px solid #ddd;
-  padding:    5px;
-  cursor:     pointer;
-  text-align: left;
-  transition: all 0.2s;
-  border-radius: 6px;
-}
+  .tutorial-menu-item {
+    background: none;
+    border:     2px solid #ddd;
+    padding:    5px;
+    cursor:     pointer;
+    text-align: left;
+    transition: all 0.2s;
+    border-radius: 6px;
+  }
 
-.tutorial-menu-item:hover {
-  background:  #f5f5f5;
-  border-color: #007acc;
-}
+  .tutorial-menu-item:hover {
+    background:  #f5f5f5;
+    border-color: #007acc;
+  }
 
-.tutorial-item-content strong {
-  display:       block;
-  color:         #333;
-  margin-bottom: 2px;
-  font-size:     medium;
-}
+  .tutorial-item-content strong {
+    display:       block;
+    color:         #333;
+    margin-bottom: 2px;
+    font-size:     medium;
+  }
 
-.tutorial-item-content p {
-  margin:     0;
-  color:      #666;
-  font-size:  small;
-  line-height: 1.4;
-}
+  .tutorial-item-content p {
+    margin:     0;
+    color:      #666;
+    font-size:  small;
+    line-height: 1.4;
+  }
 
-.tutorial-item-wrapper {
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  margin-bottom: 10px;
-}
+  .tutorial-item-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
 
-.tutorial-delete-btn {
-  background: #eed1d1;
-  color: white;
-  border: none;
-  border-radius: 50%;
-  width: 30px;
-  height: 30px;
-  font-size: 16px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s ease;
-  flex-shrink: 0;
-}
+  .tutorial-delete-btn {
+    background: #eed1d1;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    font-size: 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+  }
 
-.tutorial-delete-btn:hover {
-  background: #ff0000;
-  transform: scale(1.1);
-}
+  .tutorial-delete-btn:hover {
+    background: #ff0000;
+    transform: scale(1.1);
+  }
 
-.tutorial-delete-btn:active {
-  transform: scale(0.95);
-}
+  .tutorial-delete-btn:active {
+    transform: scale(0.95);
+  }
 
-.tutorial-menu-separator {
-  height:     3px;
-  background: #eee;
-  margin:     4px 0;
-}
+  .tutorial-menu-separator {
+    height:     3px;
+    background: #eee;
+    margin:     4px 0;
+  }
 
-.tutorial-paused-section {
-  border-bottom:  2px solid #eee;
-}
+  .tutorial-paused-section {
+    border-bottom:  2px solid #eee;
+  }
 
-.tutorial-paused-header {
-  text-align:    center;
-  margin-bottom: 8px;
-}
+  .tutorial-paused-header {
+    text-align:    center;
+    margin-bottom: 8px;
+  }
 
-.tutorial-paused-header h5 {
-  margin:      0 0 2px 0;
-  color:       #333;
-  font-size:   large;
-  font-weight: 600;
-}
+  .tutorial-paused-header h5 {
+    margin:      0 0 2px 0;
+    color:       #333;
+    font-size:   large;
+    font-weight: 600;
+  }
 
-.tutorial-paused-info {
-  margin:     0;
-  color:      #666;
-  font-size:  medium;
-  font-style: italic;
-}
+  .tutorial-paused-info {
+    margin:     0;
+    color:      #666;
+    font-size:  medium;
+    font-style: italic;
+  }
 
-.tutorial-action-buttons {
-  display:       flex;
-  gap:           8px;
-  margin-bottom: 4px;
-}
+  .tutorial-action-buttons {
+    display:       flex;
+    gap:           8px;
+    margin-bottom: 4px;
+  }
 
-.tutorial-action-btn {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  gap:     8px;
-  padding: 8px 12px;
-  border:  none;
-  border-radius: 8px;
-  cursor:      pointer;
-  transition: all 0.3s ease;
-  text-align: left;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
+  .tutorial-action-btn {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap:     8px;
+    padding: 8px 12px;
+    border:  none;
+    border-radius: 8px;
+    cursor:      pointer;
+    transition: all 0.3s ease;
+    text-align: left;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
 
-.tutorial-action-icon {
-  font-size:   large;
-  line-height: 1;
-}
+  .tutorial-action-icon {
+    font-size:   large;
+    line-height: 1;
+  }
 
-.tutorial-action-content {
-  display:        flex;
-  flex-direction: column;
-  gap: 2px;
-}
+  .tutorial-action-content {
+    display:        flex;
+    flex-direction: column;
+    gap: 2px;
+  }
 
-.tutorial-action-content strong {
-  font-size:   medium;
-  font-weight: blod;
-  line-height: 1.2;
-}
+  .tutorial-action-content strong {
+    font-size:   medium;
+    font-weight: blod;
+    line-height: 1.2;
+  }
 
-.tutorial-action-content span {
-  font-size:   small;
-  opacity:     0.8;
-  line-height: 1.2;
-}
+  .tutorial-action-content span {
+    font-size:   small;
+    opacity:     0.8;
+    line-height: 1.2;
+  }
 
-.tutorial-resume-btn {
-  background: linear-gradient(135deg, #28a745, #20893e);
-  color: white;
-}
+  .tutorial-resume-btn {
+    background: linear-gradient(135deg, #28a745, #20893e);
+    color: white;
+  }
 
-.tutorial-resume-btn:hover {
-  background: linear-gradient(135deg, #218838, #1e7e34);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 8px rgba(40, 167, 69, 0.3);
-}
+  .tutorial-resume-btn:hover {
+    background: linear-gradient(135deg, #218838, #1e7e34);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(40, 167, 69, 0.3);
+  }
 
-.tutorial-stop-btn {
-  background: linear-gradient(135deg, #dc3545, #c82333);
-  color: white;
-}
+  .tutorial-stop-btn {
+    background: linear-gradient(135deg, #dc3545, #c82333);
+    color: white;
+  }
 
-.tutorial-stop-btn:hover {
-  background: linear-gradient(135deg, #c82333, #bd2130);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 8px rgba(220, 53, 69, 0.3);
-}
+  .tutorial-stop-btn:hover {
+    background: linear-gradient(135deg, #c82333, #bd2130);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(220, 53, 69, 0.3);
+  }
 
 .question-overlay {
   display:  flex;
