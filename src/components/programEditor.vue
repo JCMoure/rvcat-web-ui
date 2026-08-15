@@ -559,7 +559,7 @@ function snapshotProgram() {
               </tr>
 
               <!-- 🔒 Fila fija final -->
-              <tr class="fixed-row">
+              <tr v-if="editedProgram.length" class="fixed-row">
                 <td> {{editedProgram.length-1}} </td>
 
                 <td title="This final conditional branch is fixed">
