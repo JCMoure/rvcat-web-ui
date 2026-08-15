@@ -176,7 +176,8 @@ function loadEditedProgram() {
     cleanupHandleGraph = registerHandler('get_prog_graph', handleGraph);
 
     const stored = localStorage.getItem('programTemp');
-    if (!stored) clearProgram
+    if (!stored) clearProgram()
+    // localStorage.setItem('programTemp', JSON.stringify(val));
 
     loadEditedProgram()
     console.log('📄🎯 Program Editor Component mounted')
