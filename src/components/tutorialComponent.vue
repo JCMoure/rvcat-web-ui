@@ -3,14 +3,7 @@
     <!-- Tutorial Overlay for Steps -->
     <div v-if="currentTutorial && isActive && !isQuestionStep" class="tutorial-overlay">
       <!-- Tooltip -->
-      <div class="tutorial-tooltip"
-            ref="contentRef"
-            :style="{
-              left:   x + 'px',
-              top:    y + 'px'
-            }">
-          <!-- , width:  tutorialOptions.windowWidth + 'px', height: tutorialOptions.windowHeight + 'px'  -->
-
+      <div class="tutorial-tooltip" ref="contentRef" :style="{ left: x + 'px', top: y + 'px' }">
         <div class="tutorial-header" ref="headerRef">
           <h3 v-html="currentStep?.title"></h3>
           <button title="Close tutorial, but can be resumed later"
@@ -711,6 +704,7 @@ const highlightCurrentStep = async () => {
     element = document.querySelector(sel)
   }
 
+  console.log(`👨‍🎓⏺️ Highlighted Element: ${element}`)
   if (element) {
     highlightElement.value = element
     element.classList.add('tutorial-highlighted', 'tutorial-highlight-pulse')
