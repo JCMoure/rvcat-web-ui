@@ -49,9 +49,6 @@
             </button>
           </div>
         </div>
-        <button @click="closeTutorial"
-          title="Close tutorial, but can be resumed later"
-          class="tutorial-close">&times;</button>
       </div>
     </div>
 
