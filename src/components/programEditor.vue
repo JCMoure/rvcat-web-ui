@@ -274,9 +274,9 @@ function snapshotProgram() {
   };
 }
 
-  function toggleInOut  () { programEditOptions.showInOut   = !programEditOptions.showInOut }
+  function toggleInOut  ()     { programEditOptions.showInOut   = !programEditOptions.showInOut }
   function toggleStrideLanes() { programEditOptions.showStrideLanes = !programEditOptions.showStrideLanes }
-  function toggleActions() { programEditOptions.showActions = !programEditOptions.showActions }
+  function toggleActions()     { programEditOptions.showActions = !programEditOptions.showActions }
 
   // Handler for 'get_prog_graph' message (fired by RVCAT getProgGraph function)
   const handleGraph = async (data, dataType) => {

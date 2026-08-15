@@ -3,7 +3,19 @@
     <!-- Tutorial Overlay for Steps -->
     <div v-if="currentTutorial && isActive && !isQuestionStep" class="tutorial-overlay">
       <!-- Tooltip -->
-      <div class="tutorial-tooltip" :style="tooltipStyle">
+      <div class="tutorial-tooltip"
+            ref="contentRef"
+            :style="{
+              left: x + 'px',
+              top: y + 'px',
+              width: tutorialOptions.windowWidth + 'px',
+              height: tutorialOptions.windowHeight + 'px'
+            }">
+        <div class="tutorial-header" ref="headerRef">
+          <h3 v-html="currentStep?.title"></h3>
+          <button title="Close tutorial, but can be resumed later"
+          class="tutorial-close" @click="closeTutorial">&times;</button>
+        </div>
         <div class="tutorial-content">
           <h3 v-html="currentStep?.title"></h3>
           <p class="step-description" v-html="currentStep?.description"></p>
@@ -234,6 +246,7 @@
 <script setup>
 
 import { ref, computed, inject, reactive, watch, nextTick, onMounted, onUnmounted } from 'vue'
+import { useDraggable, useResizeObserver}                                           from '@vueuse/core'
 import { initResource, removeFromLocalStorage, uploadJSON }                         from '@/common'
 const simState = inject('simulationState');
 
@@ -243,9 +256,13 @@ const simState = inject('simulationState');
 const STORAGE_KEY = 'tutorialOptions'
 
 const defaultOptions = {
-  available:    [],
-  inProgressID: "",
-  progressStep:  0
+  available:      [],
+  inProgressID:   "",
+  progressStep:    0,
+  windowWidth:   500,
+  windowHeight:  300,
+  x_pos:          10,
+  y_pos:          10
 }
 
 const tutorialOptions  = reactive(defaultOptions)
@@ -296,6 +313,54 @@ const props = defineProps({ activeView: String, activeFull: String })
 // emit signal to simulatorView in order to switch panels
 const emit  = defineEmits(['requestSwitchPanel', 'requestSwitchFull'])
 
+// ============================================================================
+// Draggable & resizable full-screen graph container
+// ============================================================================
+
+  const HEADER_HEIGHT = 40
+  const MIN_W = 200
+  const MIN_H = 200
+
+  const headerRef  = ref(null)
+  const contentRef = ref(null)
+
+  const x = toRef(tutorialOptions, 'x_pos')
+  const y = toRef(tutorialOptions, 'y_pos')
+
+  const { isDragging } = useDraggable(headerRef, {
+    initialValue: { x: tutorialOptions.x_pos, y: tutorialOptions.y_pos },
+
+    onMove(pos) {
+
+      const w = tutorialOptions.windowWidth
+      const h = tutorialOptions.windowHeight
+
+      const maxX = window.innerWidth  - w
+      const maxY = window.innerHeight - HEADER_HEIGHT
+
+      x.value = Math.min(Math.max(pos.x, 0), maxX)
+      y.value = Math.min(Math.max(pos.y, 0), maxY)
+    }
+  })
+
+  useResizeObserver(contentRef, (entries) => {
+    const { width: w, height: h } = entries[0].contentRect
+
+    const maxWidth  = window.innerWidth  - tutorialOptions.x_pos
+    const maxHeight = window.innerHeight - tutorialOptions.y_pos
+
+    tutorialOptions.windowWidth  = Math.max(MIN_W, Math.min(w, maxWidth))
+    tutorialOptions.windowHeight = Math.max(MIN_H, Math.min(h, maxHeight))
+  })
+
+  window.addEventListener("resize", () => {
+
+    const w = tutorialOptions.windowWidth
+    const h = tutorialOptions.windowHeight
+
+    x.value = Math.min(x.value, window.innerWidth - w)
+    y.value = Math.min(y.value, window.innerHeight - HEADER_HEIGHT)
+  })
 
 // ============================================================================
 // Tutorial STATE
@@ -905,6 +970,8 @@ watch(  // Watch for tutorial changes on specific properties
     available:    tutorialOptions.available,
     inProgressID: tutorialOptions.inProgressID,
     progressStep: tutorialOptions.progressStep,
+    windowWidth:  tutorialOptions.windowWidth,
+    windowHeight: tutorialOptions.windowHeight,
   }),
   () => {
     saveOptions()
@@ -990,6 +1057,41 @@ onUnmounted(() => {
   transform:     translateY(-10px) scale(0.95);
   animation:     tutorial-tooltip-appear 0.4s ease-out forwards;
 }
+
+.tutorial-window {
+    position: fixed;
+    border: 1px solid #ccc;
+    display: flex;
+    flex-direction: column;
+    min-width: 400px;
+    min-height: 300px;
+    height: 600px;
+    resize: both;
+    overflow: auto;
+    pointer-events: auto; /* IMPORTANTE: el contenido puede recibir clicks */
+    z-index: 1000;
+}
+
+  .tutorial-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    background: #2c3e50;
+    color: white;
+    font-weight: 600;
+    border-radius: 8px 8px 0 0;
+    cursor: grab;
+    user-select: none;
+    flex-shrink: 0; /* Evita que el header se encoja */
+  }
+  .tutorial-header:active {
+    cursor: grabbing;
+  }
+  .tutorial-header span {
+    flex: 1;
+    text-align: center;
+  }
 
 .tutorial-content {
   padding: 12px;
