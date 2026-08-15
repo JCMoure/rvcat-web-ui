@@ -1021,41 +1021,56 @@ onUnmounted(() => {
 
 <style scoped>
 
-.tutorial-system {
-  position: fixed;
-  z-index: 9999;
-}
+  .tutorial-system {
+    position: fixed;
+    z-index: 9999;
+  }
 
-.tutorial-overlay {
-  top:    0;
-  left:   0;
-  width:  100vw;
-  height: 100vh;
-  z-index:  9999;
-  position: fixed;
-  background: transparent;
-  pointer-events: none;
-  transition:     opacity 0.3s ease-in-out;
-}
+  .tutorial-overlay {
+    top:    0;
+    left:   0;
+    width:  100vw;
+    height: 100vh;
+    z-index:  9999;
+    position: fixed;
+    background: transparent;
+    pointer-events: none;
+    transition:     opacity 0.3s ease-in-out;
+  }
 
-.tutorial-tooltip {
-  position:    fixed; /* absolute */
-  overflow:    auto;  /* added to allow resizing content */
-  background:  white;
-  box-shadow:  0 8px 24px rgba(0, 0, 0, 0.3);
-  padding:     0;
-  opacity:     0;
-  width:       400px;
-  max-width:   calc(100vw - 40px);
-  z-index:     10001;
-  /* pointer-events: all; */
-  pointer-events: auto;
-  resize: both;
-  transition:    all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-  border-radius: 10px;
-  transform:     translateY(-10px) scale(0.95);
-  animation:     tutorial-tooltip-appear 0.4s ease-out forwards;
-}
+  .tutorial-tooltip {
+    position:    fixed; /* absolute */
+    overflow:    auto;  /* added to allow resizing content */
+    background:  white;
+    box-shadow:  0 8px 24px rgba(0, 0, 0, 0.3);
+    padding:     0;
+    opacity:     0;
+    width:       400px;
+    max-width:   calc(100vw - 40px);
+    z-index:     10001;
+    /* pointer-events: all; */
+    pointer-events: auto;
+    resize: both;
+    transition: opacity 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+              transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+              box-shadow 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+
+    border-radius: 10px;
+    transform:     translateY(-10px) scale(0.95);
+    animation:     tutorial-tooltip-appear 0.4s ease-out forwards;
+  }
+
+  @keyframes tutorial-tooltip-appear {
+    from {
+      opacity: 0;
+      transform: translateY(-10px) scale(0.95);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+
 
   .tutorial-header {
     display: flex;
@@ -1399,17 +1414,6 @@ onUnmounted(() => {
   background: linear-gradient(135deg, #c82333, #bd2130);
   transform: translateY(-1px);
   box-shadow: 0 4px 8px rgba(220, 53, 69, 0.3);
-}
-
-@keyframes tutorial-tooltip-appear {
-  from {
-    opacity: 0;
-    transform: translateY(-10px) scale(0.95);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
 }
 
 .question-overlay {
