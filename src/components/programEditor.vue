@@ -376,7 +376,8 @@ function snapshotProgram() {
         Stride/Lanes
       </button>
 
-      <button class="blue-button add-margin" :class="{ active: programEditOptions.showActions }"
+      <button class="blue-button add-margin"
+              :class="{ active: programEditOptions.showActions }"
           title="Show/Hide column with buttons for moving/adding/removing instructions"
           id="show-instruction-actions"
           @click="toggleActions">
