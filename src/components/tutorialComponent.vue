@@ -6,11 +6,11 @@
       <div class="tutorial-tooltip"
             ref="contentRef"
             :style="{
-              left: x + 'px',
-              top: y + 'px',
-              width: tutorialOptions.windowWidth + 'px',
-              height: tutorialOptions.windowHeight + 'px'
+              left:   x + 'px',
+              top:    y + 'px'
             }">
+          <!-- , width:  tutorialOptions.windowWidth + 'px', height: tutorialOptions.windowHeight + 'px'  -->
+
         <div class="tutorial-header" ref="headerRef">
           <h3 v-html="currentStep?.title"></h3>
           <button title="Close tutorial, but can be resumed later"
@@ -1045,8 +1045,14 @@ onUnmounted(() => {
     box-shadow:  0 8px 24px rgba(0, 0, 0, 0.3);
     padding:     0;
     opacity:     0;
-    width:       400px;
-    max-width:   calc(100vw - 40px);
+    /*width:       400px;
+    max-width:   calc(100vw - 40px); */
+
+    min-width: 300px;     /* En lugar de width fijo */
+    min-height: 200px;    /* Altura mínima */
+    max-width: calc(100vw - 40px);
+    max-height: calc(100vh - 40px);
+
     z-index:     10001;
     /* pointer-events: all; */
     pointer-events: auto;
@@ -1057,7 +1063,7 @@ onUnmounted(() => {
 
     border-radius: 10px;
     transform:     translateY(-10px) scale(0.95);
-    /* animation:     tutorial-tooltip-appear 0.4s ease-out forwards; */
+    animation:     tutorial-tooltip-appear 0.4s ease-out forwards;
   }
 
   @keyframes tutorial-tooltip-appear {
