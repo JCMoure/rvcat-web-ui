@@ -17,7 +17,6 @@
           class="tutorial-close" @click="closeTutorial">&times;</button>
         </div>
         <div class="tutorial-content">
-          <h3 v-html="currentStep?.title"></h3>
           <p class="step-description" v-html="currentStep?.description"></p>
           <div v-if="currentStep?.image" class="step-image"
             @click="openLightbox(currentStep.image)">
@@ -1080,6 +1079,12 @@ onUnmounted(() => {
     cursor: grab;
     user-select: none;
     flex-shrink: 0; /* Evita que el header se encoja */
+  }
+
+  .tutorial-header h3 {
+    margin:    0 0 1px 0;
+    color:     #333;
+    font-size: large;
   }
 
   .tutorial-header:active {
