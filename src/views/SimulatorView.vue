@@ -165,74 +165,76 @@ onUnmounted(() => {
 
 <template>
   <body>
-    <header id="top">
-     <div  class="header-title">
-       <img src="/img/favicon.png" class="title-img">
-       <h1>RVCAT-WEB</h1>
-       <nav>
-        <ul>
-          <li>
-            <button class="blue-button" :class="{ 'active': isProcessorFullscreen }"
-               id="processor-button"
-               title="Open full window for processor configuration"
-               @click="toggleFullScreen('processor')" >
-                {{ fullProcessorButtonText }}
-            </button>
-          </li>
-          <li>
-            <button class="blue-button" :class="{ 'active': isProgramFullscreen }"
-               id="program-button"
-               title="Open full window for program edition"
-               @click="toggleFullScreen('program')" >
-                {{ fullProgramButtonText }}
-            </button>
-          </li>
-          <li>
-            <button class="blue-button" :class="{ 'active': isTutorialFullscreen }"
-               id="tutorial-button"
-               title="Open full window for tutorial edition"
-               @click="toggleFullScreen('tutorial')" >
-                {{ fullTutorialButtonText }}
-            </button>
-          </li>
+    <header>
+      <div id="top">
+        <div class="header-title">
+          <img src="/img/favicon.png" class="title-img">
+          <h1>RVCAT-WEB</h1>
+          <nav>
+            <ul>
+              <li>
+                <button class="blue-button" :class="{ 'active': isProcessorFullscreen }"
+                  id="processor-button"
+                  title="Open full window for processor configuration"
+                  @click="toggleFullScreen('processor')" >
+                    {{ fullProcessorButtonText }}
+                </button>
+              </li>
+              <li>
+                <button class="blue-button" :class="{ 'active': isProgramFullscreen }"
+                  id="program-button"
+                  title="Open full window for program edition"
+                  @click="toggleFullScreen('program')" >
+                    {{ fullProgramButtonText }}
+                </button>
+              </li>
+              <li>
+                <button class="blue-button" :class="{ 'active': isTutorialFullscreen }"
+                  id="tutorial-button"
+                  title="Open full window for tutorial edition"
+                  @click="toggleFullScreen('tutorial')" >
+                    {{ fullTutorialButtonText }}
+                </button>
+              </li>
 
-          <li class="separator"></li>
+              <li class="separator"></li>
 
-          <li>
-            <button class="blue-button" :class="{ active: currentKey === 'simulationComponent' }"
-               id="simulation-button"
-               title="Simulate Program's execution and collect performance metrics"
-               @click="onRequestSwitch('simulationComponent')" >
-                Simulation
-            </button>
-          </li>
-          <li>
-            <button class="blue-button" :class="{ active: currentKey === 'timelineComponent' }"
-               id="timeline-button"
-               title="Detailed Timeline of Program's execution"
-               @click="onRequestSwitch('timelineComponent')" >
-                Timeline
-            </button>
-          </li>
-          <li>
-            <button class="blue-button" :class="{ active: currentKey === 'staticAnalysisComponent' }"
-               id="analysis-button"
-               title="Static Performance Analysis -> identify potential bottleneck, either throughput or latency (dependencies)"
-               @click="onRequestSwitch('staticAnalysisComponent')" >
-                Static Analysis
-            </button>
-          </li>
-          <li>
-            <button class="blue-button" :class="{ active: currentKey === 'aboutComponent' }"
-               id="about-button"
-               title="Credits on the design and development for this tool"
-               @click="onRequestSwitch('aboutComponent')" >
-                About
-            </button>
-          </li>
-        </ul>
-       </nav>
-     </div>
+              <li>
+                <button class="blue-button" :class="{ active: currentKey === 'simulationComponent' }"
+                  id="simulation-button"
+                  title="Simulate Program's execution and collect performance metrics"
+                  @click="onRequestSwitch('simulationComponent')" >
+                    Simulation
+                </button>
+              </li>
+              <li>
+                <button class="blue-button" :class="{ active: currentKey === 'timelineComponent' }"
+                  id="timeline-button"
+                  title="Detailed Timeline of Program's execution"
+                  @click="onRequestSwitch('timelineComponent')" >
+                    Timeline
+                </button>
+              </li>
+              <li>
+                <button class="blue-button" :class="{ active: currentKey === 'staticAnalysisComponent' }"
+                  id="analysis-button"
+                  title="Static Performance Analysis -> identify potential bottleneck, either throughput or latency (dependencies)"
+                  @click="onRequestSwitch('staticAnalysisComponent')" >
+                    Static Analysis
+                </button>
+              </li>
+              <li>
+                <button class="blue-button" :class="{ active: currentKey === 'aboutComponent' }"
+                  id="about-button"
+                  title="Credits on the design and development for this tool"
+                  @click="onRequestSwitch('aboutComponent')" >
+                    About
+                </button>
+              </li>
+            </ul>
+          </nav>
+        </div>
+      </div>
     </header>
 
     <div class="blur-overlay" :style="{ display: showOverlay ? 'block' : 'none' }"></div>
