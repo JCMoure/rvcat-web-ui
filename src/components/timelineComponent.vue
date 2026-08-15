@@ -284,7 +284,9 @@
     totalCycles = timelineOptions.cycles
     totalInstr  = timelineOptions.instructions
 
-    if (newCycles != oldCycles && newCycles != 0 && newCycles <= cycles) {
+    if (newCycles != oldCycles && newCycles != 0 ) {
+      if (newCycles > cycles) newCycles = cycles
+
       // change timeline size (cycles) and recompute totalInstr
       totalCycles = newCycles
 
@@ -294,7 +296,7 @@
         do {
           totalInstr++
           first_cycle = instructions[totalInstr-1][2]
-        } while (totalCycles > first_cycle && totalInstr < instructions.length)
+        } while (totalCycles > first_cycle && totalInstr < (instructions.length+1))
         totalInstr--  // last instruction is not included
       } else { // not included & find less
         do {
