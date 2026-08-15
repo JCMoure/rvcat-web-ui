@@ -1394,7 +1394,7 @@ onUnmounted(() => {
 
   .tutorial-action-content strong {
     font-size:   medium;
-    font-weight: blod;
+    font-weight: bold;
     line-height: 1.2;
   }
 
@@ -1852,17 +1852,6 @@ onUnmounted(() => {
   box-shadow: 0 2px 12px rgba(245, 158, 11, 0.3);
 }
 
-  .tutorial-highlight-pulse {
-    animation:        tutorial-pulse 2s infinite ease-in-out;
-    transform-origin: center center;
-  }
-
-  @keyframes tutorial-pulse {
-    0%   { box-shadow: 0 0 0 0    rgba(0, 122, 204, 0.7); }
-    70%  { box-shadow: 0 0 0 10px rgba(0, 122, 204, 0);   }
-    100% { box-shadow: 0 0 0 0    rgba(0, 122, 204, 0);   }
-  }
-
   .tutorial-highlighted {
     position:      relative;
     z-index:       10001 !important;
@@ -1898,12 +1887,6 @@ onUnmounted(() => {
     transform-origin: center center !important;
   }
 
-  div#top.tutorial-highlighted.header-title {
-    color: #333 !important;
-    transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
-    transform-origin: center center !important;
-  }
-
   .tutorial-highlighted button {
     color:      #333 !important;
     transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
@@ -1928,6 +1911,17 @@ onUnmounted(() => {
       opacity: 1;
       transform: translate(-50%, -50%) scale(1);
     }
+  }
+
+  .tutorial-highlight-pulse {
+    animation:        tutorial-pulse 2s infinite ease-in-out;
+    transform-origin: center center;
+  }
+
+  @keyframes tutorial-pulse {
+    0%   { box-shadow: 0 0 0 0    rgba(0, 122, 204, 0.7); }
+    70%  { box-shadow: 0 0 0 10px rgba(0, 122, 204, 0);   }
+    100% { box-shadow: 0 0 0 0    rgba(0, 122, 204, 0);   }
   }
 
 </style>
