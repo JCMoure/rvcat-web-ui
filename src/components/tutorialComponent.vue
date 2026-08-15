@@ -1054,7 +1054,7 @@ onUnmounted(() => {
   transition:    all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
   border-radius: 10px;
   transform:     translateY(-10px) scale(0.95);
-  animation:     tutorial-tooltip-appear 0.4s ease-out forwards;
+  /* animation:     tutorial-tooltip-appear 0.4s ease-out forwards; */
 }
 
   .tutorial-header {
