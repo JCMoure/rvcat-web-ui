@@ -92,7 +92,7 @@
       timeline.value = timelineRVCAT
       timelineOptions.canvasOffsetX = 0
       timelineOptions.canvasOffsetY = 0
-      timelineOptions.instructions = 0
+      timelineOptions.instructions = 1
       scheduleDraw(timelineOptions.cycles, 0)
 
     } catch (error) {
