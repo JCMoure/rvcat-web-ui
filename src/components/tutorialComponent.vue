@@ -1015,7 +1015,7 @@ onUnmounted(() => {
 
 <style scoped>
 
-  .tutorial-highlight-pulse {
+  :deep(.tutorial-highlight-pulse) {
     animation:        tutorial-pulse 2s infinite ease-in-out;
     transform-origin: center center;
   }
@@ -1026,7 +1026,7 @@ onUnmounted(() => {
     100% { box-shadow: 0 0 0 0    rgba(0, 122, 204, 0);   }
   }
 
-  .tutorial-highlighted {
+  :deep(.tutorial-highlighted) {
     position:      relative;
     z-index:       10001 !important;
     border:        3px solid #007acc !important;
@@ -1040,14 +1040,14 @@ onUnmounted(() => {
 
   /* Adjust highlight for different zoom levels */
   @media (max-width: 1200px) {
-    .tutorial-highlighted {
+    :deep(.tutorial-highlighted) {
       border-width:  2px !important;
       box-shadow:    0 0 15px rgba(0, 122, 204, 0.5) !important;
     }
   }
 
   @media (max-width: 768px) {
-    .tutorial-highlighted {
+    :deep(.tutorial-highlighted) {
       border-width:  2px !important;
       box-shadow:    0 0 10px rgba(0, 122, 204, 0.5) !important;
       transform:     scale(1.01) !important;
