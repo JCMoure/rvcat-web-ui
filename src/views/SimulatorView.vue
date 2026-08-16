@@ -169,7 +169,7 @@ onUnmounted(() => {
       <div id="top">
         <div class="header-title">
           <img src="/img/favicon.png" class="title-img">
-          <h1>RVCAT-WEB</h1>
+          <div :style="{ fontSize: 'large', padding: '0 40px' }">RVCAT-WEB</div>
           <nav>
             <ul>
               <li>
@@ -301,11 +301,6 @@ onUnmounted(() => {
   background-color: #0cb35f;
 }
 
-h1 {
-  margin:    0;
-  font-size: large;
-}
-
 nav ul {
   list-style: none;
   padding:    0;
@@ -329,7 +324,7 @@ nav ul li {
 
 .title-img {
   height:     4vh;
-  margin-top: 0.25vh;
+  margin-top: 0.0vh;
 }
 
 .header-title {
