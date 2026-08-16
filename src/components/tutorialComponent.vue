@@ -3,8 +3,7 @@
     <!-- Tutorial Overlay for Steps -->
     <div v-if="currentTutorial && isActive && !isQuestionStep" class="tutorial-overlay">
       <!-- Tooltip -->
-      <div class="tutorial-tooltip" ref="contentRef" :style="{ left: x + 'px', top: y + 'px' }"
-        :style="tooltipStyle">
+      <div class="tutorial-tooltip" ref="contentRef" :style="{ left: x + 'px', top: y + 'px' }">
         <div class="tutorial-header" ref="headerRef">
           <h3 v-html="currentStep?.title"></h3>
           <button title="Close tutorial, but can be resumed later"
@@ -711,6 +710,30 @@ const highlightCurrentStep = async () => {
     if (!isElementVisible(element)) {
       element.scrollIntoView({ behavior: 'smooth', block: 'center' })
     }
+
+    const rect = highlightElement.value.getBoundingClientRect()
+    const pos  = currentStep.value.position || 'bottom'
+    const margin = 15
+
+    let top, left
+    const centerX = rect.left + rect.width / 2  - TOOLTIP_WIDTH / 2
+    const centerY = rect.top  + rect.height / 2 - TOOLTIP_HEIGHT / 2
+
+    switch (pos) {
+      case 'top':    top = rect.top - TOOLTIP_HEIGHT - 15; left = centerX;                        break
+      case 'bottom': top = rect.bottom + 15;               left = centerX;                        break
+      case 'left':   top = centerY;                        left = rect.left - TOOLTIP_WIDTH - 15; break
+      case 'right':  top = centerY;                        left = rect.right + 15;                break
+      default:       top = rect.bottom + 15;               left = centerX
+    }
+
+    // Clamp to viewport
+    left = Math.max(margin, Math.min(left, window.innerWidth -  TOOLTIP_WIDTH - margin))
+    top  = Math.max(margin, Math.min(top,  window.innerHeight - TOOLTIP_HEIGHT - margin))
+
+    x.value = left
+    y.value = top
+
     console.log(`👨‍🎓⏺️ Highlighted Element: ${element}`)
   }
 
