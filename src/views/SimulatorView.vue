@@ -287,7 +287,6 @@ onUnmounted(() => {
 
 <style scoped>
 
-/* applied to header title */
 #top {
   max-height:      5vh;
   width:           100vw;
@@ -299,7 +298,7 @@ onUnmounted(() => {
   box-sizing:      border-box;
   align-items:     center;
   justify-content: space-between;
-  background-color: #007acc;
+  background-color: #0cb35f;
 }
 
 h1 {

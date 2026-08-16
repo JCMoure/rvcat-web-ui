@@ -325,7 +325,7 @@ const emit  = defineEmits(['requestSwitchPanel', 'requestSwitchFull'])
       const maxY = window.innerHeight - HEADER_HEIGHT
 
       x.value = Math.min(Math.max(pos.x, 0), maxX)
-      y.value = Math.min(Math.max(pos.y, 0), maxY)
+      y.value = Math.min(Math.max(pos.y, HEADER_HEIGHT), maxY)
     }
   })
 
