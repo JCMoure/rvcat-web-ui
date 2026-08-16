@@ -997,6 +997,7 @@ onUnmounted(() => {
 
   .tutorial-highlight-pulse {
     animation:        tutorial-pulse 5s infinite ease-in-out;
+    background: white !important;
     transform-origin: center center;
   }
 
@@ -1013,7 +1014,7 @@ onUnmounted(() => {
     border-radius: 6px !important;
     box-shadow:    0 0 20px rgba(0, 122, 204, 0.5) !important;
     transition:    all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
-    transform:     scale(1.05) !important;
+    transform:     scale(1.2) !important;
     will-change:   transform !important;
     transform-origin: center center !important;
   }
@@ -1021,7 +1022,7 @@ onUnmounted(() => {
   /* Adjust highlight for different zoom levels */
   @media (max-width: 1200px) {
     .tutorial-highlighted {
-      border-width:  2px !important;
+      border-width:  5px !important;
       box-shadow:    0 0 15px rgba(0, 122, 204, 0.5) !important;
     }
   }
@@ -1030,30 +1031,8 @@ onUnmounted(() => {
     .tutorial-highlighted {
       border-width:  2px !important;
       box-shadow:    0 0 10px rgba(0, 122, 204, 0.5) !important;
-      transform:     scale(1.02) !important;
+      transform:     scale(1.1) !important;
     }
-  }
-
-  /* Specific styles for different element types in tutorials */
-  .tutorial-highlighted.header-title {
-    color:      #333 !important;
-    transition: all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
-    transform-origin: center center !important;
-  }
-
-  .tutorial-highlighted button {
-    color:      #333 !important;
-    transition: all 1.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
-    transform:  scale(1.2) !important;
-    transform-origin: center center !important;
-  }
-
-  .tutorial-highlighted select {
-    background: white !important;
-    color:      #333 !important;
-    transition: all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
-    transform:  scale(1.03) !important;
-    transform-origin: center center !important;
   }
 
   .tutorial-system {
