@@ -319,7 +319,6 @@ const emit  = defineEmits(['requestSwitchPanel', 'requestSwitchFull'])
     onMove(pos) {
 
       const w = tutorialOptions.windowWidth
-      const h = tutorialOptions.windowHeight
 
       const maxX = window.innerWidth  - w
       const maxY = window.innerHeight - HEADER_HEIGHT
@@ -337,12 +336,14 @@ const emit  = defineEmits(['requestSwitchPanel', 'requestSwitchFull'])
 
     tutorialOptions.windowWidth  = Math.max(MIN_W, Math.min(w, maxWidth))
     tutorialOptions.windowHeight = Math.max(MIN_H, Math.min(h, maxHeight))
+
+    currentStep.value.wWidth = tutorialOptions.windowWidth
+    currentStep.value.wHeight= tutorialOptions.windowHeight
   })
 
   window.addEventListener("resize", () => {
 
     const w = tutorialOptions.windowWidth
-    const h = tutorialOptions.windowHeight
 
     x.value = Math.min(x.value, window.innerWidth - w)
     y.value = Math.min(y.value, window.innerHeight - HEADER_HEIGHT)
@@ -457,7 +458,7 @@ const clearHighlights = () => {
   })
 }
 
-const highlightCurrentStep = async () => {
+const showCurrentStep = async () => {
   if (currentStep.value?.type === 'question') {
     clearHighlights()
     highlightElement.value = null
@@ -493,12 +494,19 @@ const highlightCurrentStep = async () => {
     element = document.querySelector(sel)
   }
 
+  if (currentStep.value.wWidth)
+    tutorialOptions.windowWidth = currentStep.value.wWidth
+
+  if (currentStep.value.wHeight)
+    tutorialOptions.windowHeight = currentStep.value.wHeight
+
   if (element) {
     highlightElement.value = element
     element.classList.add('tutorial-highlighted', 'tutorial-highlight-pulse')
     if (!isElementVisible(element)) {
       element.scrollIntoView({ behavior: 'smooth', block: 'center' })
     }
+    console.log(`👨‍🎓⏺️ Highlighted Element: ${element}`)
 
     const rect = highlightElement.value.getBoundingClientRect()
     const pos  = currentStep.value.position || 'bottom'
@@ -532,7 +540,7 @@ const highlightCurrentStep = async () => {
     x.value = left
     y.value = top
 
-    console.log(`👨‍🎓⏺️ Highlighted Element: ${element}`)
+
   }
 
   await nextTick()
@@ -757,7 +765,7 @@ const startTutorial = async (tutorialId) => {
 
   nextTick(() => {
     shuffleAnswers()
-    highlightCurrentStep()
+    showCurrentStep()
   })
 }
 
@@ -769,7 +777,7 @@ const goToStep = async (newIndex) => {
   shuffleAnswers    ()
   await nextTick()
 
-  await highlightCurrentStep()
+  await showCurrentStep()
   isActive.value  = true
 }
 
@@ -810,7 +818,7 @@ const resumeTutorial = () => {
   if (!currentTutorial.value) return
   isActive.value         = true
   showTutorialMenu.value = false
-  nextTick(highlightCurrentStep)
+  nextTick(showCurrentStep)
 }
 
 const toggleTutorialMenu = () => {
