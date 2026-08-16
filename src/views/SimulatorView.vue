@@ -173,33 +173,6 @@ onUnmounted(() => {
           <nav>
             <ul>
               <li>
-                <button class="blue-button" :class="{ 'active': isProcessorFullscreen }"
-                  id="processor-button"
-                  title="Open full window for processor configuration"
-                  @click="toggleFullScreen('processor')" >
-                    {{ fullProcessorButtonText }}
-                </button>
-              </li>
-              <li>
-                <button class="blue-button" :class="{ 'active': isProgramFullscreen }"
-                  id="program-button"
-                  title="Open full window for program edition"
-                  @click="toggleFullScreen('program')" >
-                    {{ fullProgramButtonText }}
-                </button>
-              </li>
-              <li>
-                <button class="blue-button" :class="{ 'active': isTutorialFullscreen }"
-                  id="tutorial-button"
-                  title="Open full window for tutorial edition"
-                  @click="toggleFullScreen('tutorial')" >
-                    {{ fullTutorialButtonText }}
-                </button>
-              </li>
-
-              <li class="separator"></li>
-
-              <li>
                 <button class="blue-button" :class="{ active: currentKey === 'simulationComponent' }"
                   id="simulation-button"
                   title="Simulate Program's execution and collect performance metrics"
@@ -229,6 +202,33 @@ onUnmounted(() => {
                   title="Credits on the design and development for this tool"
                   @click="onRequestSwitch('aboutComponent')" >
                     About
+                </button>
+              </li>
+
+              <li class="separator"></li>
+
+              <li>
+                <button class="blue-button" :class="{ 'active': isProcessorFullscreen }"
+                  id="processor-button"
+                  title="Open full window for processor configuration"
+                  @click="toggleFullScreen('processor')" >
+                    {{ fullProcessorButtonText }}
+                </button>
+              </li>
+              <li>
+                <button class="blue-button" :class="{ 'active': isProgramFullscreen }"
+                  id="program-button"
+                  title="Open full window for program edition"
+                  @click="toggleFullScreen('program')" >
+                    {{ fullProgramButtonText }}
+                </button>
+              </li>
+              <li>
+                <button class="blue-button" :class="{ 'active': isTutorialFullscreen }"
+                  id="tutorial-button"
+                  title="Open full window for tutorial edition"
+                  @click="toggleFullScreen('tutorial')" >
+                    {{ fullTutorialButtonText }}
                 </button>
               </li>
             </ul>

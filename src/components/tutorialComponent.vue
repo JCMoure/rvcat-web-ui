@@ -256,9 +256,6 @@ const defaultOptions = {
 
 const tutorialOptions  = reactive(defaultOptions)
 
-const TOOLTIP_WIDTH  = 400
-const TOOLTIP_HEIGHT = 300
-
 // Core tutorial state
 const currentTutorial = ref(null)
 const stepIndex       = ref(0)
@@ -288,9 +285,9 @@ const isActive        = ref(false)
     }
   }
 
-const availableTutorials = computed(() =>
-   tutorialOptions.available
-)
+  const availableTutorials = computed(() =>
+    tutorialOptions.available
+  )
 
 // ============================================================================
 // PROPS & EMITS
@@ -306,7 +303,7 @@ const emit  = defineEmits(['requestSwitchPanel', 'requestSwitchFull'])
 // Draggable & resizable full-screen graph container
 // ============================================================================
 
-  const HEADER_HEIGHT = 20
+  const HEADER_HEIGHT = 40
   const MIN_W = 100
   const MIN_H = 100
 
@@ -359,10 +356,6 @@ const emit  = defineEmits(['requestSwitchPanel', 'requestSwitchFull'])
 const validationState  = ref({})
 const showTutorialMenu = ref(false)
 const highlightElement = ref(null)
-
-// Scroll position
-const originalScrollPosition = ref({ x: 0, y: 0 })
-const tooltipPositionTrigger = ref(0)
 
 // Question state
 const selectedAnswers       = ref([])
@@ -481,20 +474,6 @@ const processStepActions = (steps) => steps.map(step => {
   }
   return step
 })
-
-// ============================================================================
-// SCROLL MANAGEMENT
-// ============================================================================
-const saveScrollPosition = () => {
-  originalScrollPosition.value = {
-    x: window.pageXOffset || document.documentElement.scrollLeft,
-    y: window.pageYOffset || document.documentElement.scrollTop
-  }
-}
-
-const restoreScrollPosition = () => {
-  window.scrollTo({ ...originalScrollPosition.value, behavior: 'smooth' })
-}
 
 // ============================================================================
 // LIGHTBOX
@@ -630,7 +609,6 @@ const cleanup = () => {
 
   clickedButtons.value = new Set()
   resetQuestionState()
-  restoreScrollPosition()
 }
 
 // ============================================================================
@@ -684,20 +662,29 @@ const highlightCurrentStep = async () => {
     const margin = 15
 
     let top, left
-    const centerX = rect.left + rect.width / 2  - TOOLTIP_WIDTH / 2
-    const centerY = rect.top  + rect.height / 2 - TOOLTIP_HEIGHT / 2
+    const centerX = rect.left + rect.width / 2  - tutorialOptions.windowWidth / 2
+    const centerY = rect.top  + rect.height / 2 - tutorialOptions.windowHeight / 2
 
     switch (pos) {
-      case 'top':    top = rect.top - TOOLTIP_HEIGHT - 15; left = centerX;                        break
-      case 'bottom': top = rect.bottom + 15;               left = centerX;                        break
-      case 'left':   top = centerY;                        left = rect.left - TOOLTIP_WIDTH - 15; break
-      case 'right':  top = centerY;                        left = rect.right + 15;                break
-      default:       top = rect.bottom + 15;               left = centerX
+      case 'top':     top = rect.top - tutorialOptions.windowHeight - 15;
+                      left = centerX;
+                      break
+      case 'bottom':  top = rect.bottom + 15;
+                      left = centerX;
+                      break
+      case 'left':    top = centerY;
+                      left = rect.left - tutorialOptions.windowWidth - 15;
+                      break
+      case 'right':   top = centerY;
+                      left = rect.right + 15;
+                      break
+      default:        top = rect.bottom + 15;
+                      left = centerX
     }
 
     // Clamp to viewport
-    left = Math.max(margin, Math.min(left, window.innerWidth -  TOOLTIP_WIDTH - margin))
-    top  = Math.max(margin, Math.min(top,  window.innerHeight - TOOLTIP_HEIGHT - margin))
+    left = Math.max(margin, Math.min(left, window.innerWidth - tutorialOptions.windowWidth - margin))
+    top  = Math.max(margin, Math.min(top,  window.innerHeight - tutorialOptions.windowHeight - margin))
 
     x.value = left
     y.value = top
@@ -769,7 +756,6 @@ const startTutorial = async (tutorialId) => {
   await loadCurrentTutorial (tutorialId)
   if (!currentTutorial.value) return
 
-  saveScrollPosition()
   resetQuestionState()
 
   clickedButtons.value        = new Set()
@@ -827,7 +813,6 @@ const stopTutorial  = () => endTutorial(true)
 
 const resumeTutorial = () => {
   if (!currentTutorial.value) return
-  saveScrollPosition()
   isActive.value         = true
   showTutorialMenu.value = false
   nextTick(highlightCurrentStep)
@@ -976,14 +961,6 @@ const handleClickOutside = (e) => {
   }
 }
 
-const handleWindowChange = () => {
-  // Only run if tutorial is active AND there's an element highlighted
-  if (isActive.value && highlightElement.value) {
-    // Increment a counter to trigger tooltip repositioning
-    tooltipPositionTrigger.value++
-  }
-}
-
 // ============================================================================
 // LIFECYCLE:  Mount/unMount
 // ============================================================================
@@ -991,16 +968,12 @@ const handleWindowChange = () => {
 onMounted(async () => {
   loadOptions()
   document.addEventListener('click', handleClickOutside)
-  // window.addEventListener  ('resize', handleWindowChange)
-  // window.addEventListener  ('scroll', handleWindowChange, true)
   console.log('👨‍🎓🎯 TutorialEngine mounted')
 })
 
 onUnmounted(() => {
   console.log('👨‍🎓🧹 Tutorial Engine unmounted')
   document.removeEventListener('click', handleClickOutside)
-  // window.removeEventListener ('resize', handleWindowChange)
-  // window.removeEventListener ('scroll', handleWindowChange, true)
   cleanup ()
 })
 </script>
