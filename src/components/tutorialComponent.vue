@@ -1013,7 +1013,7 @@ onUnmounted(() => {
     border-radius: 6px !important;
     box-shadow:    0 0 20px rgba(0, 122, 204, 0.5) !important;
     transition:    all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
-    transform:     scale(1.02) !important;
+    transform:     scale(1.05) !important;
     will-change:   transform !important;
     transform-origin: center center !important;
   }
@@ -1030,7 +1030,7 @@ onUnmounted(() => {
     .tutorial-highlighted {
       border-width:  2px !important;
       box-shadow:    0 0 10px rgba(0, 122, 204, 0.5) !important;
-      transform:     scale(1.01) !important;
+      transform:     scale(1.02) !important;
     }
   }
 
