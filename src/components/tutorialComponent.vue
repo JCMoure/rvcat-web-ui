@@ -1060,6 +1060,8 @@ onUnmounted(() => {
   }
 
   .tutorial-tooltip {
+    display:        flex;
+    flex-direction: column;
     position:    fixed; /* absolute */
     overflow:    auto;  /* added to allow resizing content */
     background:  white;
@@ -1067,10 +1069,11 @@ onUnmounted(() => {
     padding:     0;
     opacity:     0;
 
-    min-width:  250px;
+    /* min-width:  250px;
     min-height: 150px;
     max-width:  calc(100vw - 40px);
     max-height: calc(100vh - 40px);
+ */
 
     z-index:    10001;
     pointer-events: auto;
@@ -1111,11 +1114,6 @@ onUnmounted(() => {
     flex: 1;
     overflow-y: auto;
     word-wrap: break-word;
-  }
-
-  .tutorial-tooltip {
-    display: flex;
-    flex-direction: column;
   }
 
   .tutorial-header {
