@@ -325,6 +325,9 @@ const emit  = defineEmits(['requestSwitchPanel', 'requestSwitchFull'])
 
       x.value = Math.min(Math.max(pos.x, 0), maxX)
       y.value = Math.min(Math.max(pos.y, HEADER_HEIGHT), maxY)
+
+      currentStep.value.x_pos = x.value
+      currentStep.value.y_pos = y.value
     }
   })
 
@@ -347,6 +350,9 @@ const emit  = defineEmits(['requestSwitchPanel', 'requestSwitchFull'])
 
     x.value = Math.min(x.value, window.innerWidth - w)
     y.value = Math.min(y.value, window.innerHeight - HEADER_HEIGHT)
+
+    currentStep.value.x_pos = x.value
+    currentStep.value.y_pos = y.value
   })
 
 // ============================================================================
@@ -506,39 +512,45 @@ const showCurrentStep = async () => {
     if (!isElementVisible(element)) {
       element.scrollIntoView({ behavior: 'smooth', block: 'center' })
     }
-    console.log(`👨‍🎓⏺️ Highlighted Element: ${element} W: ${currentStep.value.wWidth} H: ${currentStep.value.wHeight}`)
+    console.log(`👨‍🎓⏺️ Highlighted Element: ${element} X: ${currentStep.value.x_pos} Y: ${currentStep.value.y_pos} W: ${currentStep.value.wWidth} H: ${currentStep.value.wHeight}`)
 
-    const rect = highlightElement.value.getBoundingClientRect()
-    const pos  = currentStep.value.position || 'bottom'
-    const margin = 15
-
-    let top, left
-    const centerX = rect.left + rect.width / 2  - tutorialOptions.windowWidth / 2
-    const centerY = rect.top  + rect.height / 2 - tutorialOptions.windowHeight / 2
-
-    switch (pos) {
-      case 'top':     top = rect.top - tutorialOptions.windowHeight - 15;
-                      left = centerX;
-                      break
-      case 'bottom':  top = rect.bottom + 15;
-                      left = centerX;
-                      break
-      case 'left':    top = centerY;
-                      left = rect.left - tutorialOptions.windowWidth - 15;
-                      break
-      case 'right':   top = centerY;
-                      left = rect.right + 15;
-                      break
-      default:        top = rect.bottom + 15;
-                      left = centerX
+    if (currentStep.value.x_pos) {
+      x.value = currentStep.value.x_pos
+      y.value = currentStep.value.y_pos
     }
+    else {
+      const rect = highlightElement.value.getBoundingClientRect()
+      const pos  = currentStep.value.position || 'bottom'
+      const margin = 15
 
-    // Clamp to viewport
-    left = Math.max(margin, Math.min(left, window.innerWidth - tutorialOptions.windowWidth - margin))
-    top  = Math.max(margin, Math.min(top,  window.innerHeight - tutorialOptions.windowHeight - margin))
+      let top, left
+      const centerX = rect.left + rect.width / 2  - tutorialOptions.windowWidth / 2
+      const centerY = rect.top  + rect.height / 2 - tutorialOptions.windowHeight / 2
 
-    x.value = left
-    y.value = top
+      switch (pos) {
+        case 'top':     top = rect.top - tutorialOptions.windowHeight - margin;
+                        left = centerX;
+                        break
+        case 'bottom':  top = rect.bottom + margin;
+                        left = centerX;
+                        break
+        case 'left':    top = centerY;
+                        left = rect.left - tutorialOptions.windowWidth - margin;
+                        break
+        case 'right':   top = centerY;
+                        left = rect.right + margin;
+                        break
+        default:        top = rect.bottom + margin;
+                        left = centerX
+      }
+
+      // Clamp to viewport
+      left = Math.max(margin, Math.min(left, window.innerWidth - tutorialOptions.windowWidth - margin))
+      top  = Math.max(margin, Math.min(top,  window.innerHeight - tutorialOptions.windowHeight - margin))
+
+      x.value = left
+      y.value = top
+    }
   }
 
   await nextTick()
