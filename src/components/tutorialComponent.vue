@@ -996,7 +996,7 @@ onUnmounted(() => {
 <style>
 
   .tutorial-highlight-pulse {
-    animation:        tutorial-pulse 2s infinite ease-in-out;
+    animation:        tutorial-pulse 5s infinite ease-in-out;
     transform-origin: center center;
   }
 
