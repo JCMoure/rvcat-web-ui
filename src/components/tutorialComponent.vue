@@ -1043,8 +1043,8 @@ onUnmounted(() => {
 
   .tutorial-highlighted button {
     color:      #333 !important;
-    transition: all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
-    transform:  scale(1.05) !important;
+    transition: all 1.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
+    transform:  scale(1.2) !important;
     transform-origin: center center !important;
   }
 
