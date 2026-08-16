@@ -447,38 +447,6 @@ const canProceed = computed(() => {
   }
 })
 
-const tooltipStyle = computed(() => {
-
-  tooltipPositionTrigger.value // Force reactivity
-
-  if (!highlightElement.value || !currentStep.value) {
-    showTutorialMenu.value = true
-    return { display: 'none' }
-  }
-
-  const rect = highlightElement.value.getBoundingClientRect()
-  const pos  = currentStep.value.position || 'bottom'
-  const margin = 15
-
-  let top, left
-  const centerX = rect.left + rect.width / 2  - TOOLTIP_WIDTH / 2
-  const centerY = rect.top  + rect.height / 2 - TOOLTIP_HEIGHT / 2
-
-  switch (pos) {
-    case 'top':    top = rect.top - TOOLTIP_HEIGHT - 15; left = centerX;                        break
-    case 'bottom': top = rect.bottom + 15;               left = centerX;                        break
-    case 'left':   top = centerY;                        left = rect.left - TOOLTIP_WIDTH - 15; break
-    case 'right':  top = centerY;                        left = rect.right + 15;                break
-    default:       top = rect.bottom + 15;               left = centerX
-  }
-
-  // Clamp to viewport
-  left = Math.max(margin, Math.min(left, window.innerWidth -  TOOLTIP_WIDTH - margin))
-  top  = Math.max(margin, Math.min(top,  window.innerHeight - TOOLTIP_HEIGHT - margin))
-
-  return { top: `${top}px`, left: `${left}px` }
-})
-
 // ============================================================================
 // UTILITY FUNCTIONS
 // ============================================================================
@@ -1023,16 +991,16 @@ const handleWindowChange = () => {
 onMounted(async () => {
   loadOptions()
   document.addEventListener('click', handleClickOutside)
-  window.addEventListener  ('resize', handleWindowChange)
-  window.addEventListener  ('scroll', handleWindowChange, true)
+  // window.addEventListener  ('resize', handleWindowChange)
+  // window.addEventListener  ('scroll', handleWindowChange, true)
   console.log('👨‍🎓🎯 TutorialEngine mounted')
 })
 
 onUnmounted(() => {
   console.log('👨‍🎓🧹 Tutorial Engine unmounted')
   document.removeEventListener('click', handleClickOutside)
-  window.removeEventListener ('resize', handleWindowChange)
-  window.removeEventListener ('scroll', handleWindowChange, true)
+  // window.removeEventListener ('resize', handleWindowChange)
+  // window.removeEventListener ('scroll', handleWindowChange, true)
   cleanup ()
 })
 </script>
