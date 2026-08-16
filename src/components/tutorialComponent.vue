@@ -952,6 +952,8 @@ watch(  // Watch for tutorial changes on specific properties
     progressStep: tutorialOptions.progressStep,
     windowWidth:  tutorialOptions.windowWidth,
     windowHeight: tutorialOptions.windowHeight,
+    x_pos:        tutorialOptions.x_pos,
+    y_pos:        tutorialOptions.y_pos,
   }),
   () => {
     saveOptions()
