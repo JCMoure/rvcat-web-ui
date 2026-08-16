@@ -441,9 +441,8 @@ const canProceed = computed(() => {
 })
 
 // ============================================================================
-// UTILITY FUNCTIONS
+// HIGHLIGHTING
 // ============================================================================
-
 const isElementVisible = (el) => {
   const rect = el.getBoundingClientRect()
   return rect.top < window.innerHeight && rect.bottom > 0 &&
@@ -458,162 +457,6 @@ const clearHighlights = () => {
   })
 }
 
-const resetQuestionState = () => {
-  selectedAnswers.value  = []
-  questionAnswered.value = false
-}
-
-const processStepActions = (steps) => steps.map(step => {
-  if (step.action && typeof step.action === 'string') {
-    const [actionType, param] = step.action.split(':')
-    if (actionType === 'switchTo') {
-      step.action = () => emit('requestSwitchPanel', param)
-    } else if (actionType === 'switchToFull') {
-      step.action = () => emit('requestSwitchFull', param)
-    }
-  }
-  return step
-})
-
-// ============================================================================
-// LIGHTBOX
-// ============================================================================
-const openLightbox = (src) => { lightboxImage.value = src;  showLightbox.value  = true }
-const closeLightbox = () =>   { showLightbox.value = false; lightboxImage.value = '' }
-
-// ============================================================================
-// ANSWER SHUFFLING (Fisher-Yates)
-// ============================================================================
-const shuffleAnswers = () => {
-  if (currentStep.value?.type !== 'question') {
-    shuffledAnswerIndices.value = []
-    return
-  }
-  const indices = (currentStep.value.answers || []).map((_, i) => i)
-  for (let i = indices.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1))
-    ;[indices[i], indices[j]] = [indices[j], indices[i]]
-  }
-  shuffledAnswerIndices.value = indices
-}
-
-// ============================================================================
-// VALIDATION
-// ============================================================================
-const showValidationMessage = (message) => {
-  const div = document.createElement('div')
-  div.textContent = message
-  div.style.cssText = `
-    position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-    background: #ff6b6b; color: white; padding: 15px 25px; border-radius: 8px;
-    font-size: 14px; z-index: 10002; box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-  `
-  document.body.appendChild(div)
-  setTimeout(() => div.remove(), 3000)
-}
-
-const validateCurrentStep = async () => {
-  const v = currentStep.value?.validation
-  if (!v) return true
-
-  const getElement = (sel) => document.querySelector(sel)
-
-  const validators = {
-    program_selected: () =>      simState.selectedProgram === v.value,
-    architecture_selected: () => simState.selectedProcessor === v.value,
-    input_value: () =>           getElement(v.selector)?.value === v.value,
-    input_value_min: () =>       parseInt(getElement(v.selector)?.value) >= v.minValue,
-    button_clicked: () =>        v.selector && clickedButtons.value.has(v.selector.trim())
-  }
-
-  const isValid = validators[v.type]?.() ?? true
-  if (!isValid) showValidationMessage(v.message || 'Please complete this action')
-  return isValid
-}
-
-const setupValidationListeners = () => {
-  cleanupValidationListeners()
-  const v = currentStep.value?.validation
-  if (!v) return
-
-  const selectorMap = {
-    program_selected:      '#programs-list',
-    architecture_selected: '#processors-list',
-    input_value:            v.selector,
-    input_value_min:        v.selector
-  }
-
-  const selector = selectorMap[v.type]
-  if (!selector) return
-
-  const el = document.querySelector(selector)
-  if (!el) return
-
-  const handler = () => { validationState.value = { t: Date.now() } }
-
-  ;['change', 'input', 'keyup'].forEach(evt => {
-    el.addEventListener(evt, handler)
-    validationEventListeners.value.push({ element: el, eventType: evt, handler })
-  })
-}
-
-const cleanupValidationListeners = () => {
-  validationEventListeners.value.forEach(({ element, eventType, handler }) => {
-    element.removeEventListener(eventType, handler)
-  })
-  validationEventListeners.value = []
-}
-
-// ============================================================================
-// BUTTON CLICK TRACKING
-// ============================================================================
-const setupButtonClickTracking = () => {
-  cleanupButtonClickTracking()
-
-  const v = currentStep.value?.validation
-  if (v?.type !== 'button_clicked' || !v.selector) return
-
-  const selector = v.selector.trim()
-
-  const attach = () => {
-    const btn = document.querySelector(selector)
-    if (!btn) return false
-
-    const handler = () => {
-      console.log(`👨‍🎓⏺️ Button clicked: ${selector}`)
-      clickedButtons.value.add(selector)
-      validationState.value = { t: Date.now() }
-    }
-    btn.addEventListener('click', handler)
-    trackedButtonElements.value.push({ element: btn, handler })
-    return true
-  }
-
-  if (!attach()) setTimeout(attach, 500)
-}
-
-const cleanupButtonClickTracking = () => {
-  trackedButtonElements.value.forEach(({ element, handler }) => {
-    try { element.removeEventListener('click', handler) } catch {}
-  })
-  trackedButtonElements.value = []
-}
-
-// ============================================================================
-// CLEANUP HELPERS
-// ============================================================================
-const cleanup = () => {
-  clearHighlights()
-  cleanupValidationListeners()
-  cleanupButtonClickTracking()
-
-  clickedButtons.value = new Set()
-  resetQuestionState()
-}
-
-// ============================================================================
-// HIGHLIGHTING
-// ============================================================================
 const highlightCurrentStep = async () => {
   if (currentStep.value?.type === 'question') {
     clearHighlights()
@@ -697,9 +540,153 @@ const highlightCurrentStep = async () => {
   setupButtonClickTracking()
 }
 
+const processStepActions = (steps) => steps.map(step => {
+  if (step.action && typeof step.action === 'string') {
+    const [actionType, param] = step.action.split(':')
+    if (actionType === 'switchTo') {
+      step.action = () => emit('requestSwitchPanel', param)
+    } else if (actionType === 'switchToFull') {
+      step.action = () => emit('requestSwitchFull', param)
+    }
+  }
+  return step
+})
+
+// ============================================================================
+// LIGHTBOX
+// ============================================================================
+const openLightbox = (src) => { lightboxImage.value = src;  showLightbox.value  = true }
+const closeLightbox = () =>   { showLightbox.value = false; lightboxImage.value = '' }
+
+// ============================================================================
+// VALIDATION
+// ============================================================================
+const showValidationMessage = (message) => {
+  const div = document.createElement('div')
+  div.textContent = message
+  div.style.cssText = `
+    position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    background: #ff6b6b; color: white; padding: 15px 25px; border-radius: 8px;
+    font-size: 14px; z-index: 10002; box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  `
+  document.body.appendChild(div)
+  setTimeout(() => div.remove(), 3000)
+}
+
+const validateCurrentStep = async () => {
+  const v = currentStep.value?.validation
+  if (!v) return true
+
+  const getElement = (sel) => document.querySelector(sel)
+
+  const validators = {
+    program_selected: () =>      simState.selectedProgram === v.value,
+    architecture_selected: () => simState.selectedProcessor === v.value,
+    input_value: () =>           getElement(v.selector)?.value === v.value,
+    input_value_min: () =>       parseInt(getElement(v.selector)?.value) >= v.minValue,
+    button_clicked: () =>        v.selector && clickedButtons.value.has(v.selector.trim())
+  }
+
+  const isValid = validators[v.type]?.() ?? true
+  if (!isValid) showValidationMessage(v.message || 'Please complete this action')
+  return isValid
+}
+
+const setupValidationListeners = () => {
+  cleanupValidationListeners()
+  const v = currentStep.value?.validation
+  if (!v) return
+
+  const selectorMap = {
+    program_selected:      '#programs-list',
+    architecture_selected: '#processors-list',
+    input_value:            v.selector,
+    input_value_min:        v.selector
+  }
+
+  const selector = selectorMap[v.type]
+  if (!selector) return
+
+  const el = document.querySelector(selector)
+  if (!el) return
+
+  const handler = () => { validationState.value = { t: Date.now() } }
+
+  ;['change', 'input', 'keyup'].forEach(evt => {
+    el.addEventListener(evt, handler)
+    validationEventListeners.value.push({ element: el, eventType: evt, handler })
+  })
+}
+
+const setupButtonClickTracking = () => {
+  cleanupButtonClickTracking()
+
+  const v = currentStep.value?.validation
+  if (v?.type !== 'button_clicked' || !v.selector) return
+
+  const selector = v.selector.trim()
+
+  const attach = () => {
+    const btn = document.querySelector(selector)
+    if (!btn) return false
+
+    const handler = () => {
+      console.log(`👨‍🎓⏺️ Button clicked: ${selector}`)
+      clickedButtons.value.add(selector)
+      validationState.value = { t: Date.now() }
+    }
+    btn.addEventListener('click', handler)
+    trackedButtonElements.value.push({ element: btn, handler })
+    return true
+  }
+
+  if (!attach()) setTimeout(attach, 500)
+}
+
+// ============================================================================
+// BUTTON CLICK TRACKING
+// ============================================================================
+
+const cleanupValidationListeners = () => {
+  validationEventListeners.value.forEach(({ element, eventType, handler }) => {
+    element.removeEventListener(eventType, handler)
+  })
+  validationEventListeners.value = []
+}
+
+const cleanupButtonClickTracking = () => {
+  trackedButtonElements.value.forEach(({ element, handler }) => {
+    try { element.removeEventListener('click', handler) } catch {}
+  })
+  trackedButtonElements.value = []
+}
+
+const cleanup = () => {
+  clearHighlights()
+  cleanupValidationListeners()
+  cleanupButtonClickTracking()
+
+  clickedButtons.value = new Set()
+  resetQuestionState()
+}
+
 // ============================================================================
 // QUESTION HANDLING
 // ============================================================================
+
+const shuffleAnswers = () => {
+  if (currentStep.value?.type !== 'question') {
+    shuffledAnswerIndices.value = []
+    return
+  }
+  const indices = (currentStep.value.answers || []).map((_, i) => i)
+  for (let i = indices.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1))
+    ;[indices[i], indices[j]] = [indices[j], indices[i]]
+  }
+  shuffledAnswerIndices.value = indices
+}
+
 const selectAnswer = (index) => {
   if (questionAnswered.value) return
 
@@ -713,6 +700,11 @@ const selectAnswer = (index) => {
 
 const submitAnswer = () => {
   if (selectedAnswers.value.length) questionAnswered.value = true
+}
+
+const resetQuestionState = () => {
+  selectedAnswers.value  = []
+  questionAnswered.value = false
 }
 
 const retryQuestion = () => resetQuestionState()
