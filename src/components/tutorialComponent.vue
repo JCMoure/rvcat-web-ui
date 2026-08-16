@@ -506,7 +506,7 @@ const showCurrentStep = async () => {
     if (!isElementVisible(element)) {
       element.scrollIntoView({ behavior: 'smooth', block: 'center' })
     }
-    console.log(`👨‍🎓⏺️ Highlighted Element: ${element}`)
+    console.log(`👨‍🎓⏺️ Highlighted Element: ${element} W: ${currentStep.value.wWidth} H: ${currentStep.value.wHeight}`)
 
     const rect = highlightElement.value.getBoundingClientRect()
     const pos  = currentStep.value.position || 'bottom'
@@ -539,8 +539,6 @@ const showCurrentStep = async () => {
 
     x.value = left
     y.value = top
-
-
   }
 
   await nextTick()
