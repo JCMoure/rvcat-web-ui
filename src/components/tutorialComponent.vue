@@ -770,12 +770,15 @@ const startTutorial = async (tutorialId) => {
 }
 
 const goToStep = async (newIndex) => {
+  isActive.value = false
   stepIndex.value = newIndex
   tutorialOptions.progressStep =  newIndex  // fire options saving
   resetQuestionState()
   shuffleAnswers    ()
   await nextTick()
+
   await highlightCurrentStep()
+  isActive.value  = true
 }
 
 const nextStep = async () => {
@@ -1019,7 +1022,6 @@ onUnmounted(() => {
     }
   }
 
-
   /* Specific styles for different element types in tutorials */
   .tutorial-highlighted.header-title {
     color:      #333 !important;
@@ -1068,12 +1070,6 @@ onUnmounted(() => {
     box-shadow:  0 8px 24px rgba(0, 0, 0, 0.3);
     padding:     0;
     opacity:     0;
-
-    /* min-width:  250px;
-    min-height: 150px;
-    max-width:  calc(100vw - 40px);
-    max-height: calc(100vh - 40px);
- */
 
     z-index:    10001;
     pointer-events: auto;
