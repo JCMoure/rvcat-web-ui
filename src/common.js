@@ -527,11 +527,15 @@ export function get_processor_dot(process, allowEdit, highlightPort = -1) {
 
     // ---- Waiting Buffer ----
     let schedLabel = "❌optimal ✅greedy"
+    let toggle = "Toggle scheduler"
     if (sched !== "greedy"){
       schedLabel = "✅optimal ❌greedy"
     }
+    if (!allowEdit)
+      toggle = "Scheduler policy"
+
     let wb_row = `<TR>
-      <TD COLSPAN="${port_ids.length}" BGCOLOR="#eeeeee" HREF="#" ID="sched" TITLE="Toggle scheduler"><FONT POINT-SIZE="20"><B>Waiting Buffer</B></FONT>&nbsp;&nbsp;&nbsp;<FONT POINT-SIZE="16">Scheduler:&nbsp;</FONT><FONT POINT-SIZE="18"><B>${schedLabel}</B></FONT></TD>
+      <TD COLSPAN="${port_ids.length}" BGCOLOR="#eeeeee" HREF="#" ID="sched" TITLE="${toggle}"><FONT POINT-SIZE="20"><B>Waiting Buffer</B></FONT>&nbsp;&nbsp;&nbsp;<FONT POINT-SIZE="16">Scheduler:&nbsp;</FONT><FONT POINT-SIZE="18"><B>${schedLabel}</B></FONT></TD>
     </TR>`
 
     // ---- Port headers ----
@@ -579,15 +583,19 @@ export function get_processor_dot(process, allowEdit, highlightPort = -1) {
       op_rows += "</TR>"
     }
 
+    let cacheEdit = "Cache config: click repeatedly to cycle through parameter editing"
+    if (!allowEdit)
+      cacheEdit = "Current Cache config"
+
     let cache_row = ""
     // ---- Cache configuration ----
     if (CacheBlocks > 0) {
       cache_row = `<TR>
-        <TD COLSPAN="${port_ids.length}" BGCOLOR="#eeeeee" HREF="#" ID="cache" TITLE="${edit}Cache configuration"><FONT POINT-SIZE="20">🔄&nbsp;<B>Cache:</B>&nbsp;${CacheBlocks} blocks&nbsp;x&nbsp;${CacheBlockSize} bytes&nbsp;&nbsp;Penalty: ${CachePenalty}&nbsp;IssueTime: ${CacheIssueTime}</FONT></TD>
+        <TD COLSPAN="${port_ids.length}" BGCOLOR="#eeeeee" HREF="#" ID="cache" TITLE="${cacheEdit}"><FONT POINT-SIZE="20">🔄&nbsp;<B>Cache:</B>&nbsp;${CacheBlocks} blocks&nbsp;x&nbsp;${CacheBlockSize} bytes&nbsp;&nbsp;Penalty: ${CachePenalty}&nbsp;IssueTime: ${CacheIssueTime}</FONT></TD>
       </TR>`
     } else {
       cache_row = `<TR>
-        <TD COLSPAN="${port_ids.length}" BGCOLOR="#eeeeee" HREF="#" ID="cache" TITLE="${edit}Cache configuration"><FONT POINT-SIZE="20">🔄&nbsp;<B>Cache:</B>&nbsp;No cache</FONT></TD>
+        <TD COLSPAN="${port_ids.length}" BGCOLOR="#eeeeee" HREF="#" ID="cache" TITLE="${cacheEdit}"><FONT POINT-SIZE="20">🔄&nbsp;<B>Cache:</B>&nbsp;No cache</FONT></TD>
       </TR>`
     }
 
