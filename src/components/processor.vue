@@ -348,7 +348,6 @@
     try {
       const dotCode      = get_processor_dot (simState.simulatedProcess, true, simState.highlightedPort)
       const svg          = await createGraphVizGraph(dotCode);
-      // console.log('💻🔄Redrawing SVG', svg);
       simulatedSvg.value = svg.outerHTML;
     } catch (error) {
       console.error('💻❌ Failed to draw processor:', error)
@@ -395,8 +394,8 @@
                 break
 
               case 'cache':
-                currentCacheOption = (currentCacheOption + 1) % cacheConfigOptions.length;
                 activeField.value  = cacheConfigOptions[currentCacheOption];
+                currentCacheOption = (currentCacheOption + 1) % cacheConfigOptions.length;
                 break
 
               case 'op':
