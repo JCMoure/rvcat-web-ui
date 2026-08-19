@@ -282,7 +282,7 @@
 
 // ============================================================================
 // PROCESSOR ACTIONS: initProcessor, reloadProcessor, editProcessor, removeProcessor,
-//     drawProcessor, get_processor_dot
+//     drawProcessor
 // ============================================================================
 
   const initProcessor = async () => {
@@ -346,7 +346,7 @@
 
   const drawProcessor = async () => {
     try {
-      const dotCode      = get_processor_dot (simState.simulatedProcess, simState.highlightedPort)
+      const dotCode      = get_processor_dot (simState.simulatedProcess, true, simState.highlightedPort)
       const svg          = await createGraphVizGraph(dotCode);
       // console.log('💻🔄Redrawing SVG', svg);
       simulatedSvg.value = svg.outerHTML;

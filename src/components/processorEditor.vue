@@ -184,7 +184,7 @@
   const drawEditedProcessor = async () => {
     console.log('💻🔄Redrawing edited processor');
     try {
-      const dotCode   = get_processor_dot (procConfig, -1)
+      const dotCode   = get_processor_dot (procConfig, false, -1)
       const svg       = await createGraphVizGraph(dotCode);
       editedSvg.value = svg.outerHTML;
     } catch (error) {

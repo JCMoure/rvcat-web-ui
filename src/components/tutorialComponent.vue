@@ -997,7 +997,6 @@ onUnmounted(() => {
 
   .tutorial-highlight-pulse {
     animation:        tutorial-pulse 5s infinite ease-in-out;
-    background: white !important;
     transform-origin: center center;
   }
 
@@ -1015,6 +1014,7 @@ onUnmounted(() => {
     box-shadow:    0 0 20px rgba(0, 122, 204, 0.5) !important;
     transition:    all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
     transform:     scale(1.2) !important;
+    background: white !important;
     will-change:   transform !important;
     transform-origin: center center !important;
   }
