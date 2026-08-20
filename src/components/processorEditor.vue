@@ -417,7 +417,7 @@
  * ------------------------------------------------------------------ */
   const showHelp1 = ref(false); const showHelp2 = ref(false); const showHelp3 = ref(false); const showHelp4 = ref(false);
   const helpIcon1 = ref(null);  const helpIcon2 = ref(null);  const helpIcon3 = ref(null);  const helpIcon4 = ref(null);
-  const helpPosition = ref({ top: '0%', left: '40%' });
+  const helpPosition = ref({ top: '10%', left: '20%' });
 
   function openHelp1()  { nextTick(() => { showHelp1.value = true }) }
   function closeHelp1() { showHelp1.value  = false }
@@ -709,19 +709,19 @@
 
   <Teleport to="body">
     <HelpComponent v-if="showHelp1" :position="helpPosition"
-    text="Modify the simulated processor’s <strong>configuration settings</strong>, including: (1) <em>Dispatch & Retire</em> Widths;
-      (2) <em>ROB</em> size; (3) <em>Cache Memory</em>; (4) <em>Execution Ports</em> (Add or remove execution ports, up to a maximum of 10); and
+    text="Modify the simulated processor’s <strong>configuration settings</strong>, including: (1) <em>Dispatch & Retire</em> widths;
+      (2) <em>ROB</em> size; (3) <em>Cache Memory</em>; (4) <em>Execution Ports</em> (add or remove execution ports, up to a maximum of 10); and
       (5) <em>Execution Latencies</em>"
     title="Processor Settings"
     @close="closeHelp1"/>
 
     <HelpComponent v-if="showHelp2" :position="helpPosition"
-    text="Modify the <strong>Dispatch</strong> and/or <strong>Retire</strong> Widths.
-       They indicate the maximum number of instructions per clock cycle that must be dispatched into or retired from the Execution Engine.
+    text="Modify the <strong>Dispatch</strong> and/or <strong>Retire</strong> widths.
+       They indicate the maximum number of instructions per clock cycle that can be dispatched into or retired from the Execution Engine.
        They may impose a throughput-bound performace limit.
-       <p>Modify the <strong>ROB</strong> (ReOrder Buffer) size, which indicates the maximum number of instructions simultaenously on the <strong>Execution Engine</strong>.
+       <p>Modify the <strong>ROB</strong> (ReOrder Buffer) size, which indicates the maximum number of instructions simultaneously on the <strong>Execution Engine</strong>.
       This parameter limits the maximum instruction-level parallelism that can be exploited by the processor,
-      and may impose a (<strong><em>dependence-bound</em></strong>) performance limit.</p>
+      and may impose (<strong><em>latency-bound</em></strong>) performance limits.</p>
       <p>The policy of the instruction scheduler may be set to <em>greedy</em> or <em>optimal</em>.
         A greedy scheduler always issues ready instructions in program order.
         An optimal scheduler always issues the best combination of ready instructions to maximize performance.</p>"
@@ -730,7 +730,7 @@
 
     <HelpComponent v-if="showHelp3" :position="helpPosition"
     text="Modify the <strong>Cache Memory</strong> settings. Setting a Number of Blocks = 0 means all data accesses
-      will always hit in the cache, and, therefore, the latency of memory loads and stores will always be the same.
+      will always hit in the cache, and, therefore, the latency of memory loads and stores is constant.
       <p>The cache miss latency indicates the extra time required to execute load and store instructions when they miss in the cache.
       The cache miss issue time (<strong>m</strong>) is the minimum time required to issue consecutive memory block read/write requests to the Main Memory.
       It determines the maximum Main Memory bandwidth (one memory block every <strong>m</strong> clock cycles)</p>"
@@ -740,7 +740,7 @@
   <HelpComponent v-if="showHelp4" :position="helpPosition"
     text="Modify the <strong>Latency</strong> and the maximum <strong>Execution Throughput</strong> of instruction types.
       <p>Each instruction type can be assigned a fixed execution latency and a set of eligible execution ports
-         (only one is used for execution each instruction). A given execution port, named <em>Px</em>, can start executing one instruction every clock cycle.
+         (only one is used for executing each instruction). A given execution port, named <em>Px</em>, can start executing one instruction every clock cycle.
         If a port is deleted, execution port P0 is automatically assigned to any instruction types left without a valid port.</p>"
     title="Instruction Latency and Throughput Settings"
     @close="closeHelp4"/>

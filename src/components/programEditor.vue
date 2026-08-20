@@ -660,11 +660,14 @@ function snapshotProgram() {
 
   <Teleport to="body">
     <HelpComponent v-if="showHelp" :position="helpPosition"
-    text="The simulated program consists of a <em>fixed-iteration</em> loop executing a sequence of <strong>machine instructions</strong>, each described in a high-level,
-       informal language. The description of each instruction can be modified: text, type, input/destination operands, constants.
-        Programs can be edited/uploaded/downloaded in JSON format."
+    text="The simulated program consists of a <em>fixed-iteration</em> loop of <strong>machine instructions</strong>,
+          described in high-level informal language.
+          You can set a <strong>loop stride</strong> S (default 1); for a total iteration count N the loop executes N/S times.
+          For each instruction, you can edit: (1) <em>type</em> and operand <em>sizes</em>;
+          (2) input/output operands; and (3) memory <em>strides</em> and vector <em>lanes</em> used.
+        Programs can be uploaded or downloaded in JSON format."
       title="Program Edition"
-    @close="closeHelp"  />
+    @close="closeHelp" />
   </Teleport>
 </template>
 

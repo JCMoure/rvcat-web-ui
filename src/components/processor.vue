@@ -454,7 +454,7 @@
  * Help support
  * ------------------------------------------------------------------ */
   const showHelp  = ref(false); const helpIcon  = ref(null);
-  const helpPosition = ref({ top: '0%', left: '40%' });
+  const helpPosition = ref({ top: '0%', left: '35%' });
 
   function openHelp()   { nextTick(() => { showHelp.value = true }) }
   function closeHelp()  { showHelp.value  = false }
@@ -517,7 +517,7 @@
         </select>
         <button class="blue-button small-btn" @click="editProcessor"
           id="edit-processor-button"
-          title="Edit current processor on full-screen">
+          title="Edit current processor configuration">
         📝
         </button>
         <button class="blue-button small-btn" @click="removeProcessor"
@@ -581,21 +581,21 @@
         <p>Click on the corresponding table cells to modify the <strong>Dispatch</strong> and/or <strong>Retire</strong> widths
           (maximum number of instructions dispatched into or retired from the <strong>Execution Engine</strong> per clock cycle),
           or the <strong>ROB</strong> (ReOrder Buffer) size (maximum number of instructions on the <strong>Execution Engine</strong>).
-          All of them may impose a <strong><em>throughput-bound</em></strong> performance limit.</p>
+          All of them may impose a performance limit.</p>
         <p>Click on the <strong>Cache</strong> row to modify the cache configuration (number of blocks, block size, miss penalty and issue time).
-           Setting a Number of Blocks = 0 means all data accesses will always hit in the cache, and, therefore, the latency of memory loads and stores will always be the same.
+           Setting a Number of Blocks = 0 means all data accesses will always hit in the cache, and, therefore, the latency of memory loads and stores is constant.
            The cache miss latency indicates the extra time required to execute load and store instructions when they miss in the cache.
            The cache miss issue time (<strong>m</strong>) is the minimum time required to issue consecutive memory block read/write requests to the Main Memory.
            It determines the maximum Main Memory bandwidth (one memory block every <strong>m</strong> clock cycles).</p>
-        <p>Click on the <strong>Waiting Buffer</strong> row to toggle between a <em>greedy</em> instructionscheduler
+        <p>Click on the <strong>Waiting Buffer</strong> row to toggle between a <em>greedy</em> instruction scheduler
           (which issues older ready instructions as soon as possible) and an <em>optimal</em> scheduler
           (which always issues the best combination of ready instructions to maximize performance).</p>
         <p>Each instruction type is assigned a fixed execution latency and a set of eligible execution ports
-         (only one is used for execution each instruction). A given execution port, named <em>Px</em>, can start executing one instruction every clock cycle.
-         Hover the different <strong>Execution Ports</strong> to see the assigned instruction types and their latencies.</p>
+         (only one is used for executing each instruction). A given execution port, named <em>Px</em>, can start executing one instruction every clock cycle.
+         Hover the different <strong>Execution Ports</strong> to see the latencies of the assigned instruction types.</p>
         <p>A new <em>processor configuration</em> can be selected from the list (referring to a JSON file description stored in local storage).
-         Click on the <strong>edit</strong> button to modify a processor configuration or
-         to <strong>remove</strong> a file from local storage.</p>
+         Click on the corresponding button to <strong>edit</strong> a processor configuration or
+         to <strong>remove</strong> a configuration file from local storage.</p>
         "
     title="Processor MicroArchitecture Description"
     @close="closeHelp" />
