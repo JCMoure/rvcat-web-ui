@@ -581,21 +581,21 @@
         <p>Click on the corresponding table cells to modify the <strong>Dispatch</strong> and/or <strong>Retire</strong> widths
           (maximum number of instructions dispatched into or retired from the <strong>Execution Engine</strong> per clock cycle),
           or the <strong>ROB</strong> (ReOrder Buffer) size (maximum number of instructions on the <strong>Execution Engine</strong>).
-          All of them may impose a performance limit.</p>
+          All of them may impose a performance limit. Click on the <strong>Waiting Buffer</strong> row to toggle between a <em>greedy</em> instruction scheduler
+          (which issues older ready instructions as soon as possible) and an <em>optimal</em> scheduler
+          (which always issues the best combination of ready instructions to maximize performance).</p>
         <p>Click on the <strong>Cache</strong> row to modify the cache configuration (number of blocks, block size, miss penalty and issue time).
            Setting a Number of Blocks = 0 means all data accesses will always hit in the cache, and, therefore, the latency of memory loads and stores is constant.
            The cache miss latency indicates the extra time required to execute load and store instructions when they miss in the cache.
            The cache miss issue time (<strong>m</strong>) is the minimum time required to issue consecutive memory block read/write requests to the Main Memory.
            It determines the maximum Main Memory bandwidth (one memory block every <strong>m</strong> clock cycles).</p>
-        <p>Click on the <strong>Waiting Buffer</strong> row to toggle between a <em>greedy</em> instruction scheduler
-          (which issues older ready instructions as soon as possible) and an <em>optimal</em> scheduler
-          (which always issues the best combination of ready instructions to maximize performance).</p>
+
         <p>Each instruction type is assigned a fixed execution latency and a set of eligible execution ports
          (only one is used for executing each instruction). A given execution port, named <em>Px</em>, can start executing one instruction every clock cycle.
          Hover the different <strong>Execution Ports</strong> to see the latencies of the assigned instruction types.</p>
         <p>A new <em>processor configuration</em> can be selected from the list (referring to a JSON file description stored in local storage).
-         Click on the corresponding button to <strong>edit</strong> a processor configuration or
-         to <strong>remove</strong> a configuration file from local storage.</p>
+         Click on the corresponding button to <strong>edit</strong> the current processor config or
+         to <strong>remove</strong> the current config file from local storage.</p>
         "
     title="Processor MicroArchitecture Description"
     @close="closeHelp" />
