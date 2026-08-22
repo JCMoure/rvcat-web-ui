@@ -879,16 +879,6 @@ function snapshotProgram() {
     border-radius: 4px;
   }
 
-  .fullscreen-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: transparent; /* Sin fondo para no ocultar nada */
-    pointer-events: none; /* Permite clicks a través del overlay */
-    z-index: 999;
-  }
   .fullscreen-content {
     position: fixed;
     background: white;

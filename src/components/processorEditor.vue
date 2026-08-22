@@ -839,13 +839,6 @@
     flex: 0 0 auto;
   }
 
-  .processor-container {
-    width:     100%;
-    height:    100%;
-    display:   flex;
-    margin-top: 2px;
-  }
-
   .processor-side-container {
     flex: 1 1 55%;
     min-width: 0;           /* Importante para evitar desbordamiento */
@@ -869,11 +862,6 @@
   .settings-container button {
     flex-shrink: initial;
   }
-  .fullscreen-settings {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
 
   .settings-sections {
     display:         flex;
@@ -892,28 +880,6 @@
   }
   .latency-group .table-container {
     overflow-y: auto; /* Scroll vertical si la tabla es muy larga */
-  }
-
-  .form-select {
-    width:            100%;
-    padding:          1px 1px;
-    margin-bottom:    2px;
-    border:           2px solid #ddd;
-    border-radius:    6px;
-    font-size:        medium;
-    background-color: white;
-    transition:       border-color 0.3s;
-  }
-
-  .form-select:focus {
-    outline:      none;
-    border-color: #4a6cf7;
-  }
-
-  .form-select option[value="_add_new_"] {
-    color:            #4a6cf7;
-    font-weight:      bold;
-    background-color: #f0f5ff;
   }
 
   .latency-input {
@@ -940,12 +906,6 @@
     cursor: pointer;
   }
 
-  .graph-section {
-    display:         flex;
-    justify-content: center;
-    align-items:     center;
-  }
-
   .processor-img {
     width:        100%;
     height:       100%;
@@ -964,44 +924,6 @@
   .processor-img svg polygon,
   .processor-img svg path {
     stroke-width: 2px;
-  }
-
-  .simProcessor-img {
-    width:        100%;
-    height:       100%;
-    max-width:    150%;
-    max-height:   150%;
-    align-items:  center;
-    object-fit:   contain;
-    transform-box: fill-box;
-  }
-
-  .simProcessor-img svg text {
-    font-size:   12px;
-    font-family: Arial, sans-serif;
-  }
-
-  .simProcessor-img svg polygon,
-  .simProcessor-img svg path {
-    stroke-width: 2px;
-  }
-
-  .simProcessor-img svg[viewBox] {
-    width:    100%;
-    height:   100%;
-    overflow: hidden;
-  }
-
-  .simProcessor-img g.node.selected polygon {
-    stroke-width: 3px !important;
-    stroke:       #0066ff !important;
-    filter:       drop-shadow(0 0 5px rgba(0, 100, 255, 0.5));
-  }
-
-  .simProcessor-img g.node:hover polygon {
-    stroke-width: 2px !important;
-    stroke:       #444444 !important;
-    cursor:       pointer;
   }
 
   .table-container {
@@ -1127,25 +1049,6 @@
     border-radius: 4px;
     cursor:        pointer;
     font-size:     0.9em;
-  }
-
-  .tooltip-text {
-    visibility: hidden;
-    width:      240px;
-    color:      #fff;
-    text-align: left;
-    padding:    8px;
-    font-size:  0.85em;
-    position:   absolute;
-    top:        50%;
-    left:       100%;
-    transform:  translate(8px, -50%);
-    z-index:    10;
-    opacity:    0;
-    white-space:   normal;
-    border-radius: 4px;
-    transition:    opacity 0.2s ease-in-out;
-    background-color: rgba(0, 0, 0, 0.7);
   }
 
   .type-row {

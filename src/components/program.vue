@@ -437,7 +437,7 @@
         <span class="header-title">Program</span>
       </div>
 
-      <div class="settings-container">
+      <div class="program-container">
 
         <select v-model="programOptions.currentProgram" class="form-select"
             id="programs-list" title="Select Program">
@@ -624,13 +624,14 @@
     width: 5px;
   }
 
-  .settings-container {
+  .program-container {
     display: flex;
     align-items: center;
     gap: 3px;
     flex: 1;
     justify-content: center;
   }
+
   .table-container {
      width:          auto;
      max-width:      100%;

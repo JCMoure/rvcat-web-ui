@@ -32,15 +32,16 @@
               <input v-model="tutorial.name" type="text" placeholder="Enter tutorial name, used to identify tutorial" title="Tutorial name, used to identify tutorial" class="name-input">
             </div>
             <label>Description</label>
-            <textarea v-model="tutorial.description" placeholder="Brief description of the tutorial" title="Description of the tutorial"></textarea>
+            <textarea v-model="tutorial.description" placeholder="Brief description of the tutorial"
+                      title="Description of the tutorial"></textarea>
             <div class="buttons">
-              <button class="blue-button" title="Add new step to the tutorial (after selected step)"
+              <button class="blue-button" title="Add new step to the tutorial (after selected)"
                 :disabled="stepNumber >= maxSteps"
                 @click="addStep('step', stepNumber)">Add new Step</button>
-              <button class="blue-button" title="Add new question to the tutorial (after selected step)"
+              <button class="blue-button" title="Add new question to the tutorial (after selected)"
                 :disabled="stepNumber >= maxSteps"
                 @click="addStep('question', stepNumber)">Add new Question</button>
-              <button class="blue-button" title="Duplicate selected step (after the selected one)"
+              <button class="blue-button" title="Duplicate selected step/question (after selected)"
                 :disabled="stepNumber < 0 || stepNumber >= maxSteps"
                 @click="addStep(null, stepNumber)">Duplicate</button>
             </div>
@@ -57,10 +58,11 @@
           <div class="step-card" :class="{ 'question-card': currentStep.type === 'question' }">
             <div class="form-group left-column">
               <div class="form-row">
-                <span class="step-number" :class="{ 'question-number': currentStep.type === 'question' }" title="Remove selected step">
+                <span class="step-number" :class="{ 'question-number': currentStep.type === 'question' }">
                   {{ stepNumber }}
                 </span>
-                <button @click="removeStep(stepNumber)" class="remove-btn">×</button>
+                <button @click="removeStep(stepNumber)" title="Remove selected step"
+                  class="remove-btn">×</button>
               </div>
               <label>{{currentStep.type === 'question' ? 'Question title' : 'Step title'}}<span class="required">*</span></label>
               <input v-model="currentStep.title" type="text" :placeholder="currentStep.type === 'question' ? 'Question title' : 'Step title'">
@@ -307,10 +309,10 @@ const predefinedSelectors = [
   { label: 'Custom', value: '' },
   { label: '── Main Areas ──',      value: '', disabled: true },
   { label: 'Header / Title',        value: '.header-title' },
-  { label: 'Program Area',          value: '.program' },
-  { label: 'Processor Area',        value: '.processor' },
+  { label: 'Program Area',          value: '.program-container' },
+  { label: 'Processor Area',        value: '.processor-container' },
   { label: 'Results Area',          value: '.results' },
-  { label: '── Program Section ──', value: '', disabled: true },
+  { label: '── File Selection ──',  value: '', disabled: true },
   { label: 'Program Selector',      value: '#programs-list' },
   { label: 'Processor Selector',    value: '#processors-list' },
   { label: '── Processor Config ──', value: '', disabled: true },
