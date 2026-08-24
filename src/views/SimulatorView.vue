@@ -191,7 +191,7 @@ onUnmounted(() => {
               <li>
                 <button class="blue-button" :class="{ active: currentKey === 'staticAnalysisComponent' }"
                   id="analysis-button"
-                  title="Static Performance Analysis -> identify potential bottleneck, either throughput or latency (dependencies)"
+                  title="Static Performance Analysis: identify potential bottleneck (throughput or latency/dependencies)"
                   @click="onRequestSwitch('staticAnalysisComponent')" >
                     Static Analysis
                 </button>
@@ -206,27 +206,26 @@ onUnmounted(() => {
               </li>
 
               <li class="separator"></li>
-
-              <li>
-                <button class="blue-button" :class="{ 'active': isProcessorFullscreen }"
-                  id="processor-button"
-                  title="Open full window for processor configuration"
-                  @click="toggleFullScreen('processor')" >
-                    {{ fullProcessorButtonText }}
-                </button>
-              </li>
               <li>
                 <button class="blue-button" :class="{ 'active': isProgramFullscreen }"
                   id="program-button"
-                  title="Open full window for program edition"
+                  title="Open/Close program edition panel"
                   @click="toggleFullScreen('program')" >
                     {{ fullProgramButtonText }}
                 </button>
               </li>
               <li>
+                <button class="blue-button" :class="{ 'active': isProcessorFullscreen }"
+                  id="processor-button"
+                  title="Open/Close processor edition panel"
+                  @click="toggleFullScreen('processor')" >
+                    {{ fullProcessorButtonText }}
+                </button>
+              </li>
+              <li>
                 <button class="blue-button" :class="{ 'active': isTutorialFullscreen }"
                   id="tutorial-button"
-                  title="Open full window for tutorial edition"
+                  title="Open/Close tutorial edition panel"
                   @click="toggleFullScreen('tutorial')" >
                     {{ fullTutorialButtonText }}
                 </button>
