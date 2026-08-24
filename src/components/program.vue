@@ -437,8 +437,7 @@
         <span class="header-title">Program</span>
       </div>
 
-      <div class="program-container">
-
+      <div class="program-header">
         <select v-model="programOptions.currentProgram" class="form-select"
             id="programs-list" title="Select Program">
           <option value="" disabled>Select</option>
@@ -510,7 +509,7 @@
       </div>
     </div>
 
-    <section class="main-box">
+    <section class="program-container">
       <div class="table-container">
         <table class="instructions-table">
           <thead>
@@ -610,7 +609,7 @@
 </template>
 
 <style scoped>
-  .main-box {
+  .program-container {
     overflow:      auto;
     scroll-behavior: smooth;
     margin-top:    0px;
@@ -624,7 +623,7 @@
     width: 5px;
   }
 
-  .program-container {
+  .program-header {
     display: flex;
     align-items: center;
     gap: 3px;

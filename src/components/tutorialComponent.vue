@@ -1009,12 +1009,11 @@ onUnmounted(() => {
   .tutorial-highlighted {
     position:      relative;
     z-index:       10001 !important;
-    border:        3px solid #007acc !important;
+    border:        4px solid #007acc !important;
     border-radius: 6px !important;
     box-shadow:    0 0 20px rgba(0, 122, 204, 0.5) !important;
     transition:    all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
-    transform:     scale(1.2) !important;
-    background: white !important;
+    transform:     scale(1.15) !important;
     will-change:   transform !important;
     transform-origin: center center !important;
   }
