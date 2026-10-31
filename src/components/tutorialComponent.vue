@@ -323,8 +323,11 @@ const emit  = defineEmits(['requestSwitchPanel', 'requestSwitchFull'])
       x.value = Math.min(Math.max(pos.x, 0), maxX)
       y.value = Math.min(Math.max(pos.y, HEADER_HEIGHT), maxY)
 
-      currentStep.value.x_pos = x.value
-      currentStep.value.y_pos = y.value
+      const step = currentStep.value
+      if (step) {
+        step.x_pos = x.value
+        step.y_pos = y.value
+      }
     }
   })
 
@@ -337,20 +340,27 @@ const emit  = defineEmits(['requestSwitchPanel', 'requestSwitchFull'])
     tutorialOptions.windowWidth  = Math.max(MIN_W, Math.min(w, maxWidth))
     tutorialOptions.windowHeight = Math.max(MIN_H, Math.min(h, maxHeight))
 
-    currentStep.value.wWidth = tutorialOptions.windowWidth
-    currentStep.value.wHeight= tutorialOptions.windowHeight
+    const step = currentStep.value
+    if (step) {
+      step.wWidth = tutorialOptions.windowWidth
+      step.wHeight = tutorialOptions.windowHeight
+    }
   })
 
-  window.addEventListener("resize", () => {
-
+  const handleWindowResize = () => {
     const w = tutorialOptions.windowWidth
 
     x.value = Math.min(x.value, window.innerWidth - w)
     y.value = Math.min(y.value, window.innerHeight - HEADER_HEIGHT)
 
-    currentStep.value.x_pos = x.value
-    currentStep.value.y_pos = y.value
-  })
+    const step = currentStep.value
+    if (step) {
+      step.x_pos = x.value
+      step.y_pos = y.value
+    }
+  }
+
+  window.addEventListener('resize', handleWindowResize)
 
 // ============================================================================
 // Tutorial STATE
@@ -986,6 +996,7 @@ onMounted(async () => {
 onUnmounted(() => {
   console.log('👨‍🎓🧹 Tutorial Engine unmounted')
   document.removeEventListener('click', handleClickOutside)
+  window.removeEventListener('resize', handleWindowResize)
   cleanup ()
 })
 </script>
