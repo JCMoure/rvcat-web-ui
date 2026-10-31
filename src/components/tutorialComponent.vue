@@ -292,10 +292,7 @@ const isActive        = ref(false)
 // ============================================================================
 // PROPS & EMITS
 // ============================================================================
-
   // get properties from main panel
-const props = defineProps({ activeView: String, activeFull: String })
-
 // emit signal to simulatorView in order to switch panels
 const emit  = defineEmits(['requestSwitchPanel', 'requestSwitchFull'])
 
@@ -937,7 +934,7 @@ function deleteTutorial (tutorialId) {
 // EVENT HANDLERS: click, windowChange;  WATCHES: tutorial, globalState
 // ============================================================================
 
-watch(() => simState.state, (newValue, oldValue) => {
+watch(() => simState.state, (newValue) => {
   if (newValue == 4) { // Tutorial Editor has set tutorial on localStorage
     console.log('👨‍🎓📥 Include tutorials in available list');
     initTutorial()
