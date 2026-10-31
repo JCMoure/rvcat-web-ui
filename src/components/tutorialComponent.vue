@@ -310,7 +310,7 @@ const emit  = defineEmits(['requestSwitchPanel', 'requestSwitchFull'])
   const x = toRef(tutorialOptions, 'x_pos')
   const y = toRef(tutorialOptions, 'y_pos')
 
-  const { isDragging } = useDraggable(headerRef, {
+  const { isdragging } = useDraggable(headerRef, {
     initialValue: { x: tutorialOptions.x_pos, y: tutorialOptions.y_pos },
 
     onMove(pos) {
