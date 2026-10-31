@@ -252,19 +252,6 @@
     </div>
   </div>
 
-  <div v-if="showModalUp" class="modal-overlay">
-    <div class="modal">
-      <h4>Load Tutorial As</h4>
-      <label for="config-name">Name:</label>
-      <input id="config-name" type="text" v-model="modalName" />
-      <div v-if="nameError" class="error">{{ nameError }}</div>
-      <div class="modal-actions">
-        <button class="blue-button" title="Accept Load" @click="confirmModal"> Load  </button>
-        <button class="blue-button" title="Cancel Load" @click="cancelModal"> Cancel </button>
-      </div>
-    </div>
-  </div>
-
   <Teleport to="body">
     <HelpComponent v-if="showHelp" :position="helpPosition"
     text="<p>Tutorials can be edited, uploaded from or downloaded to the local file system in JSON format, added or removed to the local menu
@@ -284,7 +271,7 @@
 <script setup>
 import { ref, computed, inject, reactive, watch, nextTick, onMounted, onUnmounted } from 'vue'
 import HelpComponent                                     from '@/components/helpComponent.vue'
-import {  downloadJSON, uploadJSON, saveToLocalStorage, createGraphVizGraph  } from '@/common'
+import {  downloadJSON, uploadJSON, createGraphVizGraph  } from '@/common'
 
 const simState = inject('simulationState');
 
@@ -641,15 +628,6 @@ const validateTutorial = () => {
   return errors
 }
 
-const showValidationErrors = () => {
-  const errors = validateTutorial()
-  if (errors.length) {
-    alert('Please fix the following errors:\n\n' + errors.join('\n'))
-    return false
-  }
-  return true
-}
-
 // ============================================================================
 // HELP
 // ============================================================================
@@ -665,10 +643,6 @@ const showValidationErrors = () => {
 // TUTORIAL ACTIONS: loadEditedTutorial, clearDraft
 //                   downloadTutorial, uploadTutorial, removeTutorial
 // ============================================================================
-
-const showSaveModal = ref(false)
-const modalName     = ref('')
-const modalError    = ref('')
 
 function loadEditedTutorial() {
   const stored = localStorage.getItem('tutorialTemp');
@@ -698,30 +672,6 @@ const clearDraft = (check = true) => {
     stepNumber.value     = -1
   }
 }
-
-const saveTutorialAs = () => {
-  // Open modal to input new name
-  modalName.value     = "Name?";
-  modalError.value    = '';
-  showSaveModal.value = true;
-};
-
-const confirmSaveTutorialAs = async () => {
-  if (!showValidationErrors()) return
-  const name = modalName.value.trim();
-
-  const data    = buildTutorialData();
-  const success = saveToLocalStorage('tutorial', name, data, null );
-
-  if (success) {
-    console.log(`🎓✅ Tutorial saved as: ${name}`);
-    showSaveModal.value = false
-    return true;
-  } else {
-    modalError.value = 'Failed to save tutorial';
-    return false;
-  }
-};
 
 const downloadTutorial = () => {
   if (!validateTutorial()) return;
@@ -857,7 +807,7 @@ watch(tutorial, (t) => {
 }, { deep: true });
 
 // Watch for changes on Simulation state
-watch(() => simState.state, (newValue, oldValue) => {
+watch(() => simState.state, (newValue) => {
   if (newValue == 3) { // Initialization Stage
     simState.state = 4;   // Signal tutorial engine to obtain list of tutorials from localStorage
     console.log('🎓📥 Initialization step (4): tutorial editor')
