@@ -17,7 +17,7 @@
   const noCache = computed(() => Number(props.values.nBlocks) === 0)
   const PART = {
     nBlocks: 'cache', blkSize: 'cache', mPenalty: 'mm', mIssueTime: 'mm', nFillBuffers: 'fill',
-    nWriteBuffers: 'write', rThru: 'return', nStoreBuffers: 'sb',
+    nWriteBuffers: 'write', rThru: 'return', nStoreBuffers: 'sb', prefetchDistance: 'fill',
   }
   const hl = (part) => PART[props.active] === part
 </script>
@@ -64,6 +64,7 @@
         <rect x="640" y="46" width="140" height="58" rx="6" class="cd-box cd-fill" />
         <text x="710" y="69" class="cd-title">Fill buffers</text>
         <text x="710" y="93" class="cd-value">× {{ v('nFillBuffers') }}</text>
+        <text v-if="Number(v('prefetchDistance')) > 0" x="710" y="124" class="cd-note">{{ t('prefetch +{d} blocks', { d: v('prefetchDistance') }) }}</text>
       </g>
 
       <!-- write buffers -->

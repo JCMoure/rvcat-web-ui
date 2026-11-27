@@ -29,6 +29,7 @@
     mPenalty:      'Cycles from the request of a block to main memory until it arrives (at least the issue time)',
     mIssueTime:    'Minimum cycles between two transfers of main memory (its bandwidth)',
     nFillBuffers:  'Misses that can be in progress at the same time (blocks being filled)',
+    prefetchDistance: 'Prefetching: a LOAD that accesses block B also requests the block D blocks ahead in its direction (0: no prefetching). A prefetch uses a free fill buffer and a line; without them it is dropped',
     nWriteBuffers: 'Evicted dirty blocks that can wait to be written to main memory',
     rThru:         'Waiting LOAD instructions that can receive their data from fill buffers in each cycle',
     nStoreBuffers: 'One entry per STORE (stores to the same block are not combined), from dispatch until it is written into the cache: a store retires without waiting for its block, and waits here; when it is full, dispatch stops',

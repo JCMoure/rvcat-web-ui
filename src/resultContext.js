@@ -7,7 +7,7 @@ import { t }              from '@/i18n'
 const PROCESSOR_FIELDS = [
   'dispatch', 'retire', 'ROBsize', 'bPenalty',
   'nBlocks', 'blkSize', 'mPenalty', 'mIssueTime',
-  'nFillBuffers', 'nWriteBuffers', 'rThru', 'nStoreBuffers'
+  'nFillBuffers', 'nWriteBuffers', 'rThru', 'nStoreBuffers', 'prefetchDistance'
 ]
 
 // Snapshot of what was simulated: program name, N, the complete processor configuration and
@@ -111,7 +111,8 @@ export function resultContextLines(context) {
   if (p.nBlocks > 0) {
     lines.push(`  Cache: ${p.nBlocks} ${t('blocks')} × ${p.blkSize} B · ${t('Miss penalty')} ${p.mPenalty} · ${t('Issue time')} ${p.mIssueTime}`)
     lines.push(`         Fill buffers ${p.nFillBuffers} · Write buffers ${p.nWriteBuffers} · rThru ${p.rThru}` +
-               (p.nStoreBuffers ? ` · SB ${p.nStoreBuffers}` : ''))
+               (p.nStoreBuffers ? ` · SB ${p.nStoreBuffers}` : '') +
+               (p.prefetchDistance > 0 ? ` · ${t('prefetch')} D ${p.prefetchDistance}` : ''))
   } else {
     lines.push(`  Cache: ${t('none')}`)
   }

@@ -259,6 +259,7 @@
       if (proc1.mIssueTime !== proc2.mIssueTime) return false;
       if (proc1.mPenalty   !== proc2.mPenalty)   return false;
       if (proc1.nFillBuffers !== proc2.nFillBuffers) return false;
+      if ((proc1.prefetchDistance ?? 0) !== (proc2.prefetchDistance ?? 0)) return false;
       if (proc1.nWriteBuffers !== proc2.nWriteBuffers) return false;
       if ((proc1.nStoreBuffers ?? 16) !== (proc2.nStoreBuffers ?? 16)) return false;
       if (proc1.rThru !== proc2.rThru) return false;
@@ -668,6 +669,7 @@
       mIssueTime: process.mIssueTime,
       mPenalty: process.mPenalty,
       nFillBuffers: process.nFillBuffers ?? 2,
+      prefetchDistance: process.prefetchDistance ?? 0,
       nWriteBuffers: process.nWriteBuffers ?? 2,
       nStoreBuffers: process.nStoreBuffers ?? 16,
       rThru: process.rThru ?? 1,
@@ -686,6 +688,7 @@
         getExecutionResults(JSON.stringify( { Nloop, ROBsize, dispatch, retire, sched, speculation,
                                               bPenalty: process.bPenalty ?? 5, blkSize, nBlocks, mPenalty, mIssueTime,
                                               nFillBuffers: nFillBuffers ?? 2,
+                                              prefetchDistance: process.prefetchDistance ?? 0,
                                               nWriteBuffers: nWriteBuffers ?? 2,
                                               nStoreBuffers: process.nStoreBuffers ?? 16,
                                               rThru: rThru ?? 1,
@@ -955,6 +958,17 @@
             <label>{{ t('Primary Misses:') }}</label>
             <span id="PrimaryMiss-output"
                   :title="(formattedResults.primaryTitle ? formattedResults.primaryTitle + '. ' : '') + t('Primary misses start a new fill: LD = caused by a LOAD, ST = caused by a STORE.')">{{ formattedResults.primary }}</span>
+          </div>
+          <div v-if="simState.executionResults?.prefetch" class="simulation-inline-item stat-cache" id="prefetch-item">
+            <label>{{ t('Prefetches:') }}</label>
+            <span id="prefetch-output"
+                  :title="t('Prefetches (distance {d} blocks): issued, useful (the LOAD found the block in the cache), late (the LOAD waited for the block on the way), not used (replaced before a LOAD used it), and dropped (no free fill buffer or line)', { d: simState.executionResults.prefetch.distance })">
+              {{ simState.executionResults.prefetch.issued }} ·
+              {{ t('useful') }} {{ simState.executionResults.prefetch.useful }} ·
+              {{ t('late') }} {{ simState.executionResults.prefetch.late }} ·
+              {{ t('not used') }} {{ simState.executionResults.prefetch.unused }}
+              <template v-if="simState.executionResults.prefetch.dropped"> · {{ t('dropped') }} {{ simState.executionResults.prefetch.dropped }}</template>
+            </span>
           </div>
           <div class="simulation-inline-item stat-cache">
             <label>{{ t('Secondary Misses:') }}</label>

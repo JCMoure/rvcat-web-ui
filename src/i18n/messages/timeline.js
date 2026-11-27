@@ -1,5 +1,6 @@
 // Translations: timeline (generated from the review texts; English text = key)
 export default {
+  "prefetched, not used yet": { es: "traído por prefetch, aún sin usar", ca: "portat per prefetch, encara sense usar" },
   "assigned: {list}": { es: "asignados: {list}", ca: "assignats: {list}" },
   "Timeline problem: all instructions must traverse an E state": { es: "Problema del timeline: todas las instrucciones deben pasar por un estado E", ca: "Problema del timeline: totes les instruccions han de passar per un estat E" },
   "Waits for a free port": { es: "Espera un puerto libre", ca: "Espera un port lliure" },

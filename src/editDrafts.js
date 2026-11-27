@@ -18,6 +18,7 @@ export function processorDraftFrom(process) {
     nWriteBuffers: process.nWriteBuffers || 2,
     rThru:         process.rThru         || 1,
     nStoreBuffers: process.nStoreBuffers || 16,
+    prefetchDistance: process.prefetchDistance || 0,
     latencies:     JSON.parse(JSON.stringify(process.latencies ?? {})),
     ports:         JSON.parse(JSON.stringify(process.ports ?? {})),
   }

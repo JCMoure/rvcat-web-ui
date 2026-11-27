@@ -146,7 +146,8 @@
 
   // ---- the memory: a summary; the window of the cache has all its parameters ----
   const memoryLines = computed(() => hasCache.value
-    ? [`L1 ${p.value.nBlocks}×${p.value.blkSize} B`, `MM ${p.value.mPenalty ?? 10} c · FB ${p.value.nFillBuffers ?? 2}`]
+    ? [`L1 ${p.value.nBlocks}×${p.value.blkSize} B`, `MM ${p.value.mPenalty ?? 10} c · FB ${p.value.nFillBuffers ?? 2}`,
+       ...(p.value.prefetchDistance > 0 ? [`${t('prefetch')} +${p.value.prefetchDistance}`] : [])]
     : [t('no cache')])
   // the explanation of the memory, a paragraph per part: the cache, the main memory, the fill buffers
   // and, only for programs with STOREs, the store buffer and the write buffers
@@ -159,6 +160,8 @@
       t('Main memory: a miss brings its block in {penalty} cycles; the memory accepts a request every {issue} cycle(s).', { penalty: v.mPenalty ?? 10, issue: v.mIssueTime ?? 1 }),
       t('Fill buffers: {fill}, the blocks that can be on the way at the same time; up to {ret} waiting LOAD(s) receive their data per cycle.', { fill: v.nFillBuffers ?? 2, ret: v.rThru ?? 1 }),
     ]
+    if (v.prefetchDistance > 0) list.push(
+      t('Prefetching: a LOAD that accesses block B also requests the block {d} blocks ahead; a prefetch uses a free fill buffer and a line, or it is dropped.', { d: v.prefetchDistance }))
     if (hasStores.value) list.push(
       t('Store buffer (SB): {n} entries; a store waits there, after it retires, until it is written into the cache.', { n: v.nStoreBuffers ?? 16 }),
       t('Write buffers: {n}; an evicted dirty block waits there until it is written into the main memory.', { n: v.nWriteBuffers ?? 2 }))

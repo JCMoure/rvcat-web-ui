@@ -227,6 +227,7 @@
         process.nFillBuffers,
         process.nWriteBuffers,
         process.nStoreBuffers,
+        process.prefetchDistance,
         process.instruction_list,
         // the repetitions of the loop (Rep, independent calls, strides between calls, the block after it)
         JSON.stringify(repetitionFields(process))     // (not toRaw: the watch must track them)
@@ -241,6 +242,7 @@
       simState.simulatedProcess.mPenalty,
       simState.simulatedProcess.mIssueTime,
       simState.simulatedProcess.nFillBuffers,
+      simState.simulatedProcess.prefetchDistance,
       simState.simulatedProcess.nWriteBuffers,
       simState.simulatedProcess.nStoreBuffers,
       simState.simulatedProcess.rThru
@@ -319,6 +321,7 @@
                                     bPenalty: process.bPenalty ?? 5,
                                     blkSize, nBlocks, mPenalty, mIssueTime,
                                     nFillBuffers: nFillBuffers ?? 2,
+                                    prefetchDistance: process.prefetchDistance ?? 0,
                                     nWriteBuffers: nWriteBuffers ?? 2,
                                     nStoreBuffers: process.nStoreBuffers ?? 16,
                                     rThru: rThru ?? 1,
@@ -1447,16 +1450,16 @@
           // another resource; :: its block is coming); else F: full
           marker = SB_HEAD_MARK[sbSnap?.head_state] ?? (sbUsed >= resource.capacity ? 'F' : '')
         } else if (resource.bufferType === 'fill' && bufferEntry?.valid) {
-          marker = 'R'
+          marker = bufferEntry.prefetch ? 'P' : 'R'           // P: a prefetch (no LOAD waits for it yet)
         } else if (resource.bufferType === 'write' && bufferEntry?.valid) {
           marker = 'W'
         } else if (resource.cacheLineIndex !== undefined && cacheLine?.valid) {
           marker = cacheLine.loading
-            ? cacheLine.dirty ? 'w' : 'r'
-            : cacheLine.dirty ? 'D' : 'C'
+            ? cacheLine.dirty ? 'w' : cacheLine.prefetched ? 'p' : 'r'
+            : cacheLine.dirty ? 'D' : cacheLine.prefetched ? 'P' : 'C'     // p / P: a prefetched block (arriving / not used yet)
         } else if (resource.cycles[cycle]) {
           const transactionTypes = new Set(memoryRequests.map(request =>
-            request.operation === 'write' ? 'W' : 'R'
+            request.operation === 'write' ? 'W' : request.prefetch ? 'P' : 'R'
           ))
           marker = resource.port === null
             ? [...transactionTypes].sort().join('/')
@@ -1514,7 +1517,7 @@
             : resource.bufferType && !bufferEntry?.valid
             ? t(resource.bufferType === 'fill' ? 'Fill buffer {i}: empty' : 'Write buffer {i}: empty', { i: resource.bufferIndex })
             : resource.bufferType === 'fill'
-              ? t('Fill block at addr {a}', { a: bufferEntry.address }) + ` (${bufferEntry.state}` +
+              ? t('Fill block at addr {a}', { a: bufferEntry.address }) + (bufferEntry.prefetch ? ' · ' + t('prefetch') : '') + ` (${bufferEntry.state}` +
                 ((list) => (list.length ? `; ${t('waiting instructions {list}', { list: list.map(rowId).join(', ') })}` : ''))(
                   (bufferEntry.instruction_indices ?? []).filter(r => waitingAt(r, cycle))) + ')'
             : resource.bufferType === 'write'
@@ -1523,7 +1526,7 @@
             ? !cacheLine?.valid
               ? t('Cache line {i}: empty', { i: resource.cacheLineIndex })
               : t('Block at addr {a}', { a: cacheLine.address }) + ` (${cacheLine.dirty ? t('dirty') : t('clean')}; ` +
-              `${cacheLine.loading ? t('loading') : t('ready')}; ` +
+              `${cacheLine.loading ? t('loading') : t('ready')}; ` + (cacheLine.prefetched ? `${t('prefetched, not used yet')}; ` : '') +
                 `${t('LRU rank {r}', { r: cacheLine.lru })})`
             : resource.port !== null && resource.port !== undefined
             ? linkedInstructionRows.length
@@ -1533,7 +1536,7 @@
             : !memoryRequests.length
             ? t('MM: no transfer')
             : memoryRequests
-                .map(({ operation, address, instruction_index: own, instruction_indices: waiting, cycle: start, duration }) => {
+                .map(({ operation, address, instruction_index: own, instruction_indices: waiting, cycle: start, duration, prefetch }) => {
                   const busCycle = ` · ${t('bus cycle {k} of {d} (memory issue time)', { k: cycle - start + 1, d: duration })}`
                   if (operation === 'write')
                     return t('Write dirty block at addr {a}', { a: address }) + busCycle
@@ -1541,6 +1544,7 @@
                   const who = [...new Set([own, ...(waiting ?? [])].filter(r => Number.isInteger(r) && r >= 0 &&
                                 (waitingAt(r, cycle) || (r === own && operation === 'read_for_write'))))]
                   return t(operation === 'read_for_write' ? 'Read block for writing at addr {a}' : 'Read block at addr {a}', { a: address }) +
+                         (prefetch ? ' · ' + t('prefetch') : '') +
                          (who.length ? ' (' + t('for {list}', { list: who.map(rowId).join(', ') }) + ')' : '') + busCycle
                 })
                 .join('\n') +

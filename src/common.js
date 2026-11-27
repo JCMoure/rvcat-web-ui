@@ -50,6 +50,7 @@ export const CACHE_FIELDS = [
   { key: 'nWriteBuffers', label: 'Write buffers',             min: 1, max: 32 },
   { key: 'nStoreBuffers', label: 'Store buffer (entries)',    min: 1, max: 256 },
   { key: 'rThru',         label: 'Return throughput (per cycle)', min: 1, max: 32 },
+  { key: 'prefetchDistance', label: 'Prefetch distance (blocks)', min: 0, max: 16, default: 0 },
 ]
 
 // Errors of a cache configuration, by field ({} when it is correct). With 0 blocks there is no
@@ -62,7 +63,7 @@ export function validateCacheConfig(cfg, instructionList = [], edited = 'mPenalt
   for (const f of CACHE_FIELDS) {
     if (f.key === 'blkSize') continue
     if (f.key !== 'nBlocks' && int(cfg.nBlocks) === 0) continue
-    const v = int(cfg[f.key])
+    const v = int(cfg[f.key] ?? f.default)
     if (v === null) errors[f.key] = { text: 'Write an integer number' }
     else if (v < f.min || v > f.max) errors[f.key] = { text: 'From {min} to {max}', args: { min: f.min, max: f.max } }
   }

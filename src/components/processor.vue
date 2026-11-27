@@ -174,6 +174,8 @@
       data.mPenalty = data.mIssueTime
     if (!Number.isInteger(data.nFillBuffers) || data.nFillBuffers < 1 || data.nFillBuffers > 32)
       data.nFillBuffers = 2
+    if (!Number.isInteger(data.prefetchDistance) || data.prefetchDistance < 0 || data.prefetchDistance > 16)
+      data.prefetchDistance = 0
     if (!Number.isInteger(data.nWriteBuffers) || data.nWriteBuffers < 1 || data.nWriteBuffers > 32)
       data.nWriteBuffers = 2
     if (!Number.isInteger(data.rThru) || data.rThru < 1 || data.rThru > 32)
@@ -261,6 +263,7 @@
     const p = simState.simulatedProcess ?? {}
     return { nBlocks: p.nBlocks ?? 0, blkSize: p.blkSize ?? 64, mPenalty: p.mPenalty ?? 10, mIssueTime: p.mIssueTime ?? 1,
              nFillBuffers: p.nFillBuffers ?? 2, nWriteBuffers: p.nWriteBuffers ?? 2, rThru: p.rThru ?? 1,
+             prefetchDistance: p.prefetchDistance ?? 0,
              nStoreBuffers: p.nStoreBuffers ?? 16 }
   })
   function applyCache(values) {

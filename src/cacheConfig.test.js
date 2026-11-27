@@ -12,6 +12,10 @@ describe('cache configuration', () => {
     expect(Object.keys(validateCacheConfig({ ...ok, nBlocks: 33, nFillBuffers: 0, rThru: 1.5 })).sort())
       .toEqual(['nBlocks', 'nFillBuffers', 'rThru'])
   })
+  it('limits the prefetch distance to 0 - 16 blocks (0 when a configuration has none)', () => {
+    expect(validateCacheConfig({ ...ok, prefetchDistance: 2 })).toEqual({})
+    expect(validateCacheConfig({ ...ok, prefetchDistance: 17 }).prefetchDistance.args.max).toBe(16)
+  })
   it('limits the store buffer to 1 - 256 entries', () => {
     expect(validateCacheConfig({ ...ok, nStoreBuffers: 300 }).nStoreBuffers.args.max).toBe(256)
     expect(validateCacheConfig({ ...ok, nStoreBuffers: 0 }).nStoreBuffers).toBeTruthy()
