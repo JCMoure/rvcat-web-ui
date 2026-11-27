@@ -30,6 +30,13 @@
           <div v-if="currentStep?.todoDescription && !validationMet && !taskState.solved" class="step-description step-todo-description"
                v-html="rt(currentStep.todoDescription)"></div>
           <!-- second part of the card, shown when its validation is met (e.g. the results of the simulation) -->
+          <!-- a choice of the card ("choices"): each button runs its actions; the card needs one -->
+          <div v-if="currentStep?.choices?.length" class="card-choices" id="tutorial-choices">
+            <button v-for="(c, k) in currentStep.choices" :key="k" class="tutorial-btn card-choice" :id="`tutorial-choice-${k}`"
+                    :class="{ chosen: taskState.choice === k }" :title="rt(c.title) || ''" @click="choose(k)">
+              {{ taskState.choice === k ? '✓ ' : '' }}{{ rt(c.label) }}
+            </button>
+          </div>
           <div v-if="currentStep?.doneDescription && validationMet" class="step-description step-done-description"
                v-html="rt(currentStep.doneDescription)"></div>
           <div v-if="actionsRunning" class="tutorial-running">⏳ {{ t('The tutorial is acting on the simulator…') }}</div>
@@ -203,6 +210,21 @@
                    v-html="rt(answer.explanation)">
               </div>
             </div>
+          </div>
+
+          <!-- Help, after a wrong answer: a hint; then "show me how" and the solution (each use is recorded) -->
+          <div v-if="helpAvailable" class="help-box" id="tutorial-help">
+            <div class="help-buttons">
+              <button class="tutorial-btn help-btn" id="tutorial-help-hint" :class="{ used: helpUsed.hint }" @click="useHelp('hint')"
+                      :title="t('A clue to find the answer')">💡 {{ t('Hint') }}</button>
+              <button v-if="helpUsed.hint && currentStep.help.show" class="tutorial-btn help-btn" id="tutorial-help-show"
+                      :class="{ used: helpUsed.show }" @click="useHelp('show')"
+                      :title="t('The simulator shows where the answer is, or the steps to compute it')">👁 {{ t('Show me how') }}</button>
+              <button v-if="helpUsed.hint" class="tutorial-btn help-btn" id="tutorial-help-solution" :class="{ used: helpUsed.solution }"
+                      @click="useHelp('solution')" :title="t('Write the right answer, with its explanation')">✔ {{ t('See the solution') }}</button>
+            </div>
+            <div v-if="helpUsed.hint && currentStep.help.hint" class="help-text" v-html="rt(currentStep.help.hint)"></div>
+            <div v-if="helpUsed.show && currentStep.help.show?.text" class="help-text" v-html="rt(currentStep.help.show.text)"></div>
           </div>
 
           <!-- Summary message section -->
@@ -664,6 +686,7 @@ const canProceed = computed(() => {
   if (type === 'predict' && !taskState.value.result) return false
   if (type === 'goal'    && !taskState.value.done)   return false
   if (exploreNeeded.value) return false
+  if (currentStep.value?.choices?.length && taskState.value.choice === undefined) return false
   return validationMet.value || !!taskState.value.solved
 })
 
@@ -1014,10 +1037,26 @@ const runActions = createActionRunner({
   snapshot: { restore: () => restoreSnapshot(previewMode.value ? previewSnapshot : savedSnapshot()) },
 })
 
+// (while the actions of a card change the simulator, the automatic simulation does not run: it only
+//  follows the changes made by the student)
 async function runCardActions(list) {
   if (!actionList(list).length) return
   actionsRunning.value = true
-  try { await runActions(list) } finally { actionsRunning.value = false }
+  simState.tutorialActing = true
+  try { await runActions(list) } finally {
+    actionsRunning.value = false
+    await nextTick()
+    simState.tutorialActing = false
+  }
+}
+
+// A choice of the card: its actions, and the choice kept with the state of the card
+async function choose(k) {
+  const step = currentStep.value
+  const c = step?.choices?.[k]
+  if (!c) return
+  await runCardActions(c.actions)
+  setTask(step.id, { choice: k })
 }
 
 async function runShowMe() {
@@ -1650,11 +1689,57 @@ const selectAnswer = (index) => {
   }
 }
 
+// ---- Help of a question ("help": { hint, show: { text, actions, selector } }): it appears after a
+//      wrong answer; "show me how" and the solution, after the hint. Each use is kept with the state of
+//      the question and, in a lesson, with its task (lesson.done[id].help) ----
+const helpUsed = computed(() => taskState.value.help ?? {})
+const helpAvailable = computed(() => isQuestionStep.value && !!currentStep.value?.help && !currentStep.value.predictOnly &&
+  (!!taskState.value.wrong || !!taskState.value.help))
+function recordHelp(id, kind) {
+  setTask(id, { help: { ...(taskStates.value[id]?.help ?? {}), [kind]: true } })
+  const lesson = simState.lesson
+  if (lesson && (lesson.tasks ?? []).includes(id))
+    lesson.done = { ...(lesson.done ?? {}), [id]: { ...(lesson.done?.[id] ?? {}), help: { ...(lesson.done?.[id]?.help ?? {}), [kind]: true } } }
+}
+async function useHelp(kind) {
+  const step = currentStep.value
+  if (!step?.help) return
+  recordHelp(step.id, kind)
+  if (kind === 'show') {
+    await runCardActions(step.help.show?.actions)
+    flashTargets(step.help.show?.selector)
+  }
+  if (kind === 'solution') showSolution(step)
+}
+// the elements where the answer is read: they blink for a few seconds
+function flashTargets(selector) {
+  if (!selector) return
+  let els = []
+  try { els = [...document.querySelectorAll(selector)] } catch { return }
+  for (const el of els) {
+    el.classList.add('tutorial-highlighted', 'tutorial-highlight-pulse')
+    setTimeout(() => el.classList.remove('tutorial-highlighted', 'tutorial-highlight-pulse'), 4000)
+  }
+}
+// the right answer written, and submitted (with its explanation)
+function showSolution(step) {
+  if (isMultiNumeric.value) {
+    numericAnswers.value = (step.numericFields ?? []).map(f => String(tutorialNumber(f.value, simState) ?? ''))
+  } else if (isNumericQuestion.value) {
+    numericAnswer.value = String(tutorialNumber(step.numericValue, simState) ?? '')
+  } else {
+    selectedAnswers.value = (step.answers ?? []).reduce((acc, a, i) => a.isCorrect ? [...acc, i] : acc, [])
+  }
+  questionAnswered.value = false
+  submitAnswer()
+}
+
 const submitAnswer = () => {
   if (!canSubmit.value) return
   if (isMultiNumeric.value) {
     submittedNumerics.value = [...numericAnswers.value]
     questionAnswered.value = true
+    if (!isQuestionCorrect.value && !currentStep.value.predictOnly) setTask(currentStep.value.id, { wrong: true })
     const values = numericAnswers.value.map(toNumber)
     if (isQuestionCorrect.value) {
       setTask(currentStep.value.id, { solved: true, answer: values })
@@ -1664,6 +1749,7 @@ const submitAnswer = () => {
   }
   submittedNumeric.value = numericAnswer.value
   questionAnswered.value = true
+  if (!isQuestionCorrect.value && !currentStep.value.predictOnly) setTask(currentStep.value.id, { wrong: true })
   if (isQuestionCorrect.value) setTask(currentStep.value.id, { solved: true, answer: isNumericQuestion.value
     ? Number(numericAnswer.value.replace(',', '.')) : [...selectedAnswers.value] })
   if (isQuestionCorrect.value)
@@ -2251,6 +2337,14 @@ onUnmounted(() => {
   .question-text p { margin: 0 0 6px; }
   .question-text p:last-child { margin-bottom: 0; }
   .step-done-description    { margin-top: 0.6em; padding-top: 0.6em; border-top: 1px solid #e5e7eb; }
+  .card-choices { display: flex; flex-wrap: wrap; gap: 8px; margin: 0.2em 0 0.8em; }
+  .help-box { margin: 10px 0 4px; padding: 8px 10px; border: 1px dashed #c9a227; border-radius: 8px; background: #fffbea; }
+  .help-buttons { display: flex; flex-wrap: wrap; gap: 6px; }
+  .help-btn { border: 1px solid #c9a227; background: #fff; color: #7a5b00; padding: 3px 10px; }
+  .help-btn.used { background: #fff3c4; }
+  .help-text { margin-top: 6px; color: #333; line-height: 1.45; }
+  .card-choice  { border: 1.5px solid #7aa2e3; background: #f4f8ff; color: #1a4fb3; }
+  .card-choice.chosen { background: #1a4fb3; color: #fff; border-color: #1a4fb3; }
   #tutorial-predict .task-row { display: flex; align-items: center; flex-wrap: wrap; gap: 0.4em 1em; }
   #tutorial-predict #tutorial-prediction { width: 6em; }
   #tutorial-predict { margin-bottom: 0.8em; }

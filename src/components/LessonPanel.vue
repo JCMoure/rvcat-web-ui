@@ -155,7 +155,13 @@
 
 // ---- The lesson in progress ----
   const lesson    = computed(() => simState.lesson)
-  const doneCount = computed(() => (lesson.value?.tasks ?? []).filter(t => lesson.value.done?.[t]).length)
+  const doneCount = computed(() => (lesson.value?.tasks ?? []).filter(t => lesson.value.done?.[t]?.done).length)
+  // the help used in the questions (hint, show me how, solution), for the title of the progress
+  const helpSummary = computed(() => {
+    const entries = Object.values(lesson.value?.done ?? {}).map(d => d?.help).filter(Boolean)
+    const n = (k) => entries.filter(h => h[k]).length
+    return entries.length ? t('Help used: {h} hint(s), {s} "show me how", {x} solution(s)', { h: n('hint'), s: n('show'), x: n('solution') }) : ''
+  })
   const completed = computed(() => !!lesson.value && doneCount.value === lesson.value.tasks.length)
   const code = computed(() => {
     if (!completed.value || !lesson.value.hasCompletion) return ''
@@ -323,7 +329,7 @@
     <div v-if="lesson" class="lesson-bar" id="lesson-bar">
       <span class="lesson-title">📘 {{ localized(lesson.title) }}</span>
       <span v-if="lesson.studentId" class="lesson-student">{{ lesson.idLabel }}: <b>{{ lesson.studentId }}</b></span>
-      <span class="lesson-progress" :title="t('Tasks of the lesson completed (questions, predictions and goals of its tutorial)')">
+      <span class="lesson-progress" :title="t('Tasks of the lesson completed (questions, predictions and goals of its tutorial)') + (helpSummary ? '. ' + helpSummary : '')">
         {{ t('Tasks {d} / {n}', { d: doneCount, n: lesson.tasks.length }) }}
       </span>
       <span v-if="completed && code" class="lesson-code" id="lesson-code"
@@ -455,10 +461,7 @@
   .lesson-hide-programColumns #show-instr-operands,
   .lesson-hide-usage .sim-usage-part,
   .lesson-hide-cacheStats .stat-cache,
-  .lesson-hide-simOptions .sim-setting,
-  .lesson-hide-simOptions #simulation-options,
-  .lesson-hide-simOptions #autorun-label,
-  .lesson-hide-simOptions #automatic-simulation-check,
+  .lesson-hide-simOptions .sim-setting:not(#autorun-label),
   .lesson-hide-criticalPattern #critical-path-pattern,
   .lesson-hide-programPorts .ports-col,
   .lesson-hide-programRep .rep-part,

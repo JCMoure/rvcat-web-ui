@@ -10,7 +10,7 @@
     "es": "<p>Cuatro versiones de un bucle que suma los elementos de un vector (escalar, SIMD y desenrollado con varios acumuladores) en un procesador como el núcleo Golden Cove: latencia y throughput.</p>",
     "ca": "<p>Quatre versions d'un bucle que suma els elements d'un vector (escalar, SIMD i desenrotllat amb diversos acumuladors) en un processador com el nucli Golden Cove: latència i throughput.</p>"
   },
-  "version": 18,
+  "version": 20,
   "programs": [
     {
       "name": "SUM-scalar",
@@ -1276,7 +1276,25 @@
         "lock": [
           "N",
           "Rep"
-        ]
+        ],
+        "help": {
+          "hint": {
+            "en": "In <b>Static Analysis</b>, the line at the top gives the minimum time per iteration (the larger of the latency and the throughput bounds). Each iteration adds S elements: divide by S.",
+            "es": "En <b>Análisis estático</b>, la línea de arriba da el tiempo mínimo por iteración (el mayor de las cotas de latencia y de throughput). Cada iteración suma S elementos: divide por S.",
+            "ca": "A <b>Anàlisi estàtica</b>, la línia de dalt dona el temps mínim per iteració (el més gran de les cotes de latència i de throughput). Cada iteració suma S elements: divideix per S."
+          },
+          "show": {
+            "text": {
+              "en": "<p>Choose each program in the Program panel and read the minimum of the top line: SUM-scalar and SUM-simd have one chain of additions (2 cycles); SUM-scalar4 and SUM-simd4 have 4 additions per iteration in 2 ports. Then divide by S: 1, 4, 4 and 16.</p>",
+              "es": "<p>Elige cada programa en el panel del programa y lee el mínimo de la línea de arriba: SUM-scalar y SUM-simd tienen una cadena de sumas (2 ciclos); SUM-scalar4 y SUM-simd4 tienen 4 sumas por iteración en 2 puertos. Después divide por S: 1, 4, 4 y 16.</p>",
+              "ca": "<p>Tria cada programa al panell del programa i llegeix el mínim de la línia de dalt: SUM-scalar i SUM-simd tenen una cadena de sumes (2 cicles); SUM-scalar4 i SUM-simd4 tenen 4 sumes per iteració en 2 ports. Després divideix per S: 1, 4, 4 i 16.</p>"
+            },
+            "actions": [
+              "switchTo:staticAnalysisComponent"
+            ],
+            "selector": "#performance-bound"
+          }
+        }
       },
       {
         "id": "diagnosis",
@@ -1337,6 +1355,68 @@
           "sidePanel:show",
           "switchTo:simulationComponent",
           "programView:perf"
+        ],
+        "next": [
+          "sim-auto"
+        ],
+        "lock": [
+          "N",
+          "Rep"
+        ]
+      },
+      {
+        "id": "sim-auto",
+        "type": "step",
+        "anchor": "#right-panel",
+        "position": "inside-top-left",
+        "wWidth": 640,
+        "title": {
+          "en": "Automatic simulation?",
+          "es": "¿Simulación automática?",
+          "ca": "Simulació automàtica?"
+        },
+        "description": {
+          "en": "<p>From now on you will simulate. RVCAT can simulate <b>automatically</b> every time you change something of the program or of the processor: the results are always up to date, but each change may take a moment longer. Or it can simulate only when you click <b>Run Simulation</b>.</p><p>Choose one. You can change it at any time in <b>⚙ Options</b>, next to Run Simulation: <i>Simulate automatically after every change</i>. (The changes made by the cards of the lesson never start a simulation by themselves.)</p>",
+          "es": "<p>A partir de ahora vas a simular. RVCAT puede simular <b>automáticamente</b> cada vez que cambias algo del programa o del procesador: los resultados están siempre al día, pero cada cambio puede tardar un poco más. O puede simular solo cuando pulsas <b>Simular</b>.</p><p>Elige una opción. Puedes cambiarla cuando quieras en <b>⚙ Opciones</b>, junto a Simular: <i>Simular automáticamente después de cada cambio</i>. (Los cambios que hacen las tarjetas de la lección nunca lanzan una simulación por sí solos.)</p>",
+          "ca": "<p>A partir d'ara simularàs. RVCAT pot simular <b>automàticament</b> cada vegada que canvies alguna cosa del programa o del processador: els resultats estan sempre al dia, però cada canvi pot trigar una mica més. O pot simular només quan prems <b>Simula</b>.</p><p>Tria una opció. La pots canviar quan vulguis a <b>⚙ Opcions</b>, al costat de Simula: <i>Simular automàticament després de cada canvi</i>. (Els canvis que fan les targetes de la lliçó mai no llancen una simulació per si sols.)</p>"
+        },
+        "choices": [
+          {
+            "label": {
+              "en": "Simulate automatically",
+              "es": "Simular automáticamente",
+              "ca": "Simular automàticament"
+            },
+            "title": {
+              "en": "Every change of the program or of the processor runs the simulation",
+              "es": "Cada cambio del programa o del procesador lanza la simulación",
+              "ca": "Cada canvi del programa o del processador llança la simulació"
+            },
+            "actions": [
+              "autorun:on"
+            ]
+          },
+          {
+            "label": {
+              "en": "With the Run Simulation button",
+              "es": "Con el botón Simular",
+              "ca": "Amb el botó Simula"
+            },
+            "title": {
+              "en": "The simulation runs only when you click Run Simulation",
+              "es": "La simulación solo se lanza cuando pulsas Simular",
+              "ca": "La simulació només es llança quan prems Simula"
+            },
+            "actions": [
+              "autorun:off"
+            ]
+          }
+        ],
+        "actions": [
+          "reveal:simulation,simulationPanel",
+          "sidePanel:show",
+          "selectProgram:SUM-scalar",
+          "switchTo:simulationComponent"
         ],
         "next": [
           "simulate-all"
@@ -1435,7 +1515,22 @@
         "lock": [
           "N",
           "Rep"
-        ]
+        ],
+        "help": {
+          "hint": {
+            "en": "In the stored results, click ☆ in the row of SUM-scalar: it becomes the reference, and the column <b>Speedup</b> gives the speedup of each version over it.",
+            "es": "En los resultados guardados, pulsa ☆ en la fila de SUM-scalar: pasa a ser la referencia, y la columna <b>Speedup</b> da el speedup de cada versión respecto a ella.",
+            "ca": "Als resultats desats, prem ☆ a la fila de SUM-scalar: passa a ser la referència, i la columna <b>Speedup</b> dona el speedup de cada versió respecte a ella."
+          },
+          "show": {
+            "text": {
+              "en": "<p>The column Speedup is marked: read the largest value.</p>",
+              "es": "<p>La columna Speedup está marcada: lee el valor más grande.</p>",
+              "ca": "<p>La columna Speedup està marcada: llegeix el valor més gran.</p>"
+            },
+            "selector": ".speedup-cell"
+          }
+        }
       },
       {
         "id": "summary",
@@ -1834,7 +1929,21 @@
         ],
         "next": [
           "cache-timeline"
-        ]
+        ],
+        "help": {
+          "hint": {
+            "en": "A block holds 4 doubles: only the first access to each block misses. With ROB = 1, each instruction takes its latency + 2 cycles, one after another.",
+            "es": "Un bloque guarda 4 doubles: solo falla el primer acceso a cada bloque. Con ROB = 1, cada instrucción tarda su latencia + 2 ciclos, una detrás de otra.",
+            "ca": "Un bloc guarda 4 doubles: només falla el primer accés a cada bloc. Amb ROB = 1, cada instrucció triga la seva latència + 2 cicles, una darrere l'altra."
+          },
+          "show": {
+            "text": {
+              "en": "<p>Misses: 16 elements ÷ 4 per block. Time of an iteration that hits: (5 + 2) + (2 + 2) + 3 × (1 + 2); a miss adds 12 cycles, once every 4 iterations.</p>",
+              "es": "<p>Fallos: 16 elementos ÷ 4 por bloque. Tiempo de una iteración que acierta: (5 + 2) + (2 + 2) + 3 × (1 + 2); un fallo añade 12 ciclos, una vez cada 4 iteraciones.</p>",
+              "ca": "<p>Fallades: 16 elements ÷ 4 per bloc. Temps d'una iteració que encerta: (5 + 2) + (2 + 2) + 3 × (1 + 2); una fallada afegeix 12 cicles, una vegada cada 4 iteracions.</p>"
+            }
+          }
+        }
       },
       {
         "id": "cache-timeline",
@@ -1960,7 +2069,21 @@
         ],
         "next": [
           "q-capacity"
-        ]
+        ],
+        "help": {
+          "hint": {
+            "en": "Do the 4 blocks of V fit in the cache of 4 blocks? Then the second call finds them there. The time per sum is the average of the 32 sums of the two calls.",
+            "es": "¿Caben los 4 bloques de V en la cache de 4 bloques? Entonces la segunda llamada los encuentra allí. El tiempo por suma es el promedio de las 32 sumas de las dos llamadas.",
+            "ca": "Caben els 4 blocs de V a la cache de 4 blocs? Aleshores la segona crida els hi troba. El temps per suma és la mitjana de les 32 sumes de les dues crides."
+          },
+          "show": {
+            "text": {
+              "en": "<p>Cycles of the two calls: 32 sums × 20 cycles + the misses of the first call × 12 cycles; divide by 32. (The simulation adds a little: the exit of the first call is a mispredicted branch.)</p>",
+              "es": "<p>Ciclos de las dos llamadas: 32 sumas × 20 ciclos + los fallos de la primera llamada × 12 ciclos; divide por 32. (La simulación añade un poco: la salida de la primera llamada es un salto mal predicho.)</p>",
+              "ca": "<p>Cicles de les dues crides: 32 sumes × 20 cicles + les fallades de la primera crida × 12 cicles; divideix per 32. (La simulació hi afegeix una mica: la sortida de la primera crida és un salt mal predit.)</p>"
+            }
+          }
+        }
       },
       {
         "id": "q-capacity",
@@ -2071,7 +2194,25 @@
         ],
         "next": [
           "q-cache-simd"
-        ]
+        ],
+        "help": {
+          "hint": {
+            "en": "V has now 8 blocks, and the cache keeps 4: when the first call ends, which blocks are in the cache (the one used longest ago is replaced)? Does the second call find V[0..3]?",
+            "es": "V tiene ahora 8 bloques, y la cache guarda 4: cuando acaba la primera llamada, ¿qué bloques hay en la cache (se reemplaza el usado hace más tiempo)? ¿Encuentra la segunda llamada V[0..3]?",
+            "ca": "V té ara 8 blocs, i la cache en guarda 4: quan acaba la primera crida, quins blocs hi ha a la cache (es reemplaça el que fa més temps que es va fer servir)? Troba la segona crida V[0..3]?"
+          },
+          "show": {
+            "text": {
+              "en": "<p>The simulation is done: the values are marked in the Simulation panel.</p>",
+              "es": "<p>La simulación está hecha: los valores están marcados en el panel de simulación.</p>",
+              "ca": "<p>La simulació està feta: els valors estan marcats al panell de simulació.</p>"
+            },
+            "actions": [
+              "runSimulation"
+            ],
+            "selector": "#misses-per-call-output, #cycles-per-iteration-output"
+          }
+        }
       },
       {
         "id": "q-cache-simd",
@@ -2158,7 +2299,21 @@
         ],
         "next": [
           "cache-summary"
-        ]
+        ],
+        "help": {
+          "hint": {
+            "en": "Each vector LOAD reads a whole block: how many LOADs miss? In order, an iteration takes the latency + 2 cycles of each of its 5 instructions (the vector LOAD: 6 cycles), and 12 more if it misses; it adds 4 elements.",
+            "es": "Cada LOAD vectorial lee un bloque entero: ¿cuántos LOAD fallan? En orden, una iteración tarda la latencia + 2 ciclos de cada una de sus 5 instrucciones (el LOAD vectorial: 6 ciclos), y 12 más si falla; suma 4 elementos.",
+            "ca": "Cada LOAD vectorial llegeix un bloc sencer: quants LOAD fallen? En ordre, una iteració triga la latència + 2 cicles de cadascuna de les seves 5 instruccions (el LOAD vectorial: 6 cicles), i 12 més si falla; suma 4 elements."
+          },
+          "show": {
+            "text": {
+              "en": "<p>An iteration: (6 + 2) + (2 + 2) + 3 × (1 + 2) cycles, + 12 for its miss; divide by 4. You can also count the cycles of an iteration in the Timeline.</p>",
+              "es": "<p>Una iteración: (6 + 2) + (2 + 2) + 3 × (1 + 2) ciclos, + 12 por su fallo; divide por 4. También puedes contar los ciclos de una iteración en el Timeline.</p>",
+              "ca": "<p>Una iteració: (6 + 2) + (2 + 2) + 3 × (1 + 2) cicles, + 12 per la seva fallada; divideix per 4. També pots comptar els cicles d'una iteració al Timeline.</p>"
+            }
+          }
+        }
       },
       {
         "id": "cache-summary",
@@ -2377,7 +2532,25 @@
         ],
         "next": [
           "ooo-timeline"
-        ]
+        ],
+        "help": {
+          "hint": {
+            "en": "Click <b>Run Simulation</b>, and read <b>Cycles/iter</b>, <b>Primary Misses</b> and <b>Secondary Misses</b> in the Simulation panel.",
+            "es": "Pulsa <b>Simular</b>, y lee <b>Cycles/iter</b>, <b>Fallos primarios</b> y <b>Fallos secundarios</b> en el panel de simulación.",
+            "ca": "Prem <b>Simula</b>, i llegeix <b>Cycles/iter</b>, <b>Fallades primàries</b> i <b>Fallades secundàries</b> al panell de simulació."
+          },
+          "show": {
+            "text": {
+              "en": "<p>The simulation is done: the values are marked in the Simulation panel.</p>",
+              "es": "<p>La simulación está hecha: los valores están marcados en el panel de simulación.</p>",
+              "ca": "<p>La simulació està feta: els valors estan marcats al panell de simulació.</p>"
+            },
+            "actions": [
+              "runSimulation"
+            ],
+            "selector": "#cycles-per-iteration-output, #PrimaryMiss-output, #SecondaryMiss-output"
+          }
+        }
       },
       {
         "id": "ooo-timeline",
@@ -2485,7 +2658,25 @@
         ],
         "next": [
           "simd-intro"
-        ]
+        ],
+        "help": {
+          "hint": {
+            "en": "In the timeline, around iteration 20, point at a cell · of an addition <i>sum = sum + t0</i>: the line above the timeline says what it waits for.",
+            "es": "En el timeline, hacia la iteración 20, apunta a una celda · de una suma <i>sum = sum + t0</i>: la línea de encima del timeline dice a qué espera.",
+            "ca": "Al timeline, cap a la iteració 20, apunta a una cel·la · d'una suma <i>sum = sum + t0</i>: la línia de sobre del timeline diu a què espera."
+          },
+          "show": {
+            "text": {
+              "en": "<p>Compare, in the same iteration, the W of the LOAD that misses with the first E of its addition: does the data arrive before the addition could execute? Which instruction does the addition wait for?</p>",
+              "es": "<p>Compara, en la misma iteración, la W del LOAD que falla con la primera E de su suma: ¿llega el dato antes de que la suma se pueda ejecutar? ¿A qué instrucción espera la suma?</p>",
+              "ca": "<p>Compara, a la mateixa iteració, la W del LOAD que falla amb la primera E de la seva suma: arriba la dada abans que la suma es pugui executar? A quina instrucció espera la suma?</p>"
+            },
+            "actions": [
+              "switchTo:timelineComponent"
+            ],
+            "selector": "#timeline-status"
+          }
+        }
       },
       {
         "id": "simd-intro",
@@ -2674,7 +2865,25 @@
         ],
         "next": [
           "simd-timeline"
-        ]
+        ],
+        "help": {
+          "hint": {
+            "en": "Click <b>Run Simulation</b>, and read <b>Cycles/Alg Oper</b>, <b>Primary Misses</b> and <b>Secondary Misses</b> in the Simulation panel.",
+            "es": "Pulsa <b>Simular</b>, y lee <b>Cycles/Alg Oper</b>, <b>Fallos primarios</b> y <b>Fallos secundarios</b> en el panel de simulación.",
+            "ca": "Prem <b>Simula</b>, i llegeix <b>Cycles/Alg Oper</b>, <b>Fallades primàries</b> i <b>Fallades secundàries</b> al panell de simulació."
+          },
+          "show": {
+            "text": {
+              "en": "<p>The simulation is done: the values are marked in the Simulation panel.</p>",
+              "es": "<p>La simulación está hecha: los valores están marcados en el panel de simulación.</p>",
+              "ca": "<p>La simulació està feta: els valors estan marcats al panell de simulació.</p>"
+            },
+            "actions": [
+              "runSimulation"
+            ],
+            "selector": "#cycles-per-alg-op-output, #PrimaryMiss-output, #SecondaryMiss-output"
+          }
+        }
       },
       {
         "id": "simd-timeline",
@@ -2792,7 +3001,21 @@
         ],
         "next": [
           "q-simd-fill"
-        ]
+        ],
+        "help": {
+          "hint": {
+            "en": "Blocks on the way at the same time ÷ cycles that each block keeps its fill buffer = blocks per cycle. Each iteration needs one block, and adds 4 elements.",
+            "es": "Bloques en camino a la vez ÷ ciclos que cada bloque ocupa su fill buffer = bloques por ciclo. Cada iteración necesita un bloque, y suma 4 elementos.",
+            "ca": "Blocs en camí alhora ÷ cicles que cada bloc ocupa el seu fill buffer = blocs per cicle. Cada iteració necessita un bloc, i suma 4 elements."
+          },
+          "show": {
+            "text": {
+              "en": "<p>2 fill buffers, 12 cycles each: a block every 12 ÷ 2 cycles, that is, an iteration every 12 ÷ 2 cycles; per sum, divide by 4.</p>",
+              "es": "<p>2 fill buffers, 12 ciclos cada uno: un bloque cada 12 ÷ 2 ciclos, es decir, una iteración cada 12 ÷ 2 ciclos; por suma, divide por 4.</p>",
+              "ca": "<p>2 fill buffers, 12 cicles cadascun: un bloc cada 12 ÷ 2 cicles, és a dir, una iteració cada 12 ÷ 2 cicles; per suma, divideix per 4.</p>"
+            }
+          }
+        }
       },
       {
         "id": "q-simd-fill",
@@ -2881,7 +3104,26 @@
         ],
         "next": [
           "lines-intro"
-        ]
+        ],
+        "help": {
+          "hint": {
+            "en": "Click the <b>Memory</b> box of the Processor panel, then <b>Configure the cache…</b>; change <b>Fill buffers</b> to 3, apply, and simulate. Then the same with 4.",
+            "es": "Haz clic en la caja <b>Memoria</b> del panel del procesador, y después en <b>Configurar la cache…</b>; cambia <b>Fill buffers</b> a 3, aplica, y simula. Después lo mismo con 4.",
+            "ca": "Fes clic a la caixa <b>Memòria</b> del panell del processador, i després a <b>Configura la cache…</b>; canvia <b>Fill buffers</b> a 3, aplica, i simula. Després el mateix amb 4."
+          },
+          "show": {
+            "text": {
+              "en": "<p>The processor has now 3 fill buffers and the simulation is done: read Cycles/Alg Oper. Then change it to 4 and simulate again.</p>",
+              "es": "<p>El procesador tiene ahora 3 fill buffers y la simulación está hecha: lee Cycles/Alg Oper. Después cámbialo a 4 y vuelve a simular.</p>",
+              "ca": "<p>El processador té ara 3 fill buffers i la simulació està feta: llegeix Cycles/Alg Oper. Després canvia-ho a 4 i torna a simular.</p>"
+            },
+            "actions": [
+              "setProcessor:nFillBuffers=3",
+              "runSimulation"
+            ],
+            "selector": "#cycles-per-alg-op-output, #pd-memory"
+          }
+        }
       },
       {
         "id": "lines-intro",
@@ -3006,7 +3248,21 @@
         ],
         "next": [
           "q-lines-more"
-        ]
+        ],
+        "help": {
+          "hint": {
+            "en": "As with the fill buffers: lines that receive a block at the same time ÷ cycles per block of each line = blocks per cycle.",
+            "es": "Como con los fill buffers: líneas que reciben un bloque a la vez ÷ ciclos por bloque de cada línea = bloques por ciclo.",
+            "ca": "Com amb els fill buffers: línies que reben un bloc alhora ÷ cicles per bloc de cada línia = blocs per cicle."
+          },
+          "show": {
+            "text": {
+              "en": "<p>4 lines, a block every 13 cycles each: a block every 13 ÷ 4 cycles, that is, an iteration every 13 ÷ 4 cycles; per sum, divide by 4.</p>",
+              "es": "<p>4 líneas, un bloque cada 13 ciclos cada una: un bloque cada 13 ÷ 4 ciclos, es decir, una iteración cada 13 ÷ 4 ciclos; por suma, divide por 4.</p>",
+              "ca": "<p>4 línies, un bloc cada 13 cicles cadascuna: un bloc cada 13 ÷ 4 cicles, és a dir, una iteració cada 13 ÷ 4 cicles; per suma, divideix per 4.</p>"
+            }
+          }
+        }
       },
       {
         "id": "q-lines-more",
@@ -3120,7 +3376,26 @@
         ],
         "next": [
           "ooo-summary"
-        ]
+        ],
+        "help": {
+          "hint": {
+            "en": "Click the <b>Memory</b> box, then <b>Configure the cache…</b>; change the number of blocks to 5, apply, and simulate. Then 6 and 7.",
+            "es": "Haz clic en la caja <b>Memoria</b>, y después en <b>Configurar la cache…</b>; cambia el número de bloques a 5, aplica, y simula. Después 6 y 7.",
+            "ca": "Fes clic a la caixa <b>Memòria</b>, i després a <b>Configura la cache…</b>; canvia el nombre de blocs a 5, aplica, i simula. Després 6 i 7."
+          },
+          "show": {
+            "text": {
+              "en": "<p>The cache has now 5 blocks and the simulation is done: read Cycles/Alg Oper. Then 6 and 7 blocks.</p>",
+              "es": "<p>La cache tiene ahora 5 bloques y la simulación está hecha: lee Cycles/Alg Oper. Después 6 y 7 bloques.</p>",
+              "ca": "<p>La cache té ara 5 blocs i la simulació està feta: llegeix Cycles/Alg Oper. Després 6 i 7 blocs.</p>"
+            },
+            "actions": [
+              "setProcessor:nBlocks=5",
+              "runSimulation"
+            ],
+            "selector": "#cycles-per-alg-op-output, #pd-memory"
+          }
+        }
       },
       {
         "id": "ooo-summary",

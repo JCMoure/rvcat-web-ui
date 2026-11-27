@@ -250,9 +250,31 @@
     }
   }
 
+  // The highlights asked by the timeline (the instruction pointed, its dependences, its latency or
+  // ports, the perf view) are shown when the pointer rests on a cell: moving it across the timeline
+  // does not make the rows of the table flicker
+  const tl = reactive({ idx: -1, dep: null, prog: null, view: null })
+  let settleTimer = null
+  watch(() => [simState.instrHighlightedIdx, simState.dependenceHighlight, simState.programHighlight, simState.programViewOverride],
+    ([idx, dep, prog, view]) => {
+      clearTimeout(settleTimer)
+      if (simState.highlightNoDelay) Object.assign(tl, { idx, dep, prog, view })      // a deliberate step
+      else settleTimer = setTimeout(() => Object.assign(tl, { idx, dep, prog, view }), 300)
+    })
+  onUnmounted(() => clearTimeout(settleTimer))
+
   // View of the table: the one chosen (type | perf), or perf while the timeline highlights the
   // latency or the ports of an instruction (simState.programViewOverride)
-  const shownView = computed(() => simState.programViewOverride === 'perf' ? 1 : programOptions.show)
+  const shownView = computed(() => tl.view === 'perf' ? 1 : programOptions.show)
+  // type / perf: the button also releases the cell pinned in the timeline that asked for the perf view
+  function chooseView(v) {
+    if (v === 0 && tl.view === 'perf') {
+      simState.timelineReleaseNonce = Date.now()
+      simState.programViewOverride = null
+      tl.view = null
+    }
+    programOptions.show = v
+  }
 
   // instructions inside conditional blocks ("if c skip k"): indented
   const blockDepth = computed(() => conditionalDepth(simState.simulatedProcess?.instruction_list ?? []))
@@ -262,8 +284,8 @@
   // (right of "="); in an instruction it waits for, the variable it writes (left of "=")
   const escapeRe = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
   function textParts(text, index) {
-    const dep = simState.dependenceHighlight
-    const waiting  = dep && index === simState.instrHighlightedIdx
+    const dep = tl.dep
+    const waiting  = dep && index === tl.idx
     const producer = dep?.producers?.includes(index)
     if (!dep || dep.kind === 'port' || (!waiting && !producer && !dep.consumers?.includes(index)) || !text) return [{ text }]   // (a port conflict: no variables)
     const eq = text.indexOf('=')
@@ -283,7 +305,7 @@
     }
     const own = simState.simulatedProcess?.instruction_list?.[index]?.destin
     // the instruction pointed in the timeline gives its result (its own variable) to the consumers
-    const highlighted = simState.simulatedProcess?.instruction_list?.[simState.instrHighlightedIdx]?.destin
+    const highlighted = simState.simulatedProcess?.instruction_list?.[tl.idx]?.destin
     const consumer = dep.consumers?.includes(index) && highlighted
     return [...split(left, (producer || (waiting && dep.consumers?.length)) && own ? [own] : []),
             ...split(right, [...(waiting ? dep.vars : []), ...(consumer ? [highlighted] : [])])]
@@ -615,10 +637,10 @@
         <!-- Columns of the table: type, operation and size | latency and ports -->
         <span class="column-switch" id="show-instr-operands" role="radiogroup"
               :title="t('Columns of the table: type (type, operation, size) or perf (latency, ports). The tooltip of each instruction describes it')">
-          <button :class="{ on: programOptions.show === 0 }" role="radio" :aria-checked="programOptions.show === 0"
-                  @click="programOptions.show = 0">type</button>
-          <button :class="{ on: programOptions.show === 1 }" role="radio" :aria-checked="programOptions.show === 1"
-                  @click="programOptions.show = 1">perf</button>
+          <button :class="{ on: shownView === 0 }" role="radio" :aria-checked="shownView === 0"
+                  @click="chooseView(0)">type</button>
+          <button :class="{ on: shownView === 1 }" role="radio" :aria-checked="shownView === 1"
+                  @click="chooseView(1)">perf</button>
         </span>
         <div class="iters-group">
           <span class="iters-label"
@@ -715,10 +737,10 @@
               :key="index"
               :style="rowStyle(index)"
               @mouseenter="hoverRow(inst)" @mouseleave="leaveRow"
-              :class="{ highlighted: index === simState.instrHighlightedIdx, 'c-linked': cLinked(inst),
-                        'dep-producer': simState.dependenceHighlight?.kind !== 'port' && simState.dependenceHighlight?.producers?.includes(index),
-                        'dep-consumer': simState.dependenceHighlight?.consumers?.includes(index),
-                        'port-conflict': simState.dependenceHighlight?.kind === 'port' && simState.dependenceHighlight?.producers?.includes(index) }"
+              :class="{ highlighted: index === tl.idx, 'c-linked': cLinked(inst),
+                        'dep-producer': tl.dep?.kind !== 'port' && tl.dep?.producers?.includes(index),
+                        'dep-consumer': tl.dep?.consumers?.includes(index),
+                        'port-conflict': tl.dep?.kind === 'port' && tl.dep?.producers?.includes(index) }"
               :data-instr="index"
             >
               <td v-if="getCriticalPercentage(index) != null" class="critical-cell"
@@ -749,11 +771,11 @@
                 {{ inst.size}}
               </td>
               <td class="type-col" v-if="shownView === 1" :title="t('Instruction Latency')"
-                  :class="{ 'cell-focus': [].concat(simState.programHighlight?.field).includes('latency') && simState.programHighlight.rows.includes(index) }">
+                  :class="{ 'cell-focus': [].concat(tl.prog?.field).includes('latency') && tl.prog.rows.includes(index) }">
                 {{ inst.latency }}
               </td>
               <td class="type-col ports-col" v-if="shownView === 1" :title="t('Available execution ports')"
-                  :class="{ 'cell-focus': [].concat(simState.programHighlight?.field).includes('ports') && simState.programHighlight.rows.includes(index) }">
+                  :class="{ 'cell-focus': [].concat(tl.prog?.field).includes('ports') && tl.prog.rows.includes(index) }">
                 {{ portsMaskToString(inst.ports) }}
               </td>
             </tr>
@@ -768,7 +790,7 @@
               <tr v-for="(inst, j) in epilogue" :key="'e' + j" class="epilogue-row"
                   :style="rowStyle(bodyCount + j)"
                   @mouseenter="hoverRow(inst)" @mouseleave="leaveRow"
-                  :class="{ highlighted: bodyCount + j === simState.instrHighlightedIdx, 'c-linked': cLinked(inst) }"
+                  :class="{ highlighted: bodyCount + j === tl.idx, 'c-linked': cLinked(inst) }"
                   :data-instr="bodyCount + j">
                 <td v-if="getCriticalPercentage(bodyCount + j) != null" class="critical-cell">
                   <input v-if="compactTimeline" type="checkbox" class="tl-show" :checked="shownInTimeline(bodyCount + j)" @click.stop

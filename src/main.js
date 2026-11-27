@@ -26,6 +26,10 @@ const SimulationState = reactive({
   instrHighlightedIdx: -1,
   highlightedPort:     -1,
   highlightedPorts:    [],        // ports highlighted from the timeline (the ports an instruction can use)
+  timelineReleaseNonce: 0,
+  highlightNoDelay:    false,     // the timeline asks the Program and Processor panels to show its highlights at once
+  tutorialActing:      false,     // the actions of a tutorial card are changing the simulator (no automatic simulation)
+  autorunRequest:      null,      // { value, nonce }: a card turns the automatic simulation on or off        // changed by the Program panel (button type): the timeline releases its pinned cell
   highlightedStage:    null,      // 'dispatch' | 'retire' | 'memory': highlighted in the Processor panel (timeline)
   programViewOverride: null,      // 'perf': the Program panel shows latency and ports while the timeline needs it
   programHighlight:    null,      // { rows, field: 'ports' | 'latency' | [both] }: cells of the Program panel highlighted

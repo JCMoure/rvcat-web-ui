@@ -1,5 +1,11 @@
 // Translations: tutorial (generated from the review texts; English text = key)
 export default {
+  "Hint": { es: "Pista", ca: "Pista" },
+  "Show me how": { es: "Muéstrame cómo", ca: "Mostra-m'ho" },
+  "See the solution": { es: "Ver la solución", ca: "Veure la solució" },
+  "A clue to find the answer": { es: "Una pista para encontrar la respuesta", ca: "Una pista per trobar la resposta" },
+  "The simulator shows where the answer is, or the steps to compute it": { es: "El simulador muestra dónde está la respuesta, o los pasos para calcularla", ca: "El simulador mostra on és la resposta, o els passos per calcular-la" },
+  "Write the right answer, with its explanation": { es: "Escribe la respuesta correcta, con su explicación", ca: "Escriu la resposta correcta, amb la seva explicació" },
   "Preview from the tutorial editor: closing it returns to the editor": { es: "Vista previa desde el editor de tutoriales: al cerrarla se vuelve al editor", ca: "Previsualització des de l'editor de tutorials: en tancar-la es torna a l'editor" },
   "End preview and return to the tutorial editor": { es: "Terminar la vista previa y volver al editor de tutoriales", ca: "Acaba la previsualització i torna a l'editor de tutorials" },
   "Close tutorial, but can be resumed later": { es: "Cerrar el tutorial (se puede reanudar más tarde)", ca: "Tanca el tutorial (es pot reprendre més tard)" },

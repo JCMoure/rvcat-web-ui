@@ -315,7 +315,8 @@
       if (equalProcs) {
         if (simState.executionResults == null) simState.executionResults = simResults
         console.log('🕐✅ Same simulated proces: execution results are valid');
-      } else if (simulationOptions?.autorun) {
+      } else if (simulationOptions?.autorun && !simState.tutorialActing && !simState.simulationBlocked) {
+        // (not for the changes made by a tutorial card, nor before a prediction)
         console.log('🕐🔄 Something changed: re-running simulation', equalProcs)
         reloadExecutionResults()
       } else {
@@ -380,6 +381,16 @@
   }
   watch(() => simState.clearResultsRequest, clearStoredResults)
 
+  // A tutorial card turns the automatic simulation on or off (action autorun:on|off)
+  function applyAutorunRequest() {
+    const r = simState.autorunRequest
+    if (!r) return
+    simState.autorunRequest = null
+    simulationOptions.autorun = !!r.value
+    saveOptions()
+  }
+  watch(() => simState.autorunRequest, applyAutorunRequest)
+
   // The end of a lesson puts back the results of before it (stored ones and the last simulation)
   watch(() => simState.reloadNonce, async () => {
     simulationOptions.availableResults = []
@@ -423,7 +434,7 @@
     document.getElementById('simulation-running').style.display = 'none'
     loadOptions()
     loadResults()
-    initSimulation().then(clearStoredResults)
+    initSimulation().then(() => { clearStoredResults(); applyAutorunRequest() })
     nextTick(() => {
       isComponentMounted = true;
       unwatch = watch(

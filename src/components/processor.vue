@@ -243,6 +243,17 @@
   // ports pointed in the timeline: one port (highlightedPort) or a list (highlightedPorts)
   const highlightedPorts = computed(() => (simState.highlightedPorts?.length ? simState.highlightedPorts
     : [simState.highlightedPort].filter(x => x !== null && x !== undefined && x !== -1)).map(String))
+  // (shown when the pointer rests 300 ms on a cell of the timeline: moving it across the timeline
+  //  does not make the boxes of the diagram flicker)
+  const settledPorts = ref([])
+  const settledStage = ref('')
+  let settleTimer = null
+  watch(() => [highlightedPorts.value.join(','), simState.highlightedStage ?? ''], ([ports, stage]) => {
+    clearTimeout(settleTimer)
+    const apply = () => { settledPorts.value = ports ? ports.split(',') : []; settledStage.value = stage }
+    if (simState.highlightNoDelay) apply()                                            // a deliberate step
+    else settleTimer = setTimeout(apply, 300)
+  })
 
   // ---- Window of the cache: every parameter, checked; the simulator waits until it is closed ----
   const showCacheWindow = ref(false)
@@ -367,7 +378,7 @@
   <div v-show="!simState.processorFolded" class="graph-section processor-part">
     <div class="processor-container">
       <ProcessorDiagram v-if="simState.simulatedProcess?.ports" :process="simState.simulatedProcess" :usage="shownUsage"
-                        :highlight-ports="highlightedPorts" :stage="simState.highlightedStage ?? ''" :locked="locked"
+                        :highlight-ports="settledPorts" :stage="settledStage" :locked="locked"
                         :in-lesson="!!simState.lesson" @open-cache="showCacheWindow = true" />
     </div>
   </div>

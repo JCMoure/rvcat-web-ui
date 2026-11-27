@@ -2697,6 +2697,8 @@
     focusedCell = null
     clearFocus()
   }
+  // the button "type" of the Program panel releases the cell that showed the perf view
+  watch(() => simState.timelineReleaseNonce, () => { if (pinned.value) { releasePin(); present() } else clearFocus() })
   // after the timeline is drawn again (other options, zoom): the pinned cell is found again
   function refocusPinned() {
     const old = pinned.value?.cell
@@ -2776,10 +2778,22 @@
     present()
     return true
   }
+  // A move with an arrow 400 ms or more after the previous one is a deliberate step: the Program and
+  // Processor panels show it at once; faster keys (or a key held down) wait until they stop (300 ms)
+  let lastArrowAt = -Infinity
+  function markDeliberateStep() {
+    const now = performance.now()
+    if (now - lastArrowAt >= 400) {
+      simState.highlightNoDelay = true
+      setTimeout(() => { simState.highlightNoDelay = false }, 0)
+    }
+    lastArrowAt = now
+  }
   function onKeyDown(e) {
     if (e.key === 'Escape' && pinned.value) return releasePin()
     if (['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement?.tagName)) return
     if (!timeline.value || !timelineCanvas.value?.offsetParent) return
+    if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(e.key) && pinned.value) markDeliberateStep()
     if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(e.key) && moveSelection(e.key)) {
       e.preventDefault()
       return

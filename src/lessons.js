@@ -43,7 +43,7 @@ export const LESSON_PARTS = {
   analysis:          'Static Analysis panel',
   usage:             'diagram of resource usage of the Simulation panel',
   cacheStats:        'cache misses and MM transfers of the Simulation panel',
-  simOptions:        'Scheduler, Mispredictions and AutoRun options of the Simulation panel',
+  simOptions:        'Scheduler and Mispredictions options of the Simulation panel (the automatic simulation stays)',
   storedResults:     'stored results of the Simulation panel',
   criticalPattern:   'repeated critical-path pattern of the Simulation panel',
   programPorts:      'column of execution ports of the Program panel',

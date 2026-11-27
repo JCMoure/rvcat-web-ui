@@ -31,6 +31,7 @@ export const TUTORIAL_ACTIONS = [
   ['sidePanel:hide|show',      'hide or show the side panel (processor and program), to give room to the right panel'],
   ['programView:type|perf',    'columns of the Program panel: type (type, operation, size) or perf (latency, ports)'],
   ['sourceCode:open|close',    'unfold or fold the source code (C) of the program, above the table of instructions'],
+  ['autorun:on|off',           'turn the automatic simulation (after every change of the student) on or off'],
   ['clearStoredResults',       'remove the results of the last simulation and all the stored results (table of the Simulation panel)'],
   ['processorPanel:fold|unfold', 'fold the Processor panel to one line (more room for the program) or show its diagram'],
 ]
@@ -201,6 +202,10 @@ export function createActionRunner(ctx) {
       if (strip && (a.arg === 'open') !== strip.classList.contains('open')) {
         clickElement($('#program-source-toggle')); await sleep(200)
       }
+    },
+    async autorun(a) {
+      simState.autorunRequest = { value: a.arg === 'on', nonce: Date.now() }
+      await sleep(150)
     },
     async clearStoredResults() {
       simState.clearResultsRequest = Date.now()
