@@ -10,7 +10,7 @@
     "es": "<p>Cuatro versiones de un bucle que suma los elementos de un vector (escalar, SIMD y desenrollado con varios acumuladores) en un procesador como el núcleo Golden Cove: latencia y throughput.</p>",
     "ca": "<p>Quatre versions d'un bucle que suma els elements d'un vector (escalar, SIMD i desenrotllat amb diversos acumuladors) en un processador com el nucli Golden Cove: latència i throughput.</p>"
   },
-  "version": 20,
+  "version": 21,
   "programs": [
     {
       "name": "SUM-scalar",
@@ -3422,6 +3422,496 @@
           "revertProcessor",
           "setProcessor:nBlocks=4",
           "setProcessor:blkSize=32",
+          "sidePanel:show",
+          "switchTo:simulationComponent"
+        ],
+        "next": [
+          "pf-intro"
+        ],
+        "nextLabels": [
+          {
+            "en": "Hardware prefetching",
+            "es": "Prefetching por hardware",
+            "ca": "Prefetching per maquinari"
+          }
+        ]
+      },
+      {
+        "id": "pf-intro",
+        "type": "step",
+        "anchor": "#right-panel",
+        "position": "inside-top-left",
+        "wWidth": 700,
+        "lock": [
+          "program",
+          "N",
+          "Rep"
+        ],
+        "title": {
+          "en": "Hardware prefetching",
+          "es": "Prefetching por hardware",
+          "ca": "Prefetching per maquinari"
+        },
+        "description": {
+          "en": "<p>With a ROB of 64 entries, the out-of-order execution hides the misses of SUM-scalar. Now the processor has a <b>ROB of 16 entries</b>: the slack is too short to hide them.</p><p>Real processors have another help: a <b>prefetcher</b>, a hardware unit that sees that a LOAD walks through a vector and requests its next blocks before the LOAD needs them. RVCAT models a simple one: when a LOAD accesses block B, it also requests block <b>B + D</b> (D: the <b>prefetch distance</b>, in blocks; 0: no prefetching).</p><p>A prefetch uses a fill buffer and a line of the cache, like a miss; if none is free, it is dropped. Look at the <b>Memory</b> box of the Processor panel (a click on it explains the cache).</p>",
+          "es": "<p>Con un ROB de 64 entradas, la ejecución fuera de orden oculta los fallos de SUM-scalar. Ahora el procesador tiene un <b>ROB de 16 entradas</b>: el margen es demasiado corto para ocultarlos.</p><p>Los procesadores reales tienen otra ayuda: un <b>prefetcher</b>, una unidad que ve que un LOAD recorre un vector y pide sus bloques siguientes antes de que el LOAD los necesite. RVCAT modela uno sencillo: cuando un LOAD accede al bloque B, pide también el bloque <b>B + D</b> (D: la <b>distancia de prefetch</b>, en bloques; 0: sin prefetching).</p><p>Un prefetch usa un fill buffer y una línea de la cache, como un fallo; si no hay ninguno libre, se descarta. Mira la caja <b>Memoria</b> del panel del procesador (un clic en ella explica la cache).</p>",
+          "ca": "<p>Amb un ROB de 64 entrades, l'execució fora d'ordre amaga les fallades de SUM-scalar. Ara el processador té un <b>ROB de 16 entrades</b>: el marge és massa curt per amagar-les.</p><p>Els processadors reals tenen una altra ajuda: un <b>prefetcher</b>, una unitat que veu que un LOAD recorre un vector i en demana els blocs següents abans que el LOAD els necessiti. RVCAT en modela un de senzill: quan un LOAD accedeix al bloc B, demana també el bloc <b>B + D</b> (D: la <b>distància de prefetch</b>, en blocs; 0: sense prefetching).</p><p>Un prefetch fa servir un fill buffer i una línia de la cache, com una fallada; si no n'hi ha cap de lliure, es descarta. Mira la caixa <b>Memòria</b> del panell del processador (un clic a sobre explica la cache).</p>"
+        },
+        "actions": [
+          "revertProcessor",
+          "setProcessor:nBlocks=4",
+          "setProcessor:blkSize=32",
+          "setProcessor:ROBsize=16",
+          "selectProgram:SUM-scalar",
+          "setN:1000",
+          "setRep:1",
+          "clearStoredResults",
+          "sidePanel:show",
+          "switchTo:simulationComponent"
+        ],
+        "next": [
+          "q-pf-base"
+        ]
+      },
+      {
+        "id": "q-pf-base",
+        "type": "question",
+        "position": "left",
+        "wWidth": 440,
+        "lock": [
+          "program",
+          "N",
+          "Rep"
+        ],
+        "answerMode": "numbers",
+        "answers": [],
+        "title": {
+          "en": "Without prefetching",
+          "es": "Sin prefetching",
+          "ca": "Sense prefetching"
+        },
+        "questionText": {
+          "en": "<p>First without prefetching (D = 0): simulate SUM-scalar with the ROB of 16 entries. What time per sum (<b>Cycles/iter</b>) do you obtain?</p>",
+          "es": "<p>Primero sin prefetching (D = 0): simula SUM-scalar con el ROB de 16 entradas. ¿Qué tiempo por suma (<b>Cycles/iter</b>) obtienes?</p>",
+          "ca": "<p>Primer sense prefetching (D = 0): simula SUM-scalar amb el ROB de 16 entrades. Quin temps per suma (<b>Cycles/iter</b>) obtens?</p>"
+        },
+        "numericFields": [
+          {
+            "label": {
+              "en": "Time per sum",
+              "es": "Tiempo por suma",
+              "ca": "Temps per suma"
+            },
+            "value": 5.51,
+            "tolerance": 0.03,
+            "unit": {
+              "en": "cycles/sum",
+              "es": "ciclos/suma",
+              "ca": "cicles/suma"
+            },
+            "correct": {
+              "en": "Right: 5.51, almost 3 times the 2.02 with the ROB of 64: with 16 entries, the LOADs cannot run far enough ahead to hide the 12 cycles of the misses.",
+              "es": "Correcto: 5,51, casi el triple de los 2,02 con el ROB de 64: con 16 entradas, los LOAD no pueden ir lo bastante por delante para ocultar los 12 ciclos de los fallos.",
+              "ca": "Correcte: 5,51, gairebé el triple dels 2,02 amb el ROB de 64: amb 16 entrades, els LOAD no poden anar prou per davant per amagar els 12 cicles de les fallades."
+            },
+            "wrong": {
+              "en": "Simulate, and read Cycles/iter in the Simulation panel.",
+              "es": "Simula, y lee Cycles/iter en el panel de simulación.",
+              "ca": "Simula, i llegeix Cycles/iter al panell de simulació."
+            }
+          }
+        ],
+        "help": {
+          "hint": {
+            "en": "Click <b>Run Simulation</b>, and read <b>Cycles/iter</b> (SUM-scalar: one sum per iteration).",
+            "es": "Pulsa <b>Simular</b>, y lee <b>Cycles/iter</b> (SUM-scalar: una suma por iteración).",
+            "ca": "Prem <b>Simula</b>, i llegeix <b>Cycles/iter</b> (SUM-scalar: una suma per iteració)."
+          },
+          "show": {
+            "text": {
+              "en": "<p>The simulation is done: the value is marked in the Simulation panel.</p>",
+              "es": "<p>La simulación está hecha: el valor está marcado en el panel de simulación.</p>",
+              "ca": "<p>La simulació està feta: el valor està marcat al panell de simulació.</p>"
+            },
+            "actions": [
+              "runSimulation"
+            ],
+            "selector": "#cycles-per-iteration-output"
+          }
+        },
+        "actions": [
+          "switchTo:simulationComponent"
+        ],
+        "next": [
+          "q-pf-distance"
+        ]
+      },
+      {
+        "id": "q-pf-distance",
+        "type": "question",
+        "position": "left",
+        "wWidth": 440,
+        "lock": [
+          "program",
+          "N",
+          "Rep"
+        ],
+        "answerMode": "numbers",
+        "answers": [],
+        "title": {
+          "en": "How far ahead?",
+          "es": "¿A qué distancia?",
+          "ca": "A quina distància?"
+        },
+        "questionText": {
+          "en": "<p>A prefetch is useful if its block arrives before the LOAD needs it. A block holds 4 elements, and SUM-scalar adds one element every 2 cycles; a block takes 12 cycles to arrive from MM.</p><p>What is the <b>smallest prefetch distance D</b> (in blocks) that brings the blocks in time?</p>",
+          "es": "<p>Un prefetch es útil si su bloque llega antes de que el LOAD lo necesite. Un bloque guarda 4 elementos, y SUM-scalar suma un elemento cada 2 ciclos; un bloque tarda 12 ciclos en llegar de la MM.</p><p>¿Cuál es la <b>distancia de prefetch D más pequeña</b> (en bloques) que trae los bloques a tiempo?</p>",
+          "ca": "<p>Un prefetch és útil si el seu bloc arriba abans que el LOAD el necessiti. Un bloc guarda 4 elements, i SUM-scalar suma un element cada 2 cicles; un bloc triga 12 cicles a arribar de la MM.</p><p>Quina és la <b>distància de prefetch D més petita</b> (en blocs) que porta els blocs a temps?</p>"
+        },
+        "numericFields": [
+          {
+            "label": {
+              "en": "Distance D",
+              "es": "Distancia D",
+              "ca": "Distància D"
+            },
+            "value": 2,
+            "tolerance": 0,
+            "unit": {
+              "en": "blocks",
+              "es": "bloques",
+              "ca": "blocs"
+            },
+            "correct": {
+              "en": "Right: the loop uses a block every 4 × 2 = 8 cycles. Requested D blocks ahead, a block has D × 8 cycles to arrive: D × 8 ≥ 12, so D = 2.",
+              "es": "Correcto: el bucle usa un bloque cada 4 × 2 = 8 ciclos. Pedido D bloques antes, un bloque tiene D × 8 ciclos para llegar: D × 8 ≥ 12, así que D = 2.",
+              "ca": "Correcte: el bucle fa servir un bloc cada 4 × 2 = 8 cicles. Demanat D blocs abans, un bloc té D × 8 cicles per arribar: D × 8 ≥ 12, així que D = 2."
+            },
+            "wrong": {
+              "en": "How many cycles does the loop take to use a whole block? How many blocks ahead must the prefetch go to cover 12 cycles?",
+              "es": "¿Cuántos ciclos tarda el bucle en usar un bloque entero? ¿Cuántos bloques por delante debe ir el prefetch para cubrir 12 ciclos?",
+              "ca": "Quants cicles triga el bucle a fer servir un bloc sencer? Quants blocs per davant ha d'anar el prefetch per cobrir 12 cicles?"
+            }
+          }
+        ],
+        "help": {
+          "hint": {
+            "en": "Compute the cycles that the loop takes to use one block (4 elements, 2 cycles each). A prefetch D blocks ahead has D times those cycles to arrive.",
+            "es": "Calcula los ciclos que tarda el bucle en usar un bloque (4 elementos, 2 ciclos cada uno). Un prefetch D bloques por delante tiene D veces esos ciclos para llegar.",
+            "ca": "Calcula els cicles que triga el bucle a fer servir un bloc (4 elements, 2 cicles cadascun). Un prefetch D blocs per davant té D vegades aquests cicles per arribar."
+          },
+          "show": {
+            "text": {
+              "en": "<p>A block lasts 4 × 2 cycles in the loop. Find the smallest D with D × (cycles of a block) ≥ 12.</p>",
+              "es": "<p>Un bloque dura 4 × 2 ciclos en el bucle. Busca la D más pequeña con D × (ciclos de un bloque) ≥ 12.</p>",
+              "ca": "<p>Un bloc dura 4 × 2 cicles al bucle. Busca la D més petita amb D × (cicles d'un bloc) ≥ 12.</p>"
+            }
+          }
+        },
+        "actions": [
+          "switchTo:simulationComponent"
+        ],
+        "next": [
+          "q-pf-sim"
+        ]
+      },
+      {
+        "id": "q-pf-sim",
+        "type": "question",
+        "position": "bottom-right",
+        "wWidth": 440,
+        "lock": [
+          "program",
+          "N",
+          "Rep"
+        ],
+        "answerMode": "numbers",
+        "answers": [],
+        "allow": [
+          "processor.cache"
+        ],
+        "title": {
+          "en": "Try the distances",
+          "es": "Prueba las distancias",
+          "ca": "Prova les distàncies"
+        },
+        "questionText": {
+          "en": "<p>Change the <b>prefetch distance</b> (click the <b>Memory</b> box of the Processor panel, then <i>Configure the cache…</i>) to 1, 2 and 3, and simulate each one. What time per sum do you obtain? Look also at the <b>Prefetches</b> of the Simulation panel.</p>",
+          "es": "<p>Cambia la <b>distancia de prefetch</b> (haz clic en la caja <b>Memoria</b> del panel del procesador, y después en <i>Configurar la cache…</i>) a 1, 2 y 3, y simula cada una. ¿Qué tiempo por suma obtienes? Fíjate también en los <b>Prefetches</b> del panel de simulación.</p>",
+          "ca": "<p>Canvia la <b>distància de prefetch</b> (fes clic a la caixa <b>Memòria</b> del panell del processador, i després a <i>Configura la cache…</i>) a 1, 2 i 3, i simula cadascuna. Quin temps per suma obtens? Fixa't també en els <b>Prefetches</b> del panell de simulació.</p>"
+        },
+        "numericFields": [
+          {
+            "label": {
+              "en": "D = 1",
+              "es": "D = 1",
+              "ca": "D = 1"
+            },
+            "value": 2.77,
+            "tolerance": 0.03,
+            "unit": {
+              "en": "cycles/sum",
+              "es": "ciclos/suma",
+              "ca": "cicles/suma"
+            },
+            "correct": {
+              "en": "Right: half of the prefetches are late (the LOAD waits for the block on the way): D = 1 covers only 8 of the 12 cycles.",
+              "es": "Correcto: la mitad de los prefetches son tardíos (el LOAD espera al bloque en camino): D = 1 solo cubre 8 de los 12 ciclos.",
+              "ca": "Correcte: la meitat dels prefetches són tardans (el LOAD espera el bloc en camí): D = 1 només cobreix 8 dels 12 cicles."
+            },
+            "wrong": {
+              "en": "Simulate, and read Cycles/iter in the Simulation panel.",
+              "es": "Simula, y lee Cycles/iter en el panel de simulación.",
+              "ca": "Simula, i llegeix Cycles/iter al panell de simulació."
+            }
+          },
+          {
+            "label": {
+              "en": "D = 2",
+              "es": "D = 2",
+              "ca": "D = 2"
+            },
+            "value": 2.53,
+            "tolerance": 0.03,
+            "unit": {
+              "en": "cycles/sum",
+              "es": "ciclos/suma",
+              "ca": "cicles/suma"
+            },
+            "correct": {
+              "en": "Right: almost all the prefetches are useful, and the time falls from 5.51 to 2.53, close to the 2.02 of the ROB of 64.",
+              "es": "Correcto: casi todos los prefetches son útiles, y el tiempo baja de 5,51 a 2,53, cerca de los 2,02 del ROB de 64.",
+              "ca": "Correcte: gairebé tots els prefetches són útils, i el temps baixa de 5,51 a 2,53, a prop dels 2,02 del ROB de 64."
+            },
+            "wrong": {
+              "en": "Simulate, and read Cycles/iter in the Simulation panel.",
+              "es": "Simula, y lee Cycles/iter en el panel de simulación.",
+              "ca": "Simula, i llegeix Cycles/iter al panell de simulació."
+            }
+          },
+          {
+            "label": {
+              "en": "D = 3",
+              "es": "D = 3",
+              "ca": "D = 3"
+            },
+            "value": 5.51,
+            "tolerance": 0.03,
+            "unit": {
+              "en": "cycles/sum",
+              "es": "ciclos/suma",
+              "ca": "cicles/suma"
+            },
+            "correct": {
+              "en": "Right: back to 5.51, and no prefetch is used. With D = 3 the cache would need the blocks B to B + 3 and the one arriving: 5 lines, and it has 4. Each prefetch replaces a block brought before it is used: the prefetches <b>pollute</b> the cache.",
+              "es": "Correcto: vuelve a 5,51, y no se usa ningún prefetch. Con D = 3 la cache necesitaría los bloques B a B + 3 y el que llega: 5 líneas, y tiene 4. Cada prefetch reemplaza un bloque traído antes de que se use: los prefetches <b>contaminan</b> la cache.",
+              "ca": "Correcte: torna a 5,51, i no es fa servir cap prefetch. Amb D = 3 la cache necessitaria els blocs B a B + 3 i el que arriba: 5 línies, i en té 4. Cada prefetch reemplaça un bloc portat abans que es faci servir: els prefetches <b>contaminen</b> la cache."
+            },
+            "wrong": {
+              "en": "Simulate, and read Cycles/iter in the Simulation panel.",
+              "es": "Simula, y lee Cycles/iter en el panel de simulación.",
+              "ca": "Simula, i llegeix Cycles/iter al panell de simulació."
+            }
+          }
+        ],
+        "help": {
+          "hint": {
+            "en": "Click the <b>Memory</b> box, then <b>Configure the cache…</b>; change the prefetch distance, apply, and simulate. Read <b>Cycles/iter</b> each time.",
+            "es": "Haz clic en la caja <b>Memoria</b>, y después en <b>Configurar la cache…</b>; cambia la distancia de prefetch, aplica, y simula. Lee <b>Cycles/iter</b> cada vez.",
+            "ca": "Fes clic a la caixa <b>Memòria</b>, i després a <b>Configura la cache…</b>; canvia la distància de prefetch, aplica, i simula. Llegeix <b>Cycles/iter</b> cada vegada."
+          },
+          "show": {
+            "text": {
+              "en": "<p>The processor has now D = 1 and the simulation is done: read Cycles/iter and the Prefetches. Then D = 2 and D = 3.</p>",
+              "es": "<p>El procesador tiene ahora D = 1 y la simulación está hecha: lee Cycles/iter y los Prefetches. Después D = 2 y D = 3.</p>",
+              "ca": "<p>El processador té ara D = 1 i la simulació està feta: llegeix Cycles/iter i els Prefetches. Després D = 2 i D = 3.</p>"
+            },
+            "actions": [
+              "setProcessor:prefetchDistance=1",
+              "runSimulation"
+            ],
+            "selector": "#cycles-per-iteration-output, #prefetch-output"
+          }
+        },
+        "actions": [
+          "revertProcessor",
+          "setProcessor:nBlocks=4",
+          "setProcessor:blkSize=32",
+          "setProcessor:ROBsize=16",
+          "selectProgram:SUM-scalar",
+          "setN:1000",
+          "setRep:1",
+          "sidePanel:show",
+          "switchTo:simulationComponent"
+        ],
+        "next": [
+          "pf-timeline"
+        ]
+      },
+      {
+        "id": "pf-timeline",
+        "type": "step",
+        "position": "bottom-center",
+        "xShift": 0.12,
+        "wWidth": 700,
+        "lock": [
+          "program",
+          "N",
+          "Rep"
+        ],
+        "explore": "required",
+        "title": {
+          "en": "The prefetches in the timeline",
+          "es": "Los prefetches en el timeline",
+          "ca": "Els prefetches al timeline"
+        },
+        "description": {
+          "en": "<p>The <b>Timeline</b> shows SUM-scalar with D = 2. Unfold <b>▸ Memory</b>, <b>▸ Cache</b> and <b>▸ Fill</b>:</p><p>&bull; In the row <b>MM</b>, <b>P</b> is a block read by a prefetch; in the lines of the cache, <b>p</b> is a prefetched block arriving, and <b>P</b> a block that has arrived and waits to be used.<br>&bull; The LOADs of the first blocks still miss (! and :). Which is the first iteration whose LOAD hits? From then on, do the LOADs wait for the memory?</p>",
+          "es": "<p>El <b>Timeline</b> muestra SUM-scalar con D = 2. Despliega <b>▸ Memoria</b>, <b>▸ Cache</b> y <b>▸ Fill</b>:</p><p>&bull; En la fila <b>MM</b>, <b>P</b> es un bloque leído por un prefetch; en las líneas de la cache, <b>p</b> es un bloque de prefetch llegando, y <b>P</b> un bloque que ya ha llegado y espera a ser usado.<br>&bull; Los LOAD de los primeros bloques todavía fallan (! y :). ¿Cuál es la primera iteración cuyo LOAD acierta? A partir de ahí, ¿esperan los LOAD a la memoria?</p>",
+          "ca": "<p>El <b>Timeline</b> mostra SUM-scalar amb D = 2. Desplega <b>▸ Memòria</b>, <b>▸ Cache</b> i <b>▸ Fill</b>:</p><p>&bull; A la fila <b>MM</b>, <b>P</b> és un bloc llegit per un prefetch; a les línies de la cache, <b>p</b> és un bloc de prefetch arribant, i <b>P</b> un bloc que ja ha arribat i espera que el facin servir.<br>&bull; Els LOAD dels primers blocs encara fallen (! i :). Quina és la primera iteració el LOAD de la qual encerta? A partir d'aquí, esperen els LOAD la memòria?</p>"
+        },
+        "exploreHint": {
+          "en": "<p>Unfold <b>▸ Memory</b>, <b>▸ Cache</b> and <b>▸ Fill</b>. Click a cell <b>P</b> of MM and a cell <b>P</b> of a line to read their details; the arrow keys move along the row. When you are done, click here.</p>",
+          "es": "<p>Despliega <b>▸ Memoria</b>, <b>▸ Cache</b> y <b>▸ Fill</b>. Haz clic en una celda <b>P</b> de MM y en una celda <b>P</b> de una línea para leer sus detalles; las flechas del teclado mueven por la fila. Cuando acabes, pulsa aquí.</p>",
+          "ca": "<p>Desplega <b>▸ Memòria</b>, <b>▸ Cache</b> i <b>▸ Fill</b>. Fes clic a una cel·la <b>P</b> de MM i a una cel·la <b>P</b> d'una línia per llegir-ne els detalls; les fletxes del teclat mouen per la fila. Quan acabis, prem aquí.</p>"
+        },
+        "actions": [
+          "revertProcessor",
+          "setProcessor:nBlocks=4",
+          "setProcessor:blkSize=32",
+          "setProcessor:ROBsize=16",
+          "selectProgram:SUM-scalar",
+          "setN:1000",
+          "setRep:1",
+          "setProcessor:prefetchDistance=2",
+          "reveal:timeline",
+          "hide:timelineCritical",
+          "sidePanel:hide",
+          "switchTo:timelineComponent",
+          "timeline:view=detailed",
+          "timeline:critical=off"
+        ],
+        "next": [
+          "q-pf-simd"
+        ]
+      },
+      {
+        "id": "q-pf-simd",
+        "type": "question",
+        "position": "left",
+        "wWidth": 440,
+        "lock": [
+          "program",
+          "N",
+          "Rep"
+        ],
+        "answerMode": "single",
+        "title": {
+          "en": "And SUM-simd?",
+          "es": "¿Y SUM-simd?",
+          "ca": "I SUM-simd?"
+        },
+        "questionText": {
+          "en": "<p>SUM-simd, with the ROB of 64 entries and 2 fill buffers, took 1.51 cycles per sum. The processor has now a prefetch distance D = 2: simulate it. Does prefetching help? Why?</p>",
+          "es": "<p>SUM-simd, con el ROB de 64 entradas y 2 fill buffers, tardaba 1,51 ciclos por suma. El procesador tiene ahora una distancia de prefetch D = 2: simúlalo. ¿Ayuda el prefetching? ¿Por qué?</p>",
+          "ca": "<p>SUM-simd, amb el ROB de 64 entrades i 2 fill buffers, trigava 1,51 cicles per suma. El processador té ara una distància de prefetch D = 2: simula-ho. Ajuda el prefetching? Per què?</p>"
+        },
+        "answers": [
+          {
+            "text": {
+              "en": "Yes: the blocks arrive earlier, and the time per sum falls",
+              "es": "Sí: los bloques llegan antes, y el tiempo por suma baja",
+              "ca": "Sí: els blocs arriben abans, i el temps per suma baixa"
+            },
+            "isCorrect": false,
+            "explanation": {
+              "en": "No: simulate it: the time is still 1.51, and the Simulation panel shows that almost all the prefetches are dropped.",
+              "es": "No: simúlalo: el tiempo sigue siendo 1,51, y el panel de simulación muestra que casi todos los prefetches se descartan.",
+              "ca": "No: simula-ho: el temps continua sent 1,51, i el panell de simulació mostra que gairebé tots els prefetches es descarten."
+            }
+          },
+          {
+            "text": {
+              "en": "No: the 2 fill buffers are always busy, so the prefetches are dropped; the limit is the blocks on the way at the same time, not the latency",
+              "es": "No: los 2 fill buffers están siempre ocupados, así que los prefetches se descartan; el límite son los bloques en camino a la vez, no la latencia",
+              "ca": "No: els 2 fill buffers estan sempre ocupats, així que els prefetches es descarten; el límit són els blocs en camí alhora, no la latència"
+            },
+            "isCorrect": true,
+            "explanation": {
+              "en": "Yes: a prefetch uses the same resources as a miss. When the fill buffers are the limit, prefetching cannot bring more blocks per cycle.",
+              "es": "Sí: un prefetch usa los mismos recursos que un fallo. Cuando el límite son los fill buffers, el prefetching no puede traer más bloques por ciclo.",
+              "ca": "Sí: un prefetch fa servir els mateixos recursos que una fallada. Quan el límit són els fill buffers, el prefetching no pot portar més blocs per cicle."
+            }
+          },
+          {
+            "text": {
+              "en": "No: the prefetcher only follows scalar LOADs",
+              "es": "No: el prefetcher solo sigue los LOAD escalares",
+              "ca": "No: el prefetcher només segueix els LOAD escalars"
+            },
+            "isCorrect": false,
+            "explanation": {
+              "en": "No: it follows any LOAD that walks through a vector, also the vector LOADs.",
+              "es": "No: sigue cualquier LOAD que recorre un vector, también los LOAD vectoriales.",
+              "ca": "No: segueix qualsevol LOAD que recorre un vector, també els LOAD vectorials."
+            }
+          }
+        ],
+        "help": {
+          "hint": {
+            "en": "Simulate it, and look at the <b>Prefetches</b> of the Simulation panel: how many are issued, and how many dropped? Why is a prefetch dropped?",
+            "es": "Simúlalo, y mira los <b>Prefetches</b> del panel de simulación: ¿cuántos se lanzan, y cuántos se descartan? ¿Por qué se descarta un prefetch?",
+            "ca": "Simula-ho, i mira els <b>Prefetches</b> del panell de simulació: quants se'n llancen, i quants se'n descarten? Per què es descarta un prefetch?"
+          },
+          "show": {
+            "text": {
+              "en": "<p>The simulation is done: compare Cycles/Alg Oper with 1.51, and read the Prefetches.</p>",
+              "es": "<p>La simulación está hecha: compara Cycles/Alg Oper con 1,51, y lee los Prefetches.</p>",
+              "ca": "<p>La simulació està feta: compara Cycles/Alg Oper amb 1,51, i llegeix els Prefetches.</p>"
+            },
+            "actions": [
+              "runSimulation"
+            ],
+            "selector": "#cycles-per-alg-op-output, #prefetch-output"
+          }
+        },
+        "actions": [
+          "revertProcessor",
+          "setProcessor:nBlocks=4",
+          "setProcessor:blkSize=32",
+          "setProcessor:prefetchDistance=2",
+          "selectProgram:SUM-simd",
+          "setN:1000",
+          "setRep:1",
+          "sidePanel:show",
+          "switchTo:simulationComponent"
+        ],
+        "next": [
+          "pf-summary"
+        ]
+      },
+      {
+        "id": "pf-summary",
+        "type": "step",
+        "style": "takeaway",
+        "position": "center",
+        "wWidth": 720,
+        "lock": [
+          "program",
+          "N",
+          "Rep"
+        ],
+        "title": {
+          "en": "Prefetching: in time, and with resources",
+          "es": "Prefetching: a tiempo, y con recursos",
+          "ca": "Prefetching: a temps, i amb recursos"
+        },
+        "description": {
+          "en": "<p>A prefetcher brings the blocks of a vector before the LOADs need them: it <b>hides the latency of the misses without a large ROB</b> (SUM-scalar with a ROB of 16: from 5.51 to 2.53 cycles per sum).</p><p>&bull; <b>Distance</b>: the block must arrive in time, D × (cycles to use a block) ≥ latency of MM. Too short, the prefetches are late; too long, they need more lines, and they replace blocks before they are used (pollution).<br>&bull; <b>Resources</b>: a prefetch uses a fill buffer, a line and the bus to MM, like a miss. When those resources are the limit (SUM-simd with 2 fill buffers), prefetching does not help.</p>",
+          "es": "<p>Un prefetcher trae los bloques de un vector antes de que los LOAD los necesiten: <b>oculta la latencia de los fallos sin un ROB grande</b> (SUM-scalar con un ROB de 16: de 5,51 a 2,53 ciclos por suma).</p><p>&bull; <b>Distancia</b>: el bloque debe llegar a tiempo, D × (ciclos para usar un bloque) ≥ latencia de la MM. Demasiado corta, los prefetches llegan tarde; demasiado larga, necesitan más líneas, y reemplazan bloques antes de que se usen (contaminación).<br>&bull; <b>Recursos</b>: un prefetch usa un fill buffer, una línea y el bus con la MM, como un fallo. Cuando el límite son esos recursos (SUM-simd con 2 fill buffers), el prefetching no ayuda.</p>",
+          "ca": "<p>Un prefetcher porta els blocs d'un vector abans que els LOAD els necessitin: <b>amaga la latència de les fallades sense un ROB gran</b> (SUM-scalar amb un ROB de 16: de 5,51 a 2,53 cicles per suma).</p><p>&bull; <b>Distància</b>: el bloc ha d'arribar a temps, D × (cicles per fer servir un bloc) ≥ latència de la MM. Massa curta, els prefetches arriben tard; massa llarga, necessiten més línies, i reemplacen blocs abans que es facin servir (contaminació).<br>&bull; <b>Recursos</b>: un prefetch fa servir un fill buffer, una línia i el bus amb la MM, com una fallada. Quan el límit són aquests recursos (SUM-simd amb 2 fill buffers), el prefetching no ajuda.</p>"
+        },
+        "actions": [
           "sidePanel:show",
           "switchTo:simulationComponent"
         ],
