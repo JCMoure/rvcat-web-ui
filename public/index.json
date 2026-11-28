@@ -12,7 +12,8 @@
   "tutorial": [],
   "lesson": [
     "L0-intro",
-    "L1-cache"
+    "L1-cache",
+    "L2-prefetch"
   ],
   "defaults": {
     "processor": "B4",

@@ -1,6 +1,6 @@
 {
   "name": "BSEARCH-pf1",
-  "description": "int search ( int A[], int n, int key ) {\n  int b = 0;\n  while ( n > 1 ) {\n    int h = n / 2;\n    __builtin_prefetch(&A[b + h/2]);      // next probe if the key is in the lower half\n    __builtin_prefetch(&A[b + h + h/2]);  // next probe if it is in the upper half\n    b = (A[b+h] < key) ? b+h : b;\n    n = n - h;\n  }\n  return b;\n}",
+  "description": "int search ( int A[], int n, int key ) {\n  int b = 0;\n  while ( n > 1 ) {\n    int h = n / 2;\n    int t = A[b+h];\n    __builtin_prefetch(&A[b + h/2]);      // next probe if the key is in the lower half\n    __builtin_prefetch(&A[b + h + h/2]);  // next probe if it is in the upper half\n    b = (t < key) ? b+h : b;\n    n = n - h;\n  }\n  return b;\n}",
   "N": 16,
   "declarations": [
     {
@@ -62,7 +62,23 @@
       "source1": "n",
       "source2": "",
       "source3": "",
-      "constant": "1"
+      "constant": "1",
+      "cLine": 4
+    },
+    {
+      "text": "t = A[b+h]",
+      "type": "MEM",
+      "oper": "LOAD",
+      "size": "word",
+      "destin": "t",
+      "source1": "b",
+      "source2": "A",
+      "source3": "h",
+      "constant": "",
+      "stride": 0,
+      "lanes": 1,
+      "access": "search",
+      "cLine": 5
     },
     {
       "text": "prefetch A[b+h/2]",
@@ -78,7 +94,8 @@
       "lanes": 1,
       "access": "search",
       "ahead": 1,
-      "path": "L"
+      "path": "L",
+      "cLine": 6
     },
     {
       "text": "prefetch A[b+h+h/2]",
@@ -94,21 +111,8 @@
       "lanes": 1,
       "access": "search",
       "ahead": 1,
-      "path": "R"
-    },
-    {
-      "text": "t = A[b+h]",
-      "type": "MEM",
-      "oper": "LOAD",
-      "size": "word",
-      "destin": "t",
-      "source1": "b",
-      "source2": "A",
-      "source3": "h",
-      "constant": "",
-      "stride": 0,
-      "lanes": 1,
-      "access": "search"
+      "path": "R",
+      "cLine": 7
     },
     {
       "text": "lt = t < key",
@@ -119,7 +123,8 @@
       "source1": "t",
       "source2": "key",
       "source3": "",
-      "constant": ""
+      "constant": "",
+      "cLine": 8
     },
     {
       "text": "b = lt ? b+h : b",
@@ -130,7 +135,8 @@
       "source1": "lt",
       "source2": "b",
       "source3": "h",
-      "constant": ""
+      "constant": "",
+      "cLine": 8
     },
     {
       "text": "n = n - h",
@@ -141,7 +147,8 @@
       "source1": "n",
       "source2": "h",
       "source3": "",
-      "constant": ""
+      "constant": "",
+      "cLine": 9
     },
     {
       "text": "c = n > 1",
@@ -152,7 +159,8 @@
       "source1": "n",
       "source2": "",
       "source3": "",
-      "constant": "1"
+      "constant": "1",
+      "cLine": 3
     },
     {
       "text": "if c go back",
@@ -164,7 +172,8 @@
       "source2": "",
       "source3": "",
       "constant": "",
-      "stride": 1
+      "stride": 1,
+      "cLine": 3
     }
   ]
 }

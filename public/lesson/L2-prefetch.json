@@ -1,0 +1,2082 @@
+{
+  "lesson": "L2-prefetch",
+  "title": {
+    "en": "Lesson 2: software prefetch in a binary search",
+    "es": "Lección 2: prefetch por software en una búsqueda binaria",
+    "ca": "Lliçó 2: prefetch per programari en una cerca binària"
+  },
+  "description": {
+    "en": "<p>A binary search whose LOADs depend on each other: why the ROB and the hardware prefetcher do not help, and what software prefetching gains and costs (distance, fill buffers, pollution).</p>",
+    "es": "<p>Una búsqueda binaria cuyos LOAD dependen unos de otros: por qué no ayudan el ROB ni el prefetcher por hardware, y qué gana y qué cuesta el prefetch por software (distancia, fill buffers, contaminación).</p>",
+    "ca": "<p>Una cerca binària els LOAD de la qual depenen els uns dels altres: per què no ajuden ni el ROB ni el prefetcher per maquinari, i què guanya i què costa el prefetch per programari (distància, fill buffers, contaminació).</p>"
+  },
+  "version": 1,
+  "programs": [
+    {
+      "name": "BSEARCH",
+      "description": "int search ( int A[], int n, int key ) {\n  int b = 0;\n  while ( n > 1 ) {\n    int h = n / 2;\n    int t = A[b+h];\n    b = (t < key) ? b+h : b;\n    n = n - h;\n  }\n  return b;\n}",
+      "N": 16,
+      "declarations": [
+        {
+          "name": "A",
+          "role": "array",
+          "type": "INT",
+          "size": "word"
+        },
+        {
+          "name": "b",
+          "role": "data",
+          "type": "INT",
+          "size": "word"
+        },
+        {
+          "name": "h",
+          "role": "data",
+          "type": "INT",
+          "size": "word"
+        },
+        {
+          "name": "n",
+          "role": "data",
+          "type": "INT",
+          "size": "word"
+        },
+        {
+          "name": "t",
+          "role": "data",
+          "type": "INT",
+          "size": "word"
+        },
+        {
+          "name": "key",
+          "role": "read-only",
+          "type": "INT",
+          "size": "word"
+        },
+        {
+          "name": "lt",
+          "role": "condition",
+          "type": "INT",
+          "size": "word"
+        },
+        {
+          "name": "c",
+          "role": "condition",
+          "type": "INT",
+          "size": "word"
+        }
+      ],
+      "instruction_list": [
+        {
+          "text": "h = n >> 1",
+          "type": "INT",
+          "oper": "SHIFT",
+          "size": "word",
+          "destin": "h",
+          "source1": "n",
+          "source2": "",
+          "source3": "",
+          "constant": "1",
+          "cLine": 4
+        },
+        {
+          "text": "t = A[b+h]",
+          "type": "MEM",
+          "oper": "LOAD",
+          "size": "word",
+          "destin": "t",
+          "source1": "b",
+          "source2": "A",
+          "source3": "h",
+          "constant": "",
+          "stride": 0,
+          "lanes": 1,
+          "access": "search",
+          "cLine": 5
+        },
+        {
+          "text": "lt = t < key",
+          "type": "INT",
+          "oper": "ARITH",
+          "size": "word",
+          "destin": "lt",
+          "source1": "t",
+          "source2": "key",
+          "source3": "",
+          "constant": "",
+          "cLine": 6
+        },
+        {
+          "text": "b = lt ? b+h : b",
+          "type": "INT",
+          "oper": "ARITH",
+          "size": "word",
+          "destin": "b",
+          "source1": "lt",
+          "source2": "b",
+          "source3": "h",
+          "constant": "",
+          "cLine": 6
+        },
+        {
+          "text": "n = n - h",
+          "type": "INT",
+          "oper": "ARITH",
+          "size": "word",
+          "destin": "n",
+          "source1": "n",
+          "source2": "h",
+          "source3": "",
+          "constant": "",
+          "cLine": 7
+        },
+        {
+          "text": "c = n > 1",
+          "type": "INT",
+          "oper": "ARITH",
+          "size": "word",
+          "destin": "c",
+          "source1": "n",
+          "source2": "",
+          "source3": "",
+          "constant": "1",
+          "cLine": 3
+        },
+        {
+          "text": "if c go back",
+          "type": "BRANCH",
+          "oper": "",
+          "size": "",
+          "destin": "",
+          "source1": "c",
+          "source2": "",
+          "source3": "",
+          "constant": "",
+          "stride": 1,
+          "cLine": 3
+        }
+      ],
+      "sourceNote": {
+        "en": "branchless binary search: the LOAD of each iteration needs b, computed from the LOAD of the previous one",
+        "es": "búsqueda binaria sin saltos: el LOAD de cada iteración necesita b, calculado a partir del LOAD de la anterior",
+        "ca": "cerca binària sense salts: el LOAD de cada iteració necessita b, calculat a partir del LOAD de l'anterior"
+      },
+      "compile": "gcc -O3 -march=native SEARCH.c -o BSEARCH"
+    },
+    {
+      "name": "BSEARCH-pf1",
+      "description": "int search ( int A[], int n, int key ) {\n  int b = 0;\n  while ( n > 1 ) {\n    int h = n / 2;\n    int t = A[b+h];\n    __builtin_prefetch(&A[b + h/2]);      // next probe if the key is in the lower half\n    __builtin_prefetch(&A[b + h + h/2]);  // next probe if it is in the upper half\n    b = (t < key) ? b+h : b;\n    n = n - h;\n  }\n  return b;\n}",
+      "N": 16,
+      "declarations": [
+        {
+          "name": "A",
+          "role": "array",
+          "type": "INT",
+          "size": "word"
+        },
+        {
+          "name": "b",
+          "role": "data",
+          "type": "INT",
+          "size": "word"
+        },
+        {
+          "name": "h",
+          "role": "data",
+          "type": "INT",
+          "size": "word"
+        },
+        {
+          "name": "n",
+          "role": "data",
+          "type": "INT",
+          "size": "word"
+        },
+        {
+          "name": "t",
+          "role": "data",
+          "type": "INT",
+          "size": "word"
+        },
+        {
+          "name": "key",
+          "role": "read-only",
+          "type": "INT",
+          "size": "word"
+        },
+        {
+          "name": "lt",
+          "role": "condition",
+          "type": "INT",
+          "size": "word"
+        },
+        {
+          "name": "c",
+          "role": "condition",
+          "type": "INT",
+          "size": "word"
+        }
+      ],
+      "instruction_list": [
+        {
+          "text": "h = n >> 1",
+          "type": "INT",
+          "oper": "SHIFT",
+          "size": "word",
+          "destin": "h",
+          "source1": "n",
+          "source2": "",
+          "source3": "",
+          "constant": "1",
+          "cLine": 4
+        },
+        {
+          "text": "t = A[b+h]",
+          "type": "MEM",
+          "oper": "LOAD",
+          "size": "word",
+          "destin": "t",
+          "source1": "b",
+          "source2": "A",
+          "source3": "h",
+          "constant": "",
+          "stride": 0,
+          "lanes": 1,
+          "access": "search",
+          "cLine": 5
+        },
+        {
+          "text": "prefetch A[b+h/2]",
+          "type": "MEM",
+          "oper": "PREFETCH",
+          "size": "word",
+          "destin": "",
+          "source1": "b",
+          "source2": "A",
+          "source3": "h",
+          "constant": "",
+          "stride": 0,
+          "lanes": 1,
+          "access": "search",
+          "ahead": 1,
+          "path": "L",
+          "cLine": 6
+        },
+        {
+          "text": "prefetch A[b+h+h/2]",
+          "type": "MEM",
+          "oper": "PREFETCH",
+          "size": "word",
+          "destin": "",
+          "source1": "b",
+          "source2": "A",
+          "source3": "h",
+          "constant": "",
+          "stride": 0,
+          "lanes": 1,
+          "access": "search",
+          "ahead": 1,
+          "path": "R",
+          "cLine": 7
+        },
+        {
+          "text": "lt = t < key",
+          "type": "INT",
+          "oper": "ARITH",
+          "size": "word",
+          "destin": "lt",
+          "source1": "t",
+          "source2": "key",
+          "source3": "",
+          "constant": "",
+          "cLine": 8
+        },
+        {
+          "text": "b = lt ? b+h : b",
+          "type": "INT",
+          "oper": "ARITH",
+          "size": "word",
+          "destin": "b",
+          "source1": "lt",
+          "source2": "b",
+          "source3": "h",
+          "constant": "",
+          "cLine": 8
+        },
+        {
+          "text": "n = n - h",
+          "type": "INT",
+          "oper": "ARITH",
+          "size": "word",
+          "destin": "n",
+          "source1": "n",
+          "source2": "h",
+          "source3": "",
+          "constant": "",
+          "cLine": 9
+        },
+        {
+          "text": "c = n > 1",
+          "type": "INT",
+          "oper": "ARITH",
+          "size": "word",
+          "destin": "c",
+          "source1": "n",
+          "source2": "",
+          "source3": "",
+          "constant": "1",
+          "cLine": 3
+        },
+        {
+          "text": "if c go back",
+          "type": "BRANCH",
+          "oper": "",
+          "size": "",
+          "destin": "",
+          "source1": "c",
+          "source2": "",
+          "source3": "",
+          "constant": "",
+          "stride": 1,
+          "cLine": 3
+        }
+      ],
+      "sourceNote": {
+        "en": "2 software prefetches: the probes of the next iteration, one for each half (only one is right)",
+        "es": "2 prefetches por software: las consultas de la iteración siguiente, una por cada mitad (solo una es la buena)",
+        "ca": "2 prefetches per programari: les consultes de la iteració següent, una per cada meitat (només una és la bona)"
+      },
+      "compile": "gcc -O3 -march=native SEARCH.c -o BSEARCH-pf1"
+    },
+    {
+      "name": "BSEARCH-pf2",
+      "description": "int search ( int A[], int n, int key ) {\n  int b = 0;\n  while ( n > 1 ) {\n    int h = n / 2;\n    int t = A[b+h];\n    __builtin_prefetch(&A[b + h/4]);          // the probes 2 iterations later:\n    __builtin_prefetch(&A[b + h/2 + h/4]);    // one for each of the 4 paths\n    __builtin_prefetch(&A[b + h + h/4]);\n    __builtin_prefetch(&A[b + h + h/2 + h/4]);\n    b = (t < key) ? b+h : b;\n    n = n - h;\n  }\n  return b;\n}",
+      "N": 16,
+      "declarations": [
+        {
+          "name": "A",
+          "role": "array",
+          "type": "INT",
+          "size": "word"
+        },
+        {
+          "name": "b",
+          "role": "data",
+          "type": "INT",
+          "size": "word"
+        },
+        {
+          "name": "h",
+          "role": "data",
+          "type": "INT",
+          "size": "word"
+        },
+        {
+          "name": "n",
+          "role": "data",
+          "type": "INT",
+          "size": "word"
+        },
+        {
+          "name": "t",
+          "role": "data",
+          "type": "INT",
+          "size": "word"
+        },
+        {
+          "name": "key",
+          "role": "read-only",
+          "type": "INT",
+          "size": "word"
+        },
+        {
+          "name": "lt",
+          "role": "condition",
+          "type": "INT",
+          "size": "word"
+        },
+        {
+          "name": "c",
+          "role": "condition",
+          "type": "INT",
+          "size": "word"
+        }
+      ],
+      "instruction_list": [
+        {
+          "text": "h = n >> 1",
+          "type": "INT",
+          "oper": "SHIFT",
+          "size": "word",
+          "destin": "h",
+          "source1": "n",
+          "source2": "",
+          "source3": "",
+          "constant": "1",
+          "cLine": 4
+        },
+        {
+          "text": "t = A[b+h]",
+          "type": "MEM",
+          "oper": "LOAD",
+          "size": "word",
+          "destin": "t",
+          "source1": "b",
+          "source2": "A",
+          "source3": "h",
+          "constant": "",
+          "stride": 0,
+          "lanes": 1,
+          "access": "search",
+          "cLine": 5
+        },
+        {
+          "text": "prefetch A[b+h/4]",
+          "type": "MEM",
+          "oper": "PREFETCH",
+          "size": "word",
+          "destin": "",
+          "source1": "b",
+          "source2": "A",
+          "source3": "h",
+          "constant": "",
+          "stride": 0,
+          "lanes": 1,
+          "access": "search",
+          "ahead": 2,
+          "path": "LL",
+          "cLine": 6
+        },
+        {
+          "text": "prefetch A[b+h/2+h/4]",
+          "type": "MEM",
+          "oper": "PREFETCH",
+          "size": "word",
+          "destin": "",
+          "source1": "b",
+          "source2": "A",
+          "source3": "h",
+          "constant": "",
+          "stride": 0,
+          "lanes": 1,
+          "access": "search",
+          "ahead": 2,
+          "path": "LR",
+          "cLine": 7
+        },
+        {
+          "text": "prefetch A[b+h+h/4]",
+          "type": "MEM",
+          "oper": "PREFETCH",
+          "size": "word",
+          "destin": "",
+          "source1": "b",
+          "source2": "A",
+          "source3": "h",
+          "constant": "",
+          "stride": 0,
+          "lanes": 1,
+          "access": "search",
+          "ahead": 2,
+          "path": "RL",
+          "cLine": 8
+        },
+        {
+          "text": "prefetch A[b+h+h/2+h/4]",
+          "type": "MEM",
+          "oper": "PREFETCH",
+          "size": "word",
+          "destin": "",
+          "source1": "b",
+          "source2": "A",
+          "source3": "h",
+          "constant": "",
+          "stride": 0,
+          "lanes": 1,
+          "access": "search",
+          "ahead": 2,
+          "path": "RR",
+          "cLine": 9
+        },
+        {
+          "text": "lt = t < key",
+          "type": "INT",
+          "oper": "ARITH",
+          "size": "word",
+          "destin": "lt",
+          "source1": "t",
+          "source2": "key",
+          "source3": "",
+          "constant": "",
+          "cLine": 10
+        },
+        {
+          "text": "b = lt ? b+h : b",
+          "type": "INT",
+          "oper": "ARITH",
+          "size": "word",
+          "destin": "b",
+          "source1": "lt",
+          "source2": "b",
+          "source3": "h",
+          "constant": "",
+          "cLine": 10
+        },
+        {
+          "text": "n = n - h",
+          "type": "INT",
+          "oper": "ARITH",
+          "size": "word",
+          "destin": "n",
+          "source1": "n",
+          "source2": "h",
+          "source3": "",
+          "constant": "",
+          "cLine": 11
+        },
+        {
+          "text": "c = n > 1",
+          "type": "INT",
+          "oper": "ARITH",
+          "size": "word",
+          "destin": "c",
+          "source1": "n",
+          "source2": "",
+          "source3": "",
+          "constant": "1",
+          "cLine": 3
+        },
+        {
+          "text": "if c go back",
+          "type": "BRANCH",
+          "oper": "",
+          "size": "",
+          "destin": "",
+          "source1": "c",
+          "source2": "",
+          "source3": "",
+          "constant": "",
+          "stride": 1,
+          "cLine": 3
+        }
+      ],
+      "sourceNote": {
+        "en": "4 software prefetches: the probes 2 iterations later, one for each of the 4 paths (only one is right)",
+        "es": "4 prefetches por software: las consultas 2 iteraciones después, una por cada uno de los 4 caminos (solo una es la buena)",
+        "ca": "4 prefetches per programari: les consultes 2 iteracions després, una per cada un dels 4 camins (només una és la bona)"
+      },
+      "compile": "gcc -O3 -march=native SEARCH.c -o BSEARCH-pf2"
+    }
+  ],
+  "processors": [
+    {
+      "name": "GC-search",
+      "dispatch": 6,
+      "retire": 6,
+      "ROBsize": 64,
+      "bPenalty": 10,
+      "nBlocks": 32,
+      "blkSize": 64,
+      "mPenalty": 12,
+      "mIssueTime": 1,
+      "nFillBuffers": 8,
+      "nWriteBuffers": 2,
+      "nStoreBuffers": 2,
+      "rThru": 2,
+      "latencies": {
+        "INT": 1,
+        "INT.ARITH": 1,
+        "INT.LOGIC": 1,
+        "INT.SHIFT": 1,
+        "INT.CVT": 6,
+        "VINT": 1,
+        "VINT.ARITH": 1,
+        "VINT.LOGIC": 1,
+        "VINT.SHIFT": 1,
+        "VINT.CVT": 4,
+        "VINT.SHUFFLE": 1,
+        "VINT.PERMUTE": 3,
+        "MEM.STORE": 1,
+        "MEM.LOAD": 5,
+        "VMEM.STORE": 1,
+        "VMEM.LOAD": 6,
+        "FLOAT.ADD": 2,
+        "FLOAT.MUL": 4,
+        "FLOAT.FMA": 4,
+        "FLOAT.DIV": 11,
+        "FLOAT.DIV.double": 14,
+        "FLOAT.SQRT": 12,
+        "FLOAT.SQRT.double": 16,
+        "FLOAT.CVT": 4,
+        "FLOAT.CVT.single": 5,
+        "VFLOAT.ADD": 2,
+        "VFLOAT.MUL": 4,
+        "VFLOAT.FMA": 4,
+        "VFLOAT.DIV": 11,
+        "VFLOAT.DIV.double": 14,
+        "VFLOAT.SQRT": 12,
+        "VFLOAT.SQRT.double": 16,
+        "VFLOAT.CVT": 4,
+        "VFLOAT.CVT.single": 5,
+        "VFLOAT.SHUFFLE": 1,
+        "VFLOAT.PERMUTE": 3,
+        "BRANCH": 1
+      },
+      "ports": {
+        "0": [
+          "INT.ARITH",
+          "INT.LOGIC",
+          "INT.SHIFT",
+          "INT.CVT",
+          "FLOAT.MUL",
+          "FLOAT.FMA",
+          "FLOAT.DIV",
+          "FLOAT.SQRT",
+          "FLOAT.CVT",
+          "VFLOAT.MUL",
+          "VFLOAT.FMA",
+          "VFLOAT.DIV",
+          "VFLOAT.SQRT",
+          "VFLOAT.CVT",
+          "VINT.ARITH",
+          "VINT.LOGIC",
+          "VINT.SHIFT",
+          "VINT.CVT"
+        ],
+        "1": [
+          "INT.ARITH",
+          "INT.LOGIC",
+          "INT.CVT",
+          "FLOAT.ADD",
+          "FLOAT.MUL",
+          "FLOAT.FMA",
+          "FLOAT.CVT",
+          "VFLOAT.ADD",
+          "VFLOAT.MUL",
+          "VFLOAT.FMA",
+          "VFLOAT.CVT",
+          "VINT.ARITH",
+          "VINT.LOGIC",
+          "VINT.SHIFT",
+          "VINT.CVT",
+          "VINT.SHUFFLE",
+          "VFLOAT.SHUFFLE"
+        ],
+        "2": [
+          "MEM.LOAD",
+          "VMEM.LOAD"
+        ],
+        "3": [
+          "MEM.LOAD",
+          "VMEM.LOAD"
+        ],
+        "5": [
+          "INT.ARITH",
+          "INT.LOGIC",
+          "FLOAT.ADD",
+          "VFLOAT.ADD",
+          "VINT.ARITH",
+          "VINT.LOGIC",
+          "VINT.SHUFFLE",
+          "VINT.PERMUTE",
+          "VFLOAT.SHUFFLE",
+          "VFLOAT.PERMUTE"
+        ],
+        "6": [
+          "INT.ARITH",
+          "INT.LOGIC",
+          "INT.SHIFT",
+          "BRANCH"
+        ],
+        "7": [
+          "MEM.STORE",
+          "VMEM.STORE"
+        ]
+      },
+      "prefetchDistance": 0
+    }
+  ],
+  "start": {
+    "program": "BSEARCH",
+    "processor": "GC-search",
+    "N": 16
+  },
+  "hidden": [
+    "simulation",
+    "simulationPanel",
+    "analysis",
+    "timeline",
+    "processorRevert"
+  ],
+  "locks": {
+    "programEditor": true,
+    "tutorialEditor": true,
+    "loopTransforms": true,
+    "upload": true,
+    "remove": true,
+    "processor": "all",
+    "simulation": {
+      "sched": "optimal",
+      "speculation": "stall"
+    }
+  },
+  "tutorial": {
+    "id": "L2-prefetch-tutorial",
+    "name": {
+      "en": "Lesson 2: software prefetch in a binary search",
+      "es": "Lección 2: prefetch por software en una búsqueda binaria",
+      "ca": "Lliçó 2: prefetch per programari en una cerca binària"
+    },
+    "flowVersion": 2,
+    "steps": [
+      {
+        "id": "welcome",
+        "type": "step",
+        "anchor": "#right-panel",
+        "position": "inside-top-left",
+        "wWidth": 700,
+        "selector": "#program-source",
+        "lock": [
+          "program",
+          "N",
+          "Rep"
+        ],
+        "title": {
+          "en": "Lesson 2: software prefetch in a binary search",
+          "es": "Lección 2: prefetch por software en una búsqueda binaria",
+          "ca": "Lliçó 2: prefetch per programari en una cerca binària"
+        },
+        "validation": {
+          "type": "button_clicked",
+          "selector": "#program-source-toggle",
+          "message": {
+            "en": "Click ▸ C, above the table, to see the C code",
+            "es": "Haz clic en ▸ C, encima de la tabla, para ver el código C",
+            "ca": "Fes clic a ▸ C, damunt de la taula, per veure el codi C"
+          }
+        },
+        "description": {
+          "en": "<p>The function <b>search</b> looks for a key in a sorted vector A of <b>2<sup>16</sup> = 65,536 ints</b> (256 KB): each iteration compares the key with the middle element of the interval, and keeps one half. After N = 16 iterations, b is the position of the key.</p><p>The cache of the processor has 32 lines of 64 bytes (2 KB): almost all the vector is in main memory. Each iteration reads <b>one element far from the previous one</b>, so most of the reads miss, and nobody can guess the next address... except the program itself.</p>",
+          "es": "<p>La función <b>search</b> busca una clave en un vector ordenado A de <b>2<sup>16</sup> = 65.536 ints</b> (256 KB): cada iteración compara la clave con el elemento central del intervalo y se queda con una mitad. Después de N = 16 iteraciones, b es la posición de la clave.</p><p>La cache del procesador tiene 32 líneas de 64 bytes (2 KB): casi todo el vector está en la memoria principal. Cada iteración lee <b>un elemento lejos del anterior</b>, así que la mayoría de las lecturas fallan, y nadie puede adivinar la dirección siguiente... salvo el propio programa.</p>",
+          "ca": "<p>La funció <b>search</b> busca una clau en un vector ordenat A de <b>2<sup>16</sup> = 65.536 ints</b> (256 KB): cada iteració compara la clau amb l'element central de l'interval i es queda amb una meitat. Després de N = 16 iteracions, b és la posició de la clau.</p><p>La cache del processador té 32 línies de 64 bytes (2 KB): gairebé tot el vector és a la memòria principal. Cada iteració llegeix <b>un element lluny de l'anterior</b>, així que la majoria de les lectures fallen, i ningú no pot endevinar l'adreça següent... tret del mateix programa.</p>"
+        },
+        "actions": [
+          "revertProcessor",
+          "selectProgram:BSEARCH",
+          "setN:16",
+          "setRep:1",
+          "sidePanel:show",
+          "switchTo:simulationComponent",
+          "programView:type"
+        ],
+        "next": [
+          "chain"
+        ]
+      },
+      {
+        "id": "chain",
+        "type": "step",
+        "anchor": "#right-panel",
+        "position": "inside-top-left",
+        "wWidth": 700,
+        "lock": [
+          "program",
+          "N",
+          "Rep"
+        ],
+        "title": {
+          "en": "A chain through memory",
+          "es": "Una cadena a través de la memoria",
+          "ca": "Una cadena a través de la memòria"
+        },
+        "description": {
+          "en": "<p>Look at the instructions of BSEARCH. The compiler does not use a conditional branch: <b>b = lt ? b+h : b</b> is a conditional move (cmov), so there are no mispredictions.</p><p>But there is a chain: the LOAD <b>t = A[b+h]</b> needs b; the comparison needs t; the cmov gives the new b, which the LOAD of the next iteration needs. <b>The address of each LOAD depends on the data read by the previous LOAD.</b></p>",
+          "es": "<p>Mira las instrucciones de BSEARCH. El compilador no usa un salto condicional: <b>b = lt ? b+h : b</b> es un movimiento condicional (cmov), así que no hay malas predicciones.</p><p>Pero hay una cadena: el LOAD <b>t = A[b+h]</b> necesita b; la comparación necesita t; el cmov da la b nueva, que necesita el LOAD de la iteración siguiente. <b>La dirección de cada LOAD depende del dato leído por el LOAD anterior.</b></p>",
+          "ca": "<p>Mira les instruccions de BSEARCH. El compilador no fa servir un salt condicional: <b>b = lt ? b+h : b</b> és un moviment condicional (cmov), així que no hi ha males prediccions.</p><p>Però hi ha una cadena: el LOAD <b>t = A[b+h]</b> necessita b; la comparació necessita t; el cmov dona la b nova, que necessita el LOAD de la iteració següent. <b>L'adreça de cada LOAD depèn de la dada llegida pel LOAD anterior.</b></p>"
+        },
+        "actions": [
+          "revertProcessor",
+          "selectProgram:BSEARCH",
+          "setN:16",
+          "setRep:1",
+          "sidePanel:show",
+          "switchTo:simulationComponent",
+          "programView:type"
+        ],
+        "next": [
+          "q-chain"
+        ]
+      },
+      {
+        "id": "q-chain",
+        "type": "question",
+        "position": "right",
+        "wWidth": 440,
+        "lock": [
+          "program",
+          "N",
+          "Rep"
+        ],
+        "answerMode": "numbers",
+        "answers": [],
+        "title": {
+          "en": "The minimum time",
+          "es": "El tiempo mínimo",
+          "ca": "El temps mínim"
+        },
+        "questionText": {
+          "en": "<p>The <b>Static Analysis</b> panel assumes that every LOAD hits. What is the <b>minimum time per iteration</b> of BSEARCH? The dependence graph shows one iteration; close it to see the bounds.</p>",
+          "es": "<p>El panel de <b>Análisis estático</b> supone que todos los LOAD aciertan. ¿Cuál es el <b>tiempo mínimo por iteración</b> de BSEARCH? El grafo de dependencias muestra una iteración; ciérralo para ver las cotas.</p>",
+          "ca": "<p>El panell d'<b>Anàlisi estàtica</b> suposa que tots els LOAD encerten. Quin és el <b>temps mínim per iteració</b> de BSEARCH? El graf de dependències mostra una iteració; tanca'l per veure les cotes.</p>"
+        },
+        "numericFields": [
+          {
+            "label": {
+              "en": "Minimum",
+              "es": "Mínimo",
+              "ca": "Mínim"
+            },
+            "value": 7,
+            "tolerance": 0.02,
+            "unit": {
+              "en": "cycles/iter",
+              "es": "ciclos/iter",
+              "ca": "cicles/iter"
+            },
+            "correct": {
+              "en": "Right: the chain b → b has the LOAD (5 cycles), the comparison (1) and the cmov (1): 7 cycles per iteration, 112 for the 16 iterations, if every LOAD hits.",
+              "es": "Correcto: la cadena b → b tiene el LOAD (5 ciclos), la comparación (1) y el cmov (1): 7 ciclos por iteración, 112 para las 16 iteraciones, si todos los LOAD aciertan.",
+              "ca": "Correcte: la cadena b → b té el LOAD (5 cicles), la comparació (1) i el cmov (1): 7 cicles per iteració, 112 per a les 16 iteracions, si tots els LOAD encerten."
+            },
+            "wrong": {
+              "en": "Look at the line at the top of the panel, or at the latency bound of the chain b → b.",
+              "es": "Mira la línea de arriba del panel, o la cota de latencia de la cadena b → b.",
+              "ca": "Mira la línia de dalt del panell, o la cota de latència de la cadena b → b."
+            }
+          }
+        ],
+        "help": {
+          "hint": {
+            "en": "Add the latencies of the instructions of the chain b → b: the LOAD, the comparison and the cmov.",
+            "es": "Suma las latencias de las instrucciones de la cadena b → b: el LOAD, la comparación y el cmov.",
+            "ca": "Suma les latències de les instruccions de la cadena b → b: el LOAD, la comparació i el cmov."
+          },
+          "show": {
+            "text": {
+              "en": "<p>The marked line gives the latency bounds: the chain b → b is the largest one.</p>",
+              "es": "<p>La línea marcada da las cotas de latencia: la cadena b → b es la mayor.</p>",
+              "ca": "<p>La línia marcada dona les cotes de latència: la cadena b → b és la més gran.</p>"
+            },
+            "actions": [
+              "closeGraph"
+            ],
+            "selector": "#latency-bounds"
+          }
+        },
+        "actions": [
+          "reveal:analysis",
+          "selectProgram:BSEARCH",
+          "switchTo:staticAnalysisComponent",
+          "waitFor:#latency-bounds [data-chain]",
+          "sidePanel:hide",
+          "graphOption:iters=1",
+          "graphOption:nonCyclic=on",
+          "graphOption:text=on",
+          "graphOption:latencies=on",
+          "graphOption:inputs=off",
+          "openGraph"
+        ],
+        "next": [
+          "sim-auto"
+        ]
+      },
+      {
+        "id": "sim-auto",
+        "type": "step",
+        "anchor": "#right-panel",
+        "position": "inside-top-left",
+        "wWidth": 640,
+        "title": {
+          "en": "Automatic simulation?",
+          "es": "¿Simulación automática?",
+          "ca": "Simulació automàtica?"
+        },
+        "description": {
+          "en": "<p>From now on you will simulate. RVCAT can simulate <b>automatically</b> every time you change something of the program or of the processor: the results are always up to date, but each change may take a moment longer. Or it can simulate only when you click <b>Run Simulation</b>.</p><p>Choose one. You can change it at any time in <b>⚙ Options</b>, next to Run Simulation: <i>Simulate automatically after every change</i>. (The changes made by the cards of the lesson never start a simulation by themselves.)</p>",
+          "es": "<p>A partir de ahora vas a simular. RVCAT puede simular <b>automáticamente</b> cada vez que cambias algo del programa o del procesador: los resultados están siempre al día, pero cada cambio puede tardar un poco más. O puede simular solo cuando pulsas <b>Simular</b>.</p><p>Elige una opción. Puedes cambiarla cuando quieras en <b>⚙ Opciones</b>, junto a Simular: <i>Simular automáticamente después de cada cambio</i>. (Los cambios que hacen las tarjetas de la lección nunca lanzan una simulación por sí solos.)</p>",
+          "ca": "<p>A partir d'ara simularàs. RVCAT pot simular <b>automàticament</b> cada vegada que canvies alguna cosa del programa o del processador: els resultats estan sempre al dia, però cada canvi pot trigar una mica més. O pot simular només quan prems <b>Simula</b>.</p><p>Tria una opció. La pots canviar quan vulguis a <b>⚙ Opcions</b>, al costat de Simula: <i>Simular automàticament després de cada canvi</i>. (Els canvis que fan les targetes de la lliçó mai no llancen una simulació per si sols.)</p>"
+        },
+        "choices": [
+          {
+            "label": {
+              "en": "Simulate automatically",
+              "es": "Simular automáticamente",
+              "ca": "Simular automàticament"
+            },
+            "title": {
+              "en": "Every change of the program or of the processor runs the simulation",
+              "es": "Cada cambio del programa o del procesador lanza la simulación",
+              "ca": "Cada canvi del programa o del processador llança la simulació"
+            },
+            "actions": [
+              "autorun:on"
+            ]
+          },
+          {
+            "label": {
+              "en": "With the Run Simulation button",
+              "es": "Con el botón Simular",
+              "ca": "Amb el botó Simula"
+            },
+            "title": {
+              "en": "The simulation runs only when you click Run Simulation",
+              "es": "La simulación solo se lanza cuando pulsas Simular",
+              "ca": "La simulació només es llança quan prems Simula"
+            },
+            "actions": [
+              "autorun:off"
+            ]
+          }
+        ],
+        "actions": [
+          "closeGraph",
+          "reveal:simulation,simulationPanel",
+          "revertProcessor",
+          "selectProgram:BSEARCH",
+          "setN:16",
+          "setRep:1",
+          "sidePanel:show",
+          "switchTo:simulationComponent"
+        ],
+        "next": [
+          "q-base"
+        ],
+        "lock": [
+          "program",
+          "N",
+          "Rep"
+        ]
+      },
+      {
+        "id": "q-base",
+        "type": "question",
+        "position": "left",
+        "wWidth": 440,
+        "lock": [
+          "program",
+          "N",
+          "Rep"
+        ],
+        "answerMode": "numbers",
+        "answers": [],
+        "title": {
+          "en": "One search",
+          "es": "Una búsqueda",
+          "ca": "Una cerca"
+        },
+        "questionText": {
+          "en": "<p>Simulate one search (Rep = 1) of BSEARCH. How many <b>clock cycles</b> does it take, and how many <b>primary misses</b> does it have?</p>",
+          "es": "<p>Simula una búsqueda (Rep = 1) de BSEARCH. ¿Cuántos <b>ciclos de reloj</b> tarda, y cuántos <b>fallos primarios</b> tiene?</p>",
+          "ca": "<p>Simula una cerca (Rep = 1) de BSEARCH. Quants <b>cicles de rellotge</b> triga, i quantes <b>fallades primàries</b> té?</p>"
+        },
+        "numericFields": [
+          {
+            "label": {
+              "en": "Clock cycles",
+              "es": "Ciclos de reloj",
+              "ca": "Cicles de rellotge"
+            },
+            "value": 260,
+            "tolerance": 3,
+            "unit": {
+              "en": "cycles",
+              "es": "ciclos",
+              "ca": "cicles"
+            },
+            "correct": {
+              "en": "Right: 260 cycles, more than twice the 112 of the chain with hits.",
+              "es": "Correcto: 260 ciclos, más del doble de los 112 de la cadena con aciertos.",
+              "ca": "Correcte: 260 cicles, més del doble dels 112 de la cadena amb encerts."
+            },
+            "wrong": {
+              "en": "Simulate, and read Clock cycles in the Simulation panel.",
+              "es": "Simula, y lee Ciclos de reloj en el panel de simulación.",
+              "ca": "Simula, i llegeix Cicles de rellotge al panell de simulació."
+            }
+          },
+          {
+            "label": {
+              "en": "Primary misses",
+              "es": "Fallos primarios",
+              "ca": "Fallades primàries"
+            },
+            "value": 12,
+            "tolerance": 0,
+            "unit": {
+              "en": "misses",
+              "es": "fallos",
+              "ca": "fallades"
+            },
+            "correct": {
+              "en": "Right: 12 of the 16 LOADs miss, and each one adds about 12 cycles: (260 − 112) / 12 ≈ 12, the latency of main memory.",
+              "es": "Correcto: fallan 12 de los 16 LOAD, y cada uno añade unos 12 ciclos: (260 − 112) / 12 ≈ 12, la latencia de la memoria principal.",
+              "ca": "Correcte: fallen 12 dels 16 LOAD, i cadascun afegeix uns 12 cicles: (260 − 112) / 12 ≈ 12, la latència de la memòria principal."
+            },
+            "wrong": {
+              "en": "Read Primary misses in the Simulation panel.",
+              "es": "Lee Fallos primarios en el panel de simulación.",
+              "ca": "Llegeix Fallades primàries al panell de simulació."
+            }
+          }
+        ],
+        "help": {
+          "hint": {
+            "en": "Click <b>Run Simulation</b>, and read <b>Clock cycles</b> and <b>Primary misses</b>.",
+            "es": "Pulsa <b>Simular</b>, y lee <b>Ciclos de reloj</b> y <b>Fallos primarios</b>.",
+            "ca": "Prem <b>Simula</b>, i llegeix <b>Cicles de rellotge</b> i <b>Fallades primàries</b>."
+          },
+          "show": {
+            "text": {
+              "en": "<p>The simulation is done: the values are marked in the Simulation panel.</p>",
+              "es": "<p>La simulación está hecha: los valores están marcados en el panel de simulación.</p>",
+              "ca": "<p>La simulació està feta: els valors estan marcats al panell de simulació.</p>"
+            },
+            "actions": [
+              "runSimulation"
+            ],
+            "selector": "#cycles-output, #PrimaryMiss-output"
+          }
+        },
+        "actions": [
+          "revertProcessor",
+          "selectProgram:BSEARCH",
+          "setN:16",
+          "setRep:1",
+          "sidePanel:show",
+          "switchTo:simulationComponent"
+        ],
+        "next": [
+          "q-why-rob"
+        ]
+      },
+      {
+        "id": "q-why-rob",
+        "type": "question",
+        "position": "left",
+        "wWidth": 440,
+        "lock": [
+          "program",
+          "N",
+          "Rep"
+        ],
+        "answerMode": "single",
+        "title": {
+          "en": "Why are the misses not hidden?",
+          "es": "¿Por qué no se ocultan los fallos?",
+          "ca": "Per què no s'amaguen les fallades?"
+        },
+        "questionText": {
+          "en": "<p>In Lesson 1, a ROB of 64 entries hid the misses of SUM-scalar. Here the ROB has 64 entries too, but each miss adds its 12 cycles. Why?</p>",
+          "es": "<p>En la lección 1, un ROB de 64 entradas ocultaba los fallos de SUM-scalar. Aquí el ROB también tiene 64 entradas, pero cada fallo añade sus 12 ciclos. ¿Por qué?</p>",
+          "ca": "<p>A la lliçó 1, un ROB de 64 entrades amagava les fallades de SUM-scalar. Aquí el ROB també té 64 entrades, però cada fallada afegeix els seus 12 cicles. Per què?</p>"
+        },
+        "answers": [
+          {
+            "text": {
+              "en": "The ROB fills up: 16 iterations do not fit in 64 entries",
+              "es": "El ROB se llena: 16 iteraciones no caben en 64 entradas",
+              "ca": "El ROB s'omple: 16 iteracions no caben en 64 entrades"
+            },
+            "isCorrect": false,
+            "explanation": {
+              "en": "No: the ROB lets the processor dispatch later instructions, but they cannot start: they wait for the data of the LOAD.",
+              "es": "No: el ROB deja despachar instrucciones posteriores, pero no pueden empezar: esperan el dato del LOAD.",
+              "ca": "No: el ROB deixa despatxar instruccions posteriors, però no poden començar: esperen la dada del LOAD."
+            }
+          },
+          {
+            "text": {
+              "en": "The address of the next LOAD depends on the data of this one: no other LOAD can go ahead",
+              "es": "La dirección del LOAD siguiente depende del dato de este: ningún otro LOAD puede adelantarse",
+              "ca": "L'adreça del LOAD següent depèn de la dada d'aquest: cap altre LOAD no es pot avançar"
+            },
+            "isCorrect": true,
+            "explanation": {
+              "en": "Yes: in SUM-scalar the LOADs were independent and went ahead; here each LOAD waits for the previous one. The hardware prefetcher does not help either: the addresses do not follow a stride.",
+              "es": "Sí: en SUM-scalar los LOAD eran independientes e iban por delante; aquí cada LOAD espera al anterior. El prefetcher por hardware tampoco ayuda: las direcciones no siguen un stride.",
+              "ca": "Sí: a SUM-scalar els LOAD eren independents i anaven per davant; aquí cada LOAD espera l'anterior. El prefetcher per maquinari tampoc no ajuda: les adreces no segueixen un stride."
+            }
+          },
+          {
+            "text": {
+              "en": "There are too few fill buffers",
+              "es": "Hay demasiado pocos fill buffers",
+              "ca": "Hi ha massa pocs fill buffers"
+            },
+            "isCorrect": false,
+            "explanation": {
+              "en": "No: there are 8, and only one miss is on the way at a time.",
+              "es": "No: hay 8, y solo hay un fallo en camino a la vez.",
+              "ca": "No: n'hi ha 8, i només hi ha una fallada en camí alhora."
+            }
+          }
+        ],
+        "help": {
+          "hint": {
+            "en": "What does the LOAD of the next iteration need to compute its address?",
+            "es": "¿Qué necesita el LOAD de la iteración siguiente para calcular su dirección?",
+            "ca": "Què necessita el LOAD de la iteració següent per calcular la seva adreça?"
+          },
+          "show": {
+            "text": {
+              "en": "<p>Look at the marked instructions: the LOAD reads A[b+h], and b comes from the cmov, which waits for the comparison of t, the data of the previous LOAD.</p>",
+              "es": "<p>Mira las instrucciones marcadas: el LOAD lee A[b+h], y b viene del cmov, que espera la comparación de t, el dato del LOAD anterior.</p>",
+              "ca": "<p>Mira les instruccions marcades: el LOAD llegeix A[b+h], i b ve del cmov, que espera la comparació de t, la dada del LOAD anterior.</p>"
+            },
+            "actions": [
+              "programView:type"
+            ],
+            "selector": ".instructions-table"
+          }
+        },
+        "actions": [
+          "sidePanel:show",
+          "switchTo:simulationComponent"
+        ],
+        "next": [
+          "q-last-hits"
+        ]
+      },
+      {
+        "id": "q-last-hits",
+        "type": "question",
+        "position": "left",
+        "wWidth": 440,
+        "lock": [
+          "program",
+          "N",
+          "Rep"
+        ],
+        "answerMode": "single",
+        "title": {
+          "en": "The last 4 LOADs hit",
+          "es": "Los 4 últimos LOAD aciertan",
+          "ca": "Els 4 últims LOAD encerten"
+        },
+        "questionText": {
+          "en": "<p>The cache was empty, and the 16 LOADs read 16 different elements. Why do 4 of them hit?</p>",
+          "es": "<p>La cache estaba vacía, y los 16 LOAD leen 16 elementos distintos. ¿Por qué aciertan 4?</p>",
+          "ca": "<p>La cache era buida, i els 16 LOAD llegeixen 16 elements diferents. Per què n'encerten 4?</p>"
+        },
+        "answers": [
+          {
+            "text": {
+              "en": "In the last iterations the interval is small: the elements read are less than 16 apart, in a block of 64 bytes already in the cache",
+              "es": "En las últimas iteraciones el intervalo es pequeño: los elementos leídos están a menos de 16 posiciones, en un bloque de 64 bytes que ya está en la cache",
+              "ca": "A les últimes iteracions l'interval és petit: els elements llegits són a menys de 16 posicions, en un bloc de 64 bytes que ja és a la cache"
+            },
+            "isCorrect": true,
+            "explanation": {
+              "en": "Yes: a block holds 16 ints. When h ≤ 8, the element read is in the block of an element read before.",
+              "es": "Sí: un bloque guarda 16 ints. Cuando h ≤ 8, el elemento leído está en el bloque de un elemento leído antes.",
+              "ca": "Sí: un bloc guarda 16 ints. Quan h ≤ 8, l'element llegit és al bloc d'un element llegit abans."
+            }
+          },
+          {
+            "text": {
+              "en": "The hardware prefetcher brings them",
+              "es": "El prefetcher por hardware los trae",
+              "ca": "El prefetcher per maquinari els porta"
+            },
+            "isCorrect": false,
+            "explanation": {
+              "en": "No: this processor has no hardware prefetcher (prefetch distance 0), and the addresses do not follow a stride.",
+              "es": "No: este procesador no tiene prefetcher por hardware (distancia de prefetch 0), y las direcciones no siguen un stride.",
+              "ca": "No: aquest processador no té prefetcher per maquinari (distància de prefetch 0), i les adreces no segueixen un stride."
+            }
+          },
+          {
+            "text": {
+              "en": "The first elements of the vector are always in the cache",
+              "es": "Los primeros elementos del vector están siempre en la cache",
+              "ca": "Els primers elements del vector són sempre a la cache"
+            },
+            "isCorrect": false,
+            "explanation": {
+              "en": "No: the cache was empty at the start, and the search reads elements of the whole vector.",
+              "es": "No: la cache estaba vacía al principio, y la búsqueda lee elementos de todo el vector.",
+              "ca": "No: la cache era buida al principi, i la cerca llegeix elements de tot el vector."
+            }
+          }
+        ],
+        "help": {
+          "hint": {
+            "en": "How many ints does a block of 64 bytes hold? How far apart are the elements read in the last iterations (h = 8, 4, 2, 1)?",
+            "es": "¿Cuántos ints caben en un bloque de 64 bytes? ¿A qué distancia están los elementos leídos en las últimas iteraciones (h = 8, 4, 2, 1)?",
+            "ca": "Quants ints hi caben en un bloc de 64 bytes? A quina distància són els elements llegits a les últimes iteracions (h = 8, 4, 2, 1)?"
+          },
+          "show": {
+            "text": {
+              "en": "<p>64 bytes / 4 bytes = 16 ints per block. With h ≤ 8, the new element is less than 16 positions from one read before.</p>",
+              "es": "<p>64 bytes / 4 bytes = 16 ints por bloque. Con h ≤ 8, el elemento nuevo está a menos de 16 posiciones de uno leído antes.</p>",
+              "ca": "<p>64 bytes / 4 bytes = 16 ints per bloc. Amb h ≤ 8, l'element nou és a menys de 16 posicions d'un de llegit abans.</p>"
+            }
+          }
+        },
+        "actions": [
+          "sidePanel:show",
+          "switchTo:simulationComponent"
+        ],
+        "next": [
+          "pf-intro"
+        ]
+      },
+      {
+        "id": "pf-intro",
+        "type": "step",
+        "anchor": "#right-panel",
+        "position": "inside-top-left",
+        "wWidth": 700,
+        "lock": [
+          "program",
+          "N",
+          "Rep"
+        ],
+        "title": {
+          "en": "Software prefetch",
+          "es": "Prefetch por software",
+          "ca": "Prefetch per programari"
+        },
+        "description": {
+          "en": "<p>The program knows the two possible addresses of the next iteration before the comparison: <b>A[b + h/2]</b> if the key is in the lower half, <b>A[b + h + h/2]</b> if it is in the upper half. <b>BSEARCH-pf1</b> asks for both with <b>__builtin_prefetch</b> (open ▸ C).</p><p>The compiler turns each one into a <b>PREFETCH</b> instruction: it runs in a LOAD port, and if its block is not in the cache nor on the way, it requests it like a miss. It <b>does not wait for the block</b>: it finishes as soon as its request gets a fill buffer, and nobody waits for it. Only one of the two prefetches is the right one.</p>",
+          "es": "<p>El programa conoce las dos direcciones posibles de la iteración siguiente antes de la comparación: <b>A[b + h/2]</b> si la clave está en la mitad inferior, <b>A[b + h + h/2]</b> si está en la superior. <b>BSEARCH-pf1</b> pide las dos con <b>__builtin_prefetch</b> (abre ▸ C).</p><p>El compilador convierte cada una en una instrucción <b>PREFETCH</b>: se ejecuta en un puerto de LOAD, y si su bloque no está en la cache ni en camino, lo pide como un fallo. <b>No espera al bloque</b>: acaba en cuanto su petición obtiene un fill buffer, y nadie la espera. Solo uno de los dos prefetches es el bueno.</p>",
+          "ca": "<p>El programa coneix les dues adreces possibles de la iteració següent abans de la comparació: <b>A[b + h/2]</b> si la clau és a la meitat inferior, <b>A[b + h + h/2]</b> si és a la superior. <b>BSEARCH-pf1</b> demana les dues amb <b>__builtin_prefetch</b> (obre ▸ C).</p><p>El compilador converteix cadascuna en una instrucció <b>PREFETCH</b>: s'executa en un port de LOAD, i si el seu bloc no és a la cache ni en camí, el demana com una fallada. <b>No espera el bloc</b>: acaba tan aviat com la seva petició obté un fill buffer, i ningú no l'espera. Només un dels dos prefetches és el bo.</p>"
+        },
+        "actions": [
+          "revertProcessor",
+          "selectProgram:BSEARCH-pf1",
+          "setN:16",
+          "setRep:1",
+          "sidePanel:show",
+          "switchTo:simulationComponent",
+          "programView:type"
+        ],
+        "next": [
+          "q-pf1"
+        ]
+      },
+      {
+        "id": "q-pf1",
+        "type": "question",
+        "position": "left",
+        "wWidth": 440,
+        "lock": [
+          "program",
+          "N",
+          "Rep"
+        ],
+        "answerMode": "numbers",
+        "answers": [],
+        "title": {
+          "en": "Two prefetches",
+          "es": "Dos prefetches",
+          "ca": "Dos prefetches"
+        },
+        "questionText": {
+          "en": "<p>Simulate one search of BSEARCH-pf1. How many <b>clock cycles</b> does it take? In the line <b>PREFETCH instructions</b> of the Simulation panel, how many prefetches were <b>late</b> (the LOAD found its block still on the way)?</p>",
+          "es": "<p>Simula una búsqueda de BSEARCH-pf1. ¿Cuántos <b>ciclos de reloj</b> tarda? En la línea <b>Instrucciones PREFETCH</b> del panel de simulación, ¿cuántos prefetches fueron <b>tardíos</b> (el LOAD encontró su bloque todavía en camino)?</p>",
+          "ca": "<p>Simula una cerca de BSEARCH-pf1. Quants <b>cicles de rellotge</b> triga? A la línia <b>Instruccions PREFETCH</b> del panell de simulació, quants prefetches van ser <b>tardans</b> (el LOAD va trobar el seu bloc encara en camí)?</p>"
+        },
+        "numericFields": [
+          {
+            "label": {
+              "en": "Clock cycles",
+              "es": "Ciclos de reloj",
+              "ca": "Cicles de rellotge"
+            },
+            "value": 156,
+            "tolerance": 3,
+            "unit": {
+              "en": "cycles",
+              "es": "ciclos",
+              "ca": "cicles"
+            },
+            "correct": {
+              "en": "Right: from 260 to 156 cycles, 1.67 times faster.",
+              "es": "Correcto: de 260 a 156 ciclos, 1,67 veces más rápido.",
+              "ca": "Correcte: de 260 a 156 cicles, 1,67 vegades més ràpid."
+            },
+            "wrong": {
+              "en": "Simulate, and read Clock cycles in the Simulation panel.",
+              "es": "Simula, y lee Ciclos de reloj en el panel de simulación.",
+              "ca": "Simula, i llegeix Cicles de rellotge al panell de simulació."
+            }
+          },
+          {
+            "label": {
+              "en": "Late",
+              "es": "Tardíos",
+              "ca": "Tardans"
+            },
+            "value": 8,
+            "tolerance": 0,
+            "unit": {
+              "en": "prefetches",
+              "es": "prefetches",
+              "ca": "prefetches"
+            },
+            "correct": {
+              "en": "Right: 32 PREFETCH sent 22 requests (the others found their block in the cache or on the way); 3 were useful, 8 late, and 11 never used: the other half.",
+              "es": "Correcto: 32 PREFETCH enviaron 22 peticiones (los demás encontraron su bloque en la cache o en camino); 3 fueron útiles, 8 tardíos, y 11 nunca se usaron: la otra mitad.",
+              "ca": "Correcte: 32 PREFETCH van enviar 22 peticions (els altres van trobar el seu bloc a la cache o en camí); 3 van ser útils, 8 tardans, i 11 no es van fer servir mai: l'altra meitat."
+            },
+            "wrong": {
+              "en": "Read the line PREFETCH instructions: executed · requests · useful · late · not used.",
+              "es": "Lee la línea Instrucciones PREFETCH: ejecutadas · peticiones · útiles · tardíos · no usados.",
+              "ca": "Llegeix la línia Instruccions PREFETCH: executades · peticions · útils · tardans · no usats."
+            }
+          }
+        ],
+        "help": {
+          "hint": {
+            "en": "Click <b>Run Simulation</b>; read <b>Clock cycles</b>, and the fourth number of <b>PREFETCH instructions</b>.",
+            "es": "Pulsa <b>Simular</b>; lee <b>Ciclos de reloj</b>, y el cuarto número de <b>Instrucciones PREFETCH</b>.",
+            "ca": "Prem <b>Simula</b>; llegeix <b>Cicles de rellotge</b>, i el quart número d'<b>Instruccions PREFETCH</b>."
+          },
+          "show": {
+            "text": {
+              "en": "<p>The simulation is done: the values are marked in the Simulation panel.</p>",
+              "es": "<p>La simulación está hecha: los valores están marcados en el panel de simulación.</p>",
+              "ca": "<p>La simulació està feta: els valors estan marcats al panell de simulació.</p>"
+            },
+            "actions": [
+              "runSimulation"
+            ],
+            "selector": "#cycles-output, #sw-prefetch-output"
+          }
+        },
+        "actions": [
+          "revertProcessor",
+          "selectProgram:BSEARCH-pf1",
+          "setN:16",
+          "setRep:1",
+          "sidePanel:show",
+          "switchTo:simulationComponent"
+        ],
+        "next": [
+          "q-ahead"
+        ]
+      },
+      {
+        "id": "q-ahead",
+        "type": "question",
+        "position": "left",
+        "wWidth": 440,
+        "lock": [
+          "program",
+          "N",
+          "Rep"
+        ],
+        "answerMode": "numbers",
+        "answers": [],
+        "title": {
+          "en": "How far ahead?",
+          "es": "¿A qué distancia?",
+          "ca": "A quina distància?"
+        },
+        "questionText": {
+          "en": "<p>Most prefetches of BSEARCH-pf1 are late. A block takes about 12 cycles to arrive from main memory, and an iteration whose LOAD hits takes 7 cycles.</p><p>How many <b>iterations ahead</b> must a prefetch go, at least, so that its block arrives in time?</p>",
+          "es": "<p>La mayoría de los prefetches de BSEARCH-pf1 llegan tarde. Un bloque tarda unos 12 ciclos en llegar de la memoria principal, y una iteración cuyo LOAD acierta tarda 7 ciclos.</p><p>¿Cuántas <b>iteraciones por delante</b> debe ir un prefetch, como mínimo, para que su bloque llegue a tiempo?</p>",
+          "ca": "<p>La majoria dels prefetches de BSEARCH-pf1 arriben tard. Un bloc triga uns 12 cicles a arribar de la memòria principal, i una iteració el LOAD de la qual encerta triga 7 cicles.</p><p>Quantes <b>iteracions per davant</b> ha d'anar un prefetch, com a mínim, perquè el seu bloc arribi a temps?</p>"
+        },
+        "numericFields": [
+          {
+            "label": {
+              "en": "Iterations ahead",
+              "es": "Iteraciones por delante",
+              "ca": "Iteracions per davant"
+            },
+            "value": 2,
+            "tolerance": 0,
+            "unit": {
+              "en": "iterations",
+              "es": "iteraciones",
+              "ca": "iteracions"
+            },
+            "correct": {
+              "en": "Right: one iteration ahead gives 7 cycles, less than 12; two give 14. The same rule as the hardware prefetcher of Lesson 1: distance × time per step ≥ latency.",
+              "es": "Correcto: una iteración por delante da 7 ciclos, menos de 12; dos dan 14. La misma regla que el prefetcher por hardware de la lección 1: distancia × tiempo por paso ≥ latencia.",
+              "ca": "Correcte: una iteració per davant dona 7 cicles, menys de 12; dues en donen 14. La mateixa regla que el prefetcher per maquinari de la lliçó 1: distància × temps per pas ≥ latència."
+            },
+            "wrong": {
+              "en": "A prefetch k iterations ahead has k × 7 cycles for its block. Which k gives at least 12?",
+              "es": "Un prefetch k iteraciones por delante tiene k × 7 ciclos para su bloque. ¿Qué k da al menos 12?",
+              "ca": "Un prefetch k iteracions per davant té k × 7 cicles per al seu bloc. Quina k en dona almenys 12?"
+            }
+          }
+        ],
+        "help": {
+          "hint": {
+            "en": "A prefetch k iterations ahead has k × 7 cycles until its LOAD needs the block.",
+            "es": "Un prefetch k iteraciones por delante tiene k × 7 ciclos hasta que su LOAD necesita el bloque.",
+            "ca": "Un prefetch k iteracions per davant té k × 7 cicles fins que el seu LOAD necessita el bloc."
+          },
+          "show": {
+            "text": {
+              "en": "<p>Find the smallest k with k × 7 ≥ 12.</p>",
+              "es": "<p>Busca la k más pequeña con k × 7 ≥ 12.</p>",
+              "ca": "<p>Busca la k més petita amb k × 7 ≥ 12.</p>"
+            }
+          }
+        },
+        "actions": [
+          "sidePanel:show",
+          "switchTo:simulationComponent"
+        ],
+        "next": [
+          "pf-timeline"
+        ]
+      },
+      {
+        "id": "pf-timeline",
+        "type": "step",
+        "position": "bottom-center",
+        "xShift": 0.12,
+        "wWidth": 700,
+        "lock": [
+          "program",
+          "N",
+          "Rep"
+        ],
+        "explore": "required",
+        "title": {
+          "en": "The prefetches in the timeline",
+          "es": "Los prefetches en el timeline",
+          "ca": "Els prefetches al timeline"
+        },
+        "description": {
+          "en": "<p>The <b>Timeline</b> shows BSEARCH-pf1. Each PREFETCH runs like a LOAD (E), waits for a fill buffer if needed (!), and finishes (W, R) <b>without waiting for its block</b>. Unfold <b>▸ Memory</b>: <b>P</b> in the row MM is a block requested by a prefetch.</p><p>Look at the LOADs: do they still wait for their block (<b>:</b>)? For how many cycles, compared with the first iteration?</p>",
+          "es": "<p>El <b>Timeline</b> muestra BSEARCH-pf1. Cada PREFETCH se ejecuta como un LOAD (E), espera un fill buffer si hace falta (!), y acaba (W, R) <b>sin esperar a su bloque</b>. Despliega <b>▸ Memoria</b>: <b>P</b> en la fila MM es un bloque pedido por un prefetch.</p><p>Mira los LOAD: ¿siguen esperando su bloque (<b>:</b>)? ¿Cuántos ciclos, comparado con la primera iteración?</p>",
+          "ca": "<p>El <b>Timeline</b> mostra BSEARCH-pf1. Cada PREFETCH s'executa com un LOAD (E), espera un fill buffer si cal (!), i acaba (W, R) <b>sense esperar el seu bloc</b>. Desplega <b>▸ Memòria</b>: <b>P</b> a la fila MM és un bloc demanat per un prefetch.</p><p>Mira els LOAD: encara esperen el seu bloc (<b>:</b>)? Quants cicles, comparat amb la primera iteració?</p>"
+        },
+        "exploreHint": {
+          "en": "<p>Click a cell of a PREFETCH row and of a LOAD row to read their details; the arrow keys move along the row. When you are done, click here.</p>",
+          "es": "<p>Haz clic en una celda de una fila PREFETCH y de una fila LOAD para leer sus detalles; las flechas del teclado mueven por la fila. Cuando acabes, pulsa aquí.</p>",
+          "ca": "<p>Fes clic a una cel·la d'una fila PREFETCH i d'una fila LOAD per llegir-ne els detalls; les fletxes del teclat mouen per la fila. Quan acabis, prem aquí.</p>"
+        },
+        "actions": [
+          "revertProcessor",
+          "selectProgram:BSEARCH-pf1",
+          "setN:16",
+          "setRep:1",
+          "reveal:timeline",
+          "hide:timelineCritical",
+          "sidePanel:hide",
+          "switchTo:timelineComponent",
+          "timeline:view=detailed",
+          "timeline:critical=off"
+        ],
+        "next": [
+          "q-pf2"
+        ]
+      },
+      {
+        "id": "q-pf2",
+        "type": "question",
+        "position": "left",
+        "wWidth": 440,
+        "lock": [
+          "program",
+          "N",
+          "Rep"
+        ],
+        "answerMode": "numbers",
+        "answers": [],
+        "title": {
+          "en": "Two iterations ahead",
+          "es": "Dos iteraciones por delante",
+          "ca": "Dues iteracions per davant"
+        },
+        "questionText": {
+          "en": "<p>Two iterations ahead there are 4 possible probes, one for each path (lower-lower, lower-upper...): <b>BSEARCH-pf2</b> prefetches the 4. Simulate one search. How many <b>clock cycles</b> does it take, and how many of its requests are <b>not used</b>?</p>",
+          "es": "<p>Dos iteraciones por delante hay 4 consultas posibles, una por camino (inferior-inferior, inferior-superior...): <b>BSEARCH-pf2</b> hace prefetch de las 4. Simula una búsqueda. ¿Cuántos <b>ciclos de reloj</b> tarda, y cuántas de sus peticiones <b>no se usan</b>?</p>",
+          "ca": "<p>Dues iteracions per davant hi ha 4 consultes possibles, una per camí (inferior-inferior, inferior-superior...): <b>BSEARCH-pf2</b> fa prefetch de les 4. Simula una cerca. Quants <b>cicles de rellotge</b> triga, i quantes de les seves peticions <b>no es fan servir</b>?</p>"
+        },
+        "numericFields": [
+          {
+            "label": {
+              "en": "Clock cycles",
+              "es": "Ciclos de reloj",
+              "ca": "Cicles de rellotge"
+            },
+            "value": 141,
+            "tolerance": 3,
+            "unit": {
+              "en": "cycles",
+              "es": "ciclos",
+              "ca": "cicles"
+            },
+            "correct": {
+              "en": "Right: 141 cycles, close to the 112 of the chain with hits: almost all the prefetches arrive in time (1 late).",
+              "es": "Correcto: 141 ciclos, cerca de los 112 de la cadena con aciertos: casi todos los prefetches llegan a tiempo (1 tardío).",
+              "ca": "Correcte: 141 cicles, a prop dels 112 de la cadena amb encerts: gairebé tots els prefetches arriben a temps (1 tardà)."
+            },
+            "wrong": {
+              "en": "Simulate, and read Clock cycles in the Simulation panel.",
+              "es": "Simula, y lee Ciclos de reloj en el panel de simulación.",
+              "ca": "Simula, i llegeix Cicles de rellotge al panell de simulació."
+            }
+          },
+          {
+            "label": {
+              "en": "Not used",
+              "es": "No usados",
+              "ca": "No usats"
+            },
+            "value": 30,
+            "tolerance": 0,
+            "unit": {
+              "en": "requests",
+              "es": "peticiones",
+              "ca": "peticions"
+            },
+            "correct": {
+              "en": "Right: 30 of its 40 requests bring blocks that no LOAD uses: 3 of every 4. Prefetching further ahead costs more requests.",
+              "es": "Correcto: 30 de sus 40 peticiones traen bloques que ningún LOAD usa: 3 de cada 4. Hacer prefetch más lejos cuesta más peticiones.",
+              "ca": "Correcte: 30 de les seves 40 peticions porten blocs que cap LOAD no fa servir: 3 de cada 4. Fer prefetch més lluny costa més peticions."
+            },
+            "wrong": {
+              "en": "Read the last number of the line PREFETCH instructions.",
+              "es": "Lee el último número de la línea Instrucciones PREFETCH.",
+              "ca": "Llegeix l'últim número de la línia Instruccions PREFETCH."
+            }
+          }
+        ],
+        "help": {
+          "hint": {
+            "en": "Click <b>Run Simulation</b>; read <b>Clock cycles</b>, and the last number of <b>PREFETCH instructions</b>.",
+            "es": "Pulsa <b>Simular</b>; lee <b>Ciclos de reloj</b>, y el último número de <b>Instrucciones PREFETCH</b>.",
+            "ca": "Prem <b>Simula</b>; llegeix <b>Cicles de rellotge</b>, i l'últim número d'<b>Instruccions PREFETCH</b>."
+          },
+          "show": {
+            "text": {
+              "en": "<p>The simulation is done: the values are marked in the Simulation panel.</p>",
+              "es": "<p>La simulación está hecha: los valores están marcados en el panel de simulación.</p>",
+              "ca": "<p>La simulació està feta: els valors estan marcats al panell de simulació.</p>"
+            },
+            "actions": [
+              "runSimulation"
+            ],
+            "selector": "#cycles-output, #sw-prefetch-output"
+          }
+        },
+        "actions": [
+          "hide:timeline",
+          "revertProcessor",
+          "selectProgram:BSEARCH-pf2",
+          "setN:16",
+          "setRep:1",
+          "sidePanel:show",
+          "switchTo:simulationComponent",
+          "programView:type"
+        ],
+        "next": [
+          "q-pf2-fb"
+        ]
+      },
+      {
+        "id": "q-pf2-fb",
+        "type": "question",
+        "position": "bottom-right",
+        "wWidth": 440,
+        "lock": [
+          "program",
+          "N",
+          "Rep"
+        ],
+        "answerMode": "numbers",
+        "answers": [],
+        "allow": [
+          "processor.cache"
+        ],
+        "title": {
+          "en": "And the fill buffers?",
+          "es": "¿Y los fill buffers?",
+          "ca": "I els fill buffers?"
+        },
+        "questionText": {
+          "en": "<p>The processor has 8 fill buffers. Change them to <b>4</b> and then to <b>2</b> (click the <b>Memory</b> box of the Processor panel, then <i>Configure the cache…</i>), and simulate BSEARCH-pf2 each time. How many clock cycles?</p>",
+          "es": "<p>El procesador tiene 8 fill buffers. Cámbialos a <b>4</b> y después a <b>2</b> (haz clic en la caja <b>Memoria</b> del panel del procesador, y después en <i>Configurar la cache…</i>), y simula BSEARCH-pf2 cada vez. ¿Cuántos ciclos de reloj?</p>",
+          "ca": "<p>El processador té 8 fill buffers. Canvia'ls a <b>4</b> i després a <b>2</b> (fes clic a la caixa <b>Memòria</b> del panell del processador, i després a <i>Configura la cache…</i>), i simula BSEARCH-pf2 cada vegada. Quants cicles de rellotge?</p>"
+        },
+        "numericFields": [
+          {
+            "label": {
+              "en": "4 fill buffers",
+              "es": "4 fill buffers",
+              "ca": "4 fill buffers"
+            },
+            "value": 173,
+            "tolerance": 3,
+            "unit": {
+              "en": "cycles",
+              "es": "ciclos",
+              "ca": "cicles"
+            },
+            "correct": {
+              "en": "Right: 173 cycles. Each iteration sends up to 4 requests, and each one keeps its fill buffer about 13 cycles: with 4, the prefetches wait, and they arrive late.",
+              "es": "Correcto: 173 ciclos. Cada iteración envía hasta 4 peticiones, y cada una ocupa su fill buffer unos 13 ciclos: con 4, los prefetches esperan, y llegan tarde.",
+              "ca": "Correcte: 173 cicles. Cada iteració envia fins a 4 peticions, i cadascuna ocupa el seu fill buffer uns 13 cicles: amb 4, els prefetches esperen, i arriben tard."
+            },
+            "wrong": {
+              "en": "Simulate, and read Clock cycles in the Simulation panel.",
+              "es": "Simula, y lee Ciclos de reloj en el panel de simulación.",
+              "ca": "Simula, i llegeix Cicles de rellotge al panell de simulació."
+            }
+          },
+          {
+            "label": {
+              "en": "2 fill buffers",
+              "es": "2 fill buffers",
+              "ca": "2 fill buffers"
+            },
+            "value": 279,
+            "tolerance": 3,
+            "unit": {
+              "en": "cycles",
+              "es": "ciclos",
+              "ca": "cicles"
+            },
+            "correct": {
+              "en": "Right: 279 cycles, worse than without prefetching (260): the prefetches that will not be used take the fill buffers, and the misses of the LOADs wait behind them.",
+              "es": "Correcto: 279 ciclos, peor que sin prefetch (260): los prefetches que no se usarán ocupan los fill buffers, y los fallos de los LOAD esperan detrás de ellos.",
+              "ca": "Correcte: 279 cicles, pitjor que sense prefetch (260): els prefetches que no es faran servir ocupen els fill buffers, i les fallades dels LOAD esperen darrere seu."
+            },
+            "wrong": {
+              "en": "Simulate, and read Clock cycles in the Simulation panel.",
+              "es": "Simula, y lee Ciclos de reloj en el panel de simulación.",
+              "ca": "Simula, i llegeix Cicles de rellotge al panell de simulació."
+            }
+          }
+        ],
+        "help": {
+          "hint": {
+            "en": "Click the <b>Memory</b> box, then <b>Configure the cache…</b>; change Fill buffers, apply, and simulate. Read <b>Clock cycles</b> each time.",
+            "es": "Haz clic en la caja <b>Memoria</b>, y después en <b>Configurar la cache…</b>; cambia Fill buffers, aplica, y simula. Lee <b>Ciclos de reloj</b> cada vez.",
+            "ca": "Fes clic a la caixa <b>Memòria</b>, i després a <b>Configura la cache…</b>; canvia Fill buffers, aplica, i simula. Llegeix <b>Cicles de rellotge</b> cada vegada."
+          },
+          "show": {
+            "text": {
+              "en": "<p>The processor has now 4 fill buffers and the simulation is done. Then try 2.</p>",
+              "es": "<p>El procesador tiene ahora 4 fill buffers y la simulación está hecha. Después prueba con 2.</p>",
+              "ca": "<p>El processador té ara 4 fill buffers i la simulació està feta. Després prova amb 2.</p>"
+            },
+            "actions": [
+              "setProcessor:nFillBuffers=4",
+              "runSimulation"
+            ],
+            "selector": "#cycles-output, #pd-memory"
+          }
+        },
+        "actions": [
+          "revertProcessor",
+          "selectProgram:BSEARCH-pf2",
+          "setN:16",
+          "setRep:1",
+          "sidePanel:show",
+          "switchTo:simulationComponent"
+        ],
+        "next": [
+          "many"
+        ]
+      },
+      {
+        "id": "many",
+        "type": "step",
+        "anchor": "#right-panel",
+        "position": "inside-top-left",
+        "wWidth": 700,
+        "lock": [
+          "program",
+          "N",
+          "Rep"
+        ],
+        "title": {
+          "en": "Many searches",
+          "es": "Muchas búsquedas",
+          "ca": "Moltes cerques"
+        },
+        "description": {
+          "en": "<p>A program usually searches many keys in the same vector. Now <b>Rep = 20</b>: 20 calls of search, each with a different key (the processor has 8 fill buffers again).</p><p>Two things change. The first iterations of all the searches read the same elements (the middle of the vector, then one of the two quarters...): <b>their blocks stay in the cache</b>. And the searches are independent: while one search waits for a miss, the ROB can already hold the next search.</p>",
+          "es": "<p>Un programa suele buscar muchas claves en el mismo vector. Ahora <b>Rep = 20</b>: 20 llamadas a search, cada una con una clave distinta (el procesador vuelve a tener 8 fill buffers).</p><p>Cambian dos cosas. Las primeras iteraciones de todas las búsquedas leen los mismos elementos (el centro del vector, después uno de los dos cuartos...): <b>sus bloques se quedan en la cache</b>. Y las búsquedas son independientes: mientras una búsqueda espera un fallo, el ROB ya puede contener la búsqueda siguiente.</p>",
+          "ca": "<p>Un programa sol cercar moltes claus en el mateix vector. Ara <b>Rep = 20</b>: 20 crides a search, cadascuna amb una clau diferent (el processador torna a tenir 8 fill buffers).</p><p>Canvien dues coses. Les primeres iteracions de totes les cerques llegeixen els mateixos elements (el centre del vector, després un dels dos quarts...): <b>els seus blocs es queden a la cache</b>. I les cerques són independents: mentre una cerca espera una fallada, el ROB ja pot contenir la cerca següent.</p>"
+        },
+        "actions": [
+          "revertProcessor",
+          "selectProgram:BSEARCH",
+          "setN:16",
+          "setRep:20",
+          "clearStoredResults",
+          "sidePanel:show",
+          "switchTo:simulationComponent"
+        ],
+        "next": [
+          "q-rep"
+        ]
+      },
+      {
+        "id": "q-rep",
+        "type": "question",
+        "position": "left",
+        "wWidth": 440,
+        "lock": [
+          "program",
+          "N",
+          "Rep"
+        ],
+        "answerMode": "numbers",
+        "answers": [],
+        "title": {
+          "en": "20 searches",
+          "es": "20 búsquedas",
+          "ca": "20 cerques"
+        },
+        "questionText": {
+          "en": "<p>Simulate BSEARCH with Rep = 20. What is the time per iteration (<b>Cycles/iter</b>)? With one search it was 260 / 16 = 16.25.</p>",
+          "es": "<p>Simula BSEARCH con Rep = 20. ¿Cuál es el tiempo por iteración (<b>Cycles/iter</b>)? Con una búsqueda era 260 / 16 = 16,25.</p>",
+          "ca": "<p>Simula BSEARCH amb Rep = 20. Quin és el temps per iteració (<b>Cycles/iter</b>)? Amb una cerca era 260 / 16 = 16,25.</p>"
+        },
+        "numericFields": [
+          {
+            "label": {
+              "en": "Time per iteration",
+              "es": "Tiempo por iteración",
+              "ca": "Temps per iteració"
+            },
+            "value": 8.93,
+            "tolerance": 0.05,
+            "unit": {
+              "en": "cycles/iter",
+              "es": "ciclos/iter",
+              "ca": "cicles/iter"
+            },
+            "correct": {
+              "en": "Right: 8.93, almost half. Look at <b>Misses per call</b>: the first search has 12, the next ones fewer, because the top of the tree stays in the cache; and the ROB overlaps the end of a search with the start of the next one.",
+              "es": "Correcto: 8,93, casi la mitad. Mira <b>Fallos por llamada</b>: la primera búsqueda tiene 12, las siguientes menos, porque la parte alta del árbol se queda en la cache; y el ROB solapa el final de una búsqueda con el principio de la siguiente.",
+              "ca": "Correcte: 8,93, gairebé la meitat. Mira <b>Fallades per crida</b>: la primera cerca en té 12, les següents menys, perquè la part alta de l'arbre es queda a la cache; i el ROB solapa el final d'una cerca amb el principi de la següent."
+            },
+            "wrong": {
+              "en": "Simulate, and read Cycles/iter in the Simulation panel.",
+              "es": "Simula, y lee Cycles/iter en el panel de simulación.",
+              "ca": "Simula, i llegeix Cycles/iter al panell de simulació."
+            }
+          }
+        ],
+        "help": {
+          "hint": {
+            "en": "Click <b>Run Simulation</b>, and read <b>Cycles/iter</b>.",
+            "es": "Pulsa <b>Simular</b>, y lee <b>Cycles/iter</b>.",
+            "ca": "Prem <b>Simula</b>, i llegeix <b>Cycles/iter</b>."
+          },
+          "show": {
+            "text": {
+              "en": "<p>The simulation is done: the values are marked in the Simulation panel.</p>",
+              "es": "<p>La simulación está hecha: los valores están marcados en el panel de simulación.</p>",
+              "ca": "<p>La simulació està feta: els valors estan marcats al panell de simulació.</p>"
+            },
+            "actions": [
+              "runSimulation"
+            ],
+            "selector": "#cycles-per-iteration-output, #misses-per-call-output"
+          }
+        },
+        "actions": [
+          "revertProcessor",
+          "selectProgram:BSEARCH",
+          "setN:16",
+          "setRep:20",
+          "sidePanel:show",
+          "switchTo:simulationComponent"
+        ],
+        "next": [
+          "q-rep-pf1"
+        ]
+      },
+      {
+        "id": "q-rep-pf1",
+        "type": "question",
+        "position": "left",
+        "wWidth": 440,
+        "lock": [
+          "program",
+          "N",
+          "Rep"
+        ],
+        "answerMode": "numbers",
+        "answers": [],
+        "title": {
+          "en": "And with the prefetches?",
+          "es": "¿Y con los prefetches?",
+          "ca": "I amb els prefetches?"
+        },
+        "questionText": {
+          "en": "<p>Simulate BSEARCH-pf1 with Rep = 20. What is the time per iteration?</p>",
+          "es": "<p>Simula BSEARCH-pf1 con Rep = 20. ¿Cuál es el tiempo por iteración?</p>",
+          "ca": "<p>Simula BSEARCH-pf1 amb Rep = 20. Quin és el temps per iteració?</p>"
+        },
+        "numericFields": [
+          {
+            "label": {
+              "en": "Time per iteration",
+              "es": "Tiempo por iteración",
+              "ca": "Temps per iteració"
+            },
+            "value": 6.37,
+            "tolerance": 0.05,
+            "unit": {
+              "en": "cycles/iter",
+              "es": "ciclos/iter",
+              "ca": "cicles/iter"
+            },
+            "correct": {
+              "en": "Right: 6.37, 1.4 times faster than 8.93 (with one search it was 1.67): part of the latency was already hidden by the cache and by the ROB.",
+              "es": "Correcto: 6,37, 1,4 veces más rápido que 8,93 (con una búsqueda era 1,67): parte de la latencia ya la ocultaban la cache y el ROB.",
+              "ca": "Correcte: 6,37, 1,4 vegades més ràpid que 8,93 (amb una cerca era 1,67): part de la latència ja l'amagaven la cache i el ROB."
+            },
+            "wrong": {
+              "en": "Simulate, and read Cycles/iter in the Simulation panel.",
+              "es": "Simula, y lee Cycles/iter en el panel de simulación.",
+              "ca": "Simula, i llegeix Cycles/iter al panell de simulació."
+            }
+          }
+        ],
+        "help": {
+          "hint": {
+            "en": "Click <b>Run Simulation</b>, and read <b>Cycles/iter</b>.",
+            "es": "Pulsa <b>Simular</b>, y lee <b>Cycles/iter</b>.",
+            "ca": "Prem <b>Simula</b>, i llegeix <b>Cycles/iter</b>."
+          },
+          "show": {
+            "text": {
+              "en": "<p>The simulation is done: the values are marked in the Simulation panel.</p>",
+              "es": "<p>La simulación está hecha: los valores están marcados en el panel de simulación.</p>",
+              "ca": "<p>La simulació està feta: els valors estan marcats al panell de simulació.</p>"
+            },
+            "actions": [
+              "runSimulation"
+            ],
+            "selector": "#cycles-per-iteration-output"
+          }
+        },
+        "actions": [
+          "revertProcessor",
+          "selectProgram:BSEARCH-pf1",
+          "setN:16",
+          "setRep:20",
+          "sidePanel:show",
+          "switchTo:simulationComponent"
+        ],
+        "next": [
+          "q-rep-pf2"
+        ]
+      },
+      {
+        "id": "q-rep-pf2",
+        "type": "question",
+        "position": "left",
+        "wWidth": 440,
+        "lock": [
+          "program",
+          "N",
+          "Rep"
+        ],
+        "answerMode": "numbers",
+        "answers": [],
+        "title": {
+          "en": "And two iterations ahead?",
+          "es": "¿Y dos iteraciones por delante?",
+          "ca": "I dues iteracions per davant?"
+        },
+        "questionText": {
+          "en": "<p>Simulate BSEARCH-pf2 with Rep = 20. What is the time per iteration? With one search, BSEARCH-pf2 was faster than BSEARCH-pf1 (141 cycles against 156).</p>",
+          "es": "<p>Simula BSEARCH-pf2 con Rep = 20. ¿Cuál es el tiempo por iteración? Con una búsqueda, BSEARCH-pf2 era más rápido que BSEARCH-pf1 (141 ciclos contra 156).</p>",
+          "ca": "<p>Simula BSEARCH-pf2 amb Rep = 20. Quin és el temps per iteració? Amb una cerca, BSEARCH-pf2 era més ràpid que BSEARCH-pf1 (141 cicles contra 156).</p>"
+        },
+        "numericFields": [
+          {
+            "label": {
+              "en": "Time per iteration",
+              "es": "Tiempo por iteración",
+              "ca": "Temps per iteració"
+            },
+            "value": 7.27,
+            "tolerance": 0.05,
+            "unit": {
+              "en": "cycles/iter",
+              "es": "ciclos/iter",
+              "ca": "cicles/iter"
+            },
+            "correct": {
+              "en": "Right: 7.27, slower than BSEARCH-pf1 (6.37) with 20 searches.",
+              "es": "Correcto: 7,27, más lento que BSEARCH-pf1 (6,37) con 20 búsquedas.",
+              "ca": "Correcte: 7,27, més lent que BSEARCH-pf1 (6,37) amb 20 cerques."
+            },
+            "wrong": {
+              "en": "Simulate, and read Cycles/iter in the Simulation panel.",
+              "es": "Simula, y lee Cycles/iter en el panel de simulación.",
+              "ca": "Simula, i llegeix Cycles/iter al panell de simulació."
+            }
+          }
+        ],
+        "help": {
+          "hint": {
+            "en": "Click <b>Run Simulation</b>, and read <b>Cycles/iter</b>.",
+            "es": "Pulsa <b>Simular</b>, y lee <b>Cycles/iter</b>.",
+            "ca": "Prem <b>Simula</b>, i llegeix <b>Cycles/iter</b>."
+          },
+          "show": {
+            "text": {
+              "en": "<p>The simulation is done: the values are marked in the Simulation panel.</p>",
+              "es": "<p>La simulación está hecha: los valores están marcados en el panel de simulación.</p>",
+              "ca": "<p>La simulació està feta: els valors estan marcats al panell de simulació.</p>"
+            },
+            "actions": [
+              "runSimulation"
+            ],
+            "selector": "#cycles-per-iteration-output"
+          }
+        },
+        "actions": [
+          "revertProcessor",
+          "selectProgram:BSEARCH-pf2",
+          "setN:16",
+          "setRep:20",
+          "sidePanel:show",
+          "switchTo:simulationComponent"
+        ],
+        "next": [
+          "q-pollution"
+        ]
+      },
+      {
+        "id": "q-pollution",
+        "type": "question",
+        "position": "left",
+        "wWidth": 440,
+        "lock": [
+          "program",
+          "N",
+          "Rep"
+        ],
+        "answerMode": "single",
+        "title": {
+          "en": "Why is BSEARCH-pf2 slower?",
+          "es": "¿Por qué es más lento BSEARCH-pf2?",
+          "ca": "Per què és més lent BSEARCH-pf2?"
+        },
+        "questionText": {
+          "en": "<p>Look at <b>Misses per call</b> and at the <b>PREFETCH instructions</b>. Why is it slower than BSEARCH-pf1 with 20 searches?</p>",
+          "es": "<p>Mira <b>Fallos por llamada</b> y las <b>Instrucciones PREFETCH</b>. ¿Por qué es más lento que BSEARCH-pf1 con 20 búsquedas?</p>",
+          "ca": "<p>Mira <b>Fallades per crida</b> i les <b>Instruccions PREFETCH</b>. Per què és més lent que BSEARCH-pf1 amb 20 cerques?</p>"
+        },
+        "answers": [
+          {
+            "text": {
+              "en": "Its prefetches arrive late",
+              "es": "Sus prefetches llegan tarde",
+              "ca": "Els seus prefetches arriben tard"
+            },
+            "isCorrect": false,
+            "explanation": {
+              "en": "No: few of them are late; they go two iterations ahead.",
+              "es": "No: pocos llegan tarde; van dos iteraciones por delante.",
+              "ca": "No: pocs arriben tard; van dues iteracions per davant."
+            }
+          },
+          {
+            "text": {
+              "en": "Its 600 prefetched blocks that are never used replace, in the 32 lines, the blocks of the top of the tree, which all the searches share",
+              "es": "Sus 600 bloques de prefetch que nunca se usan reemplazan, en las 32 líneas, los bloques de la parte alta del árbol, que comparten todas las búsquedas",
+              "ca": "Els seus 600 blocs de prefetch que mai no es fan servir reemplacen, a les 32 línies, els blocs de la part alta de l'arbre, que comparteixen totes les cerques"
+            },
+            "isCorrect": true,
+            "explanation": {
+              "en": "Yes: the prefetches <b>pollute</b> the cache. Each search now misses in its first 2 iterations (Misses per call: 2), which no prefetch covers; BSEARCH-pf1 has 0. And 800 requests keep the fill buffers and main memory busy.",
+              "es": "Sí: los prefetches <b>contaminan</b> la cache. Cada búsqueda falla ahora en sus 2 primeras iteraciones (Fallos por llamada: 2), que ningún prefetch cubre; BSEARCH-pf1 tiene 0. Y 800 peticiones mantienen ocupados los fill buffers y la memoria principal.",
+              "ca": "Sí: els prefetches <b>contaminen</b> la cache. Cada cerca falla ara a les seves 2 primeres iteracions (Fallades per crida: 2), que cap prefetch no cobreix; BSEARCH-pf1 en té 0. I 800 peticions mantenen ocupats els fill buffers i la memòria principal."
+            }
+          },
+          {
+            "text": {
+              "en": "Its PREFETCH instructions take the LOAD ports from the LOADs",
+              "es": "Sus instrucciones PREFETCH quitan los puertos de LOAD a los LOAD",
+              "ca": "Les seves instruccions PREFETCH treuen els ports de LOAD als LOAD"
+            },
+            "isCorrect": false,
+            "explanation": {
+              "en": "No: the LOAD comes before the prefetches in the program, so it gets a port first; with one search BSEARCH-pf2 was the fastest.",
+              "es": "No: el LOAD va antes que los prefetches en el programa, así que obtiene un puerto primero; con una búsqueda BSEARCH-pf2 era el más rápido.",
+              "ca": "No: el LOAD va abans que els prefetches al programa, així que obté un port primer; amb una cerca BSEARCH-pf2 era el més ràpid."
+            }
+          }
+        ],
+        "help": {
+          "hint": {
+            "en": "Compare <b>Misses per call</b> of BSEARCH-pf1 and BSEARCH-pf2. Which iterations of a search does no prefetch cover? Where were their blocks?",
+            "es": "Compara <b>Fallos por llamada</b> de BSEARCH-pf1 y BSEARCH-pf2. ¿Qué iteraciones de una búsqueda no cubre ningún prefetch? ¿Dónde estaban sus bloques?",
+            "ca": "Compara <b>Fallades per crida</b> de BSEARCH-pf1 i BSEARCH-pf2. Quines iteracions d'una cerca no cobreix cap prefetch? On eren els seus blocs?"
+          },
+          "show": {
+            "text": {
+              "en": "<p>The simulation is done: the values are marked in the Simulation panel.</p>",
+              "es": "<p>La simulación está hecha: los valores están marcados en el panel de simulación.</p>",
+              "ca": "<p>La simulació està feta: els valors estan marcats al panell de simulació.</p>"
+            },
+            "actions": [
+              "runSimulation"
+            ],
+            "selector": "#misses-per-call-output, #sw-prefetch-output"
+          }
+        },
+        "actions": [
+          "revertProcessor",
+          "selectProgram:BSEARCH-pf2",
+          "setN:16",
+          "setRep:20",
+          "sidePanel:show",
+          "switchTo:simulationComponent"
+        ],
+        "next": [
+          "summary"
+        ]
+      },
+      {
+        "id": "summary",
+        "type": "step",
+        "style": "takeaway",
+        "position": "center",
+        "wWidth": 720,
+        "lock": [
+          "program",
+          "N",
+          "Rep"
+        ],
+        "title": {
+          "en": "Software prefetch: what it costs",
+          "es": "Prefetch por software: lo que cuesta",
+          "ca": "Prefetch per programari: el que costa"
+        },
+        "description": {
+          "en": "<p>When the address of each LOAD depends on the previous LOAD, neither the ROB nor the hardware prefetcher can hide the misses. The program itself can: it knows the possible next addresses, and <b>prefetches them</b> (one search: from 260 to 156 cycles).</p><p>&bull; <b>In time</b>: k iterations ahead × time per iteration ≥ latency of memory (here k = 2).<br>&bull; <b>Cost</b>: k iterations ahead there are 2<sup>k</sup> candidates, and only one is right: more instructions, more requests, more <b>fill buffers</b> (with 2, prefetching is slower than nothing), and the blocks never used <b>pollute</b> the cache.<br>&bull; <b>Context</b>: with many searches the cache and the ROB already hide part of the latency, and the best distance changes (BSEARCH-pf1 wins).</p>",
+          "es": "<p>Cuando la dirección de cada LOAD depende del LOAD anterior, ni el ROB ni el prefetcher por hardware pueden ocultar los fallos. El propio programa sí: conoce las direcciones siguientes posibles, y <b>hace prefetch de ellas</b> (una búsqueda: de 260 a 156 ciclos).</p><p>&bull; <b>A tiempo</b>: k iteraciones por delante × tiempo por iteración ≥ latencia de la memoria (aquí k = 2).<br>&bull; <b>Coste</b>: k iteraciones por delante hay 2<sup>k</sup> candidatas, y solo una es la buena: más instrucciones, más peticiones, más <b>fill buffers</b> (con 2, el prefetch es más lento que nada), y los bloques que nunca se usan <b>contaminan</b> la cache.<br>&bull; <b>Contexto</b>: con muchas búsquedas la cache y el ROB ya ocultan parte de la latencia, y la mejor distancia cambia (gana BSEARCH-pf1).</p>",
+          "ca": "<p>Quan l'adreça de cada LOAD depèn del LOAD anterior, ni el ROB ni el prefetcher per maquinari no poden amagar les fallades. El mateix programa sí: coneix les adreces següents possibles, i <b>en fa prefetch</b> (una cerca: de 260 a 156 cicles).</p><p>&bull; <b>A temps</b>: k iteracions per davant × temps per iteració ≥ latència de la memòria (aquí k = 2).<br>&bull; <b>Cost</b>: k iteracions per davant hi ha 2<sup>k</sup> candidates, i només una és la bona: més instruccions, més peticions, més <b>fill buffers</b> (amb 2, el prefetch és més lent que res), i els blocs que mai no es fan servir <b>contaminen</b> la cache.<br>&bull; <b>Context</b>: amb moltes cerques la cache i el ROB ja amaguen part de la latència, i la millor distància canvia (guanya BSEARCH-pf1).</p>"
+        },
+        "actions": [
+          "sidePanel:show",
+          "switchTo:simulationComponent"
+        ],
+        "next": []
+      }
+    ]
+  }
+}
