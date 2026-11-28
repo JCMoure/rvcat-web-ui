@@ -266,7 +266,6 @@ export default {
   "Replace the current draft (\"{1}\") with the tutorial \"{2}\"?": { es: "¿Sustituir el borrador actual («{1}») por el tutorial «{2}»?", ca: "Vols substituir l'esborrany actual («{1}») pel tutorial «{2}»?" },
   "Could not open tutorial \"{1}\": {2}": { es: "No se ha podido abrir el tutorial «{1}»: {2}", ca: "No s'ha pogut obrir el tutorial «{1}»: {2}" },
   "Cannot preview: {1}": { es: "No se puede previsualizar: {1}", ca: "No es pot previsualitzar: {1}" },
-  "show a panel: simulationComponent, staticAnalysisComponent, timelineComponent, aboutComponent": { es: "mostrar un panel: simulationComponent, staticAnalysisComponent, timelineComponent, aboutComponent", ca: "mostra un panell: simulationComponent, staticAnalysisComponent, timelineComponent, aboutComponent" },
   "select a program of the list": { es: "seleccionar un programa de la lista", ca: "selecciona un programa de la llista" },
   "select a processor of the list": { es: "seleccionar un procesador de la lista", ca: "selecciona un processador de la llista" },
   "set N (algorithmic operations)": { es: "fijar N (operaciones algorítmicas)", ca: "fixa N (operacions algorísmiques)" },

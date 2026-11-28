@@ -5,7 +5,7 @@
 // Each action is a string "type:argument"; TUTORIAL_ACTIONS describes them (tutorial editor).
 
 export const TUTORIAL_ACTIONS = [
-  ['switchTo:PANEL',           'show a panel: simulationComponent, staticAnalysisComponent, timelineComponent, aboutComponent'],
+  ['switchTo:PANEL',           'show a panel: simulationComponent, staticAnalysisComponent, timelineComponent, cacheTraceComponent, aboutComponent'],
   ['selectProgram:NAME',       'select a program of the list'],
   ['selectProcessor:NAME',     'select a processor of the list'],
   ['setN:NUMBER',              'set N (algorithmic operations)'],
@@ -33,6 +33,7 @@ export const TUTORIAL_ACTIONS = [
   ['sourceCode:open|close',    'unfold or fold the source code (C) of the program, above the table of instructions'],
   ['autorun:on|off',           'turn the automatic simulation (after every change of the student) on or off'],
   ['clearStoredResults',       'remove the results of the last simulation and all the stored results (table of the Simulation panel)'],
+  ['cacheTrace:step=N',        'Cache panel: step=N (the cache after N accesses; end: all of them), predict=on|off (prediction mode), grid=on|off'],
   ['processorPanel:fold|unfold', 'fold the Processor panel to one line (more room for the program) or show its diagram'],
 ]
 
@@ -181,6 +182,13 @@ export function createActionRunner(ctx) {
       const value = a.key === 'cycles' || a.key === 'width' ? Number(a.value) || null : a.value !== 'off'
       simState.timelineLesson = { ...(simState.timelineLesson ?? {}), [a.key]: value }
       await sleep(250)
+    },
+    async cacheTrace(a) {
+      if (!$('#cache-trace-root')) await switchPanel('cacheTraceComponent')
+      await waitUntil(() => $('#ct-controls') || $('#ct-no-cache'), 8000)
+      const value = a.key === 'step' ? (a.value === 'end' ? 'end' : Number(a.value) || 0) : a.value !== 'off'
+      simState.cacheTraceRequest = { ...(simState.cacheTraceRequest ?? {}), [a.key]: value }
+      await sleep(200)
     },
     async sidePanel(a) {
       const collapsed = !!$('#side-panel-expand')

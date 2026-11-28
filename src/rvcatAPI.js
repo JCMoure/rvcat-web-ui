@@ -60,9 +60,15 @@ export function useRVCAT_Api() {
     run(`rvcat._program.get_memory_trace(${pyJSON(JSONprogramText)}, ${N}, ${K})`,
         'get_memory_trace', 'memory trace');
 
+  // The accesses to the cache in a sequential execution, without time (panel Cache)
+  const getCacheTrace = (JSONprogramText, N, nBlocks, blkSize) =>
+    run(`rvcat._program.get_cache_trace(${pyJSON(JSONprogramText)}, ${N}, ${nBlocks}, ${blkSize})`,
+        'get_cache_trace', 'cache trace');
+
   return {
     importRVCAT,
     getMemoryTrace,
+    getCacheTrace,
     getPerformanceAnalysis,
     getDependenceGraph,
     getProgGraph,

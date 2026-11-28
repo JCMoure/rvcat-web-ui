@@ -182,7 +182,34 @@
     write(progressKey(l.id, l.studentId), l.done ?? {})
   }, { deep: true })
 
+  // Lessons renamed (old id -> new id): the progress of each student and the lesson in progress move
+  // to the new id, and the old lesson leaves the list
+  const RENAMED = { 'L1-cache': 'L2-cache', 'L2-prefetch': 'L3-prefetch' }
+  function migrateRenamedLessons() {
+    try {
+      const keys = Array.from({ length: localStorage.length }, (_, i) => localStorage.key(i))
+      for (const key of keys) {
+        const m = /^lessonProgress\.([^.]+)\.(.*)$/.exec(key ?? '')
+        if (!m || !RENAMED[m[1]]) continue
+        const moved = `lessonProgress.${RENAMED[m[1]]}.${m[2]}`
+        if (localStorage.getItem(moved) === null) localStorage.setItem(moved, localStorage.getItem(key))
+        localStorage.removeItem(key)
+      }
+      for (const old of Object.keys(RENAMED)) localStorage.removeItem(lessonKey(old))
+      if (lessons.value.some(l => RENAMED[l.id])) {
+        lessons.value = lessons.value.filter(l => !RENAMED[l.id])
+        write(INDEX_KEY, lessons.value)
+      }
+      const session = read(SESSION_KEY)
+      if (session?.state?.id && RENAMED[session.state.id]) {
+        session.state.id = RENAMED[session.state.id]
+        write(SESSION_KEY, session)
+      }
+    } catch (e) { console.warn('📘⚠️ Cannot migrate the renamed lessons', e) }
+  }
+
   onMounted(() => {
+    migrateRenamedLessons()
     const session = read(SESSION_KEY)
     if (session?.state && !simState.lesson) simState.lesson = session.state
     loadDistributionLessons()
@@ -456,6 +483,7 @@
   .lesson-hide-timelineCritical #timeline-critical-only,
   .lesson-hide-simulation #simulation-button,
   .lesson-hide-analysis #analysis-button,
+  .lesson-hide-cacheTrace #cache-trace-button,
   .lesson-hide-processor .processor-part,
   .lesson-hide-programColumns .type-col,
   .lesson-hide-programColumns #show-instr-operands,

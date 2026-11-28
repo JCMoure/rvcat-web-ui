@@ -27,6 +27,8 @@ const SimulationState = reactive({
   highlightedPort:     -1,
   highlightedPorts:    [],        // ports highlighted from the timeline (the ports an instruction can use)
   timelineReleaseNonce: 0,
+  cacheTraceRequest:   null,      // a tutorial card asks the Cache panel for a step, the prediction mode or the grid
+  cacheTraceReady:     0,         // incremented by the Cache panel when it has a new trace
   highlightNoDelay:    false,     // the timeline asks the Program and Processor panels to show its highlights at once
   tutorialActing:      false,     // the actions of a tutorial card are changing the simulator (no automatic simulation)
   autorunRequest:      null,      // { value, nonce }: a card turns the automatic simulation on or off        // changed by the Program panel (button type): the timeline releases its pinned cell

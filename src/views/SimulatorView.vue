@@ -10,6 +10,7 @@ import tutorialEditor          from '@/components/tutorialEditor.vue';
 import timelineComponent       from '@/components/timelineComponent.vue';
 import aboutComponent          from '@/components/aboutComponent.vue';
 import staticAnalysisComponent from '@/components/staticAnalysisComponent.vue';
+import cacheTraceComponent     from '@/components/cacheTraceComponent.vue';
 import LessonPanel             from '@/components/LessonPanel.vue';
 import { uiLocked, authorMode } from '@/authorMode';
 import { changeTextScale, canGrow, canShrink } from '@/textScale';
@@ -142,6 +143,7 @@ const components = {
   simulationComponent,
   timelineComponent,
   staticAnalysisComponent,
+  cacheTraceComponent,
   aboutComponent
 };
 
@@ -279,6 +281,13 @@ onUnmounted(() => {
                   :title="t('Static Performance Analysis: identify potential bottleneck (throughput or latency/dependencies)')"
                   @click="onRequestSwitch('staticAnalysisComponent')" >
                     {{ t('Static Analysis') }}
+                </button>
+                <button class="view-tab" role="tab" :class="{ active: isNotFullscreen && currentKey === 'cacheTraceComponent' }"
+                  :aria-selected="isNotFullscreen && currentKey === 'cacheTraceComponent'"
+                  id="cache-trace-button"
+                  :title="t('Cache trace: which accesses hit or miss in the cache, step by step (sequential execution, without time)')"
+                  @click="onRequestSwitch('cacheTraceComponent')" >
+                    {{ t('Cache') }}
                 </button>
               </li>
               <li class="separator"></li>

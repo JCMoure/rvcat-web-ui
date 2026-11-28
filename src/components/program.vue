@@ -223,7 +223,7 @@
     delete simState.simulatedProcess.declarations
     delete simState.simulatedProcess.vlen
     delete simState.simulatedProcess.description
-    for (const key of ['rep', 'repIndependent', 'repStrides', 'epilogue']) delete simState.simulatedProcess[key]
+    for (const key of ['rep', 'repIndependent', 'repStrides', 'epilogue', 'mapWidth']) delete simState.simulatedProcess[key]
     Object.assign(simState.simulatedProcess, normalizeProgramDefaults(data))
   }
 

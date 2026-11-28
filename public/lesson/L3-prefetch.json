@@ -1,16 +1,16 @@
 {
-  "lesson": "L2-prefetch",
+  "lesson": "L3-prefetch",
   "title": {
-    "en": "Lesson 2: software prefetch in a binary search",
-    "es": "Lección 2: prefetch por software en una búsqueda binaria",
-    "ca": "Lliçó 2: prefetch per programari en una cerca binària"
+    "en": "Lesson 3: software prefetch in a binary search",
+    "es": "Lección 3: prefetch por software en una búsqueda binaria",
+    "ca": "Lliçó 3: prefetch per programari en una cerca binària"
   },
   "description": {
     "en": "<p>A binary search whose LOADs depend on each other: why the ROB and the hardware prefetcher do not help, and what software prefetching gains and costs (distance, fill buffers, pollution).</p>",
     "es": "<p>Una búsqueda binaria cuyos LOAD dependen unos de otros: por qué no ayudan el ROB ni el prefetcher por hardware, y qué gana y qué cuesta el prefetch por software (distancia, fill buffers, contaminación).</p>",
     "ca": "<p>Una cerca binària els LOAD de la qual depenen els uns dels altres: per què no ajuden ni el ROB ni el prefetcher per maquinari, i què guanya i què costa el prefetch per programari (distància, fill buffers, contaminació).</p>"
   },
-  "version": 1,
+  "version": 2,
   "programs": [
     {
       "name": "BSEARCH",
@@ -721,11 +721,11 @@
     }
   },
   "tutorial": {
-    "id": "L2-prefetch-tutorial",
+    "id": "L3-prefetch-tutorial",
     "name": {
-      "en": "Lesson 2: software prefetch in a binary search",
-      "es": "Lección 2: prefetch por software en una búsqueda binaria",
-      "ca": "Lliçó 2: prefetch per programari en una cerca binària"
+      "en": "Lesson 3: software prefetch in a binary search",
+      "es": "Lección 3: prefetch por software en una búsqueda binaria",
+      "ca": "Lliçó 3: prefetch per programari en una cerca binària"
     },
     "flowVersion": 2,
     "steps": [
@@ -742,9 +742,9 @@
           "Rep"
         ],
         "title": {
-          "en": "Lesson 2: software prefetch in a binary search",
-          "es": "Lección 2: prefetch por software en una búsqueda binaria",
-          "ca": "Lliçó 2: prefetch per programari en una cerca binària"
+          "en": "Lesson 3: software prefetch in a binary search",
+          "es": "Lección 3: prefetch por software en una búsqueda binaria",
+          "ca": "Lliçó 3: prefetch per programari en una cerca binària"
         },
         "validation": {
           "type": "button_clicked",
@@ -1076,9 +1076,9 @@
           "ca": "Per què no s'amaguen les fallades?"
         },
         "questionText": {
-          "en": "<p>In Lesson 1, a ROB of 64 entries hid the misses of SUM-scalar. Here the ROB has 64 entries too, but each miss adds its 12 cycles. Why?</p>",
-          "es": "<p>En la lección 1, un ROB de 64 entradas ocultaba los fallos de SUM-scalar. Aquí el ROB también tiene 64 entradas, pero cada fallo añade sus 12 ciclos. ¿Por qué?</p>",
-          "ca": "<p>A la lliçó 1, un ROB de 64 entrades amagava les fallades de SUM-scalar. Aquí el ROB també té 64 entrades, però cada fallada afegeix els seus 12 cicles. Per què?</p>"
+          "en": "<p>In Lesson 2, a ROB of 64 entries hid the misses of SUM-scalar. Here the ROB has 64 entries too, but each miss adds its 12 cycles. Why?</p>",
+          "es": "<p>En la lección 2, un ROB de 64 entradas ocultaba los fallos de SUM-scalar. Aquí el ROB también tiene 64 entradas, pero cada fallo añade sus 12 ciclos. ¿Por qué?</p>",
+          "ca": "<p>A la lliçó 2, un ROB de 64 entrades amagava les fallades de SUM-scalar. Aquí el ROB també té 64 entrades, però cada fallada afegeix els seus 12 cicles. Per què?</p>"
         },
         "answers": [
           {
@@ -1404,9 +1404,9 @@
               "ca": "iteracions"
             },
             "correct": {
-              "en": "Right: one iteration ahead gives 7 cycles, less than 12; two give 14. The same rule as the hardware prefetcher of Lesson 1: distance × time per step ≥ latency.",
-              "es": "Correcto: una iteración por delante da 7 ciclos, menos de 12; dos dan 14. La misma regla que el prefetcher por hardware de la lección 1: distancia × tiempo por paso ≥ latencia.",
-              "ca": "Correcte: una iteració per davant dona 7 cicles, menys de 12; dues en donen 14. La mateixa regla que el prefetcher per maquinari de la lliçó 1: distància × temps per pas ≥ latència."
+              "en": "Right: one iteration ahead gives 7 cycles, less than 12; two give 14. The same rule as the hardware prefetcher of Lesson 2: distance × time per step ≥ latency.",
+              "es": "Correcto: una iteración por delante da 7 ciclos, menos de 12; dos dan 14. La misma regla que el prefetcher por hardware de la lección 2: distancia × tiempo por paso ≥ latencia.",
+              "ca": "Correcte: una iteració per davant dona 7 cicles, menys de 12; dues en donen 14. La mateixa regla que el prefetcher per maquinari de la lliçó 2: distància × temps per pas ≥ latència."
             },
             "wrong": {
               "en": "A prefetch k iterations ahead has k × 7 cycles for its block. Which k gives at least 12?",

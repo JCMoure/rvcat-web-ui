@@ -12,6 +12,7 @@ import editors    from './editors'
 import checks     from './checks'
 import help       from './help'
 import about      from './about'
+import cacheTrace from './cacheTrace'
 
-export const AREAS = { header, processor, program, simulation, analysis, timeline, tutorial, lesson, editors, checks, help, about }
+export const AREAS = { header, processor, program, simulation, analysis, timeline, tutorial, lesson, editors, checks, help, about, cacheTrace }
 export const MESSAGES = Object.assign({}, ...Object.values(AREAS))

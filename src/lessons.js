@@ -41,6 +41,7 @@ export const LESSON_PARTS = {
   timelineCritical:  'critical path of the Timeline (red letters)',
   timelineResources: 'rows of the ports (and of the cache) of the Timeline',
   analysis:          'Static Analysis panel',
+  cacheTrace:        'Cache panel (cache trace: hits and misses, step by step)',
   usage:             'diagram of resource usage of the Simulation panel',
   cacheStats:        'cache misses and MM transfers of the Simulation panel',
   simOptions:        'Scheduler and Mispredictions options of the Simulation panel (the automatic simulation stays)',

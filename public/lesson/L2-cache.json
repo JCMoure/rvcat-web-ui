@@ -1,16 +1,16 @@
 {
-  "lesson": "L1-cache",
+  "lesson": "L2-cache",
   "title": {
-    "en": "Lesson 1: the cache and a sum of a vector",
-    "es": "Lección 1: la cache y la suma de un vector",
-    "ca": "Lliçó 1: la cache i la suma d'un vector"
+    "en": "Lesson 2: the cache and a sum of a vector",
+    "es": "Lección 2: la cache y la suma de un vector",
+    "ca": "Lliçó 2: la cache i la suma d'un vector"
   },
   "description": {
     "en": "<p>Four versions of a loop that adds the elements of a vector (scalar, SIMD, and unrolled with several accumulators) on a processor like the Golden Cove core: latency and throughput.</p>",
     "es": "<p>Cuatro versiones de un bucle que suma los elementos de un vector (escalar, SIMD y desenrollado con varios acumuladores) en un procesador como el núcleo Golden Cove: latencia y throughput.</p>",
     "ca": "<p>Quatre versions d'un bucle que suma els elements d'un vector (escalar, SIMD i desenrotllat amb diversos acumuladors) en un processador com el nucli Golden Cove: latència i throughput.</p>"
   },
-  "version": 21,
+  "version": 22,
   "programs": [
     {
       "name": "SUM-scalar",
@@ -867,11 +867,11 @@
     }
   },
   "tutorial": {
-    "id": "L1-cache-tutorial",
+    "id": "L2-cache-tutorial",
     "name": {
-      "en": "Lesson 1: the cache and a sum of a vector",
-      "es": "Lección 1: la cache y la suma de un vector",
-      "ca": "Lliçó 1: la cache i la suma d'un vector"
+      "en": "Lesson 2: the cache and a sum of a vector",
+      "es": "Lección 2: la cache y la suma de un vector",
+      "ca": "Lliçó 2: la cache i la suma d'un vector"
     },
     "description": {
       "en": "Cache performance",
@@ -884,9 +884,9 @@
         "id": "welcome",
         "type": "step",
         "title": {
-          "en": "Lesson 1: the cache and a sum of a vector",
-          "es": "Lección 1: la cache y la suma de un vector",
-          "ca": "Lliçó 1: la cache i la suma d'un vector"
+          "en": "Lesson 2: the cache and a sum of a vector",
+          "es": "Lección 2: la cache y la suma de un vector",
+          "ca": "Lliçó 2: la cache i la suma d'un vector"
         },
         "selector": "#program-source",
         "anchor": "#right-panel",

@@ -1,0 +1,2096 @@
+{
+  "lesson": "L1-locality",
+  "title": {
+    "en": "Lesson 1: when does the cache miss?",
+    "es": "Lección 1: ¿cuándo falla la cache?",
+    "ca": "Lliçó 1: quan falla la cache?"
+  },
+  "description": {
+    "en": "<p>The accesses of five programs to the cache, one by one and without time: cold and capacity misses, spatial and temporal locality, strides, and a matrix stored by rows or by columns.</p>",
+    "es": "<p>Los accesos de cinco programas a la cache, uno a uno y sin tiempo: fallos en frío y de capacidad, localidad espacial y temporal, strides, y una matriz guardada por filas o por columnas.</p>",
+    "ca": "<p>Els accessos de cinc programes a la cache, un a un i sense temps: fallades en fred i de capacitat, localitat espacial i temporal, strides, i una matriu desada per files o per columnes.</p>"
+  },
+  "version": 1,
+  "programs": [
+    {
+      "name": "Base",
+      "description": "float Base(float V[], float W[], int N)\n{\n  float sum = 0;\n  for (int i=0; i<N; i++) {\n    sum = sum + V[i] + W[i];\n  }\n  return sum;\n}",
+      "declarations": [
+        {
+          "name": "tmp",
+          "role": "data",
+          "type": "FLOAT",
+          "size": "single"
+        },
+        {
+          "name": "V",
+          "role": "array",
+          "type": "FLOAT",
+          "size": "single"
+        },
+        {
+          "name": "i",
+          "role": "index",
+          "type": "INT",
+          "size": "word"
+        },
+        {
+          "name": "sum",
+          "role": "data",
+          "type": "FLOAT",
+          "size": "single"
+        },
+        {
+          "name": "W",
+          "role": "array",
+          "type": "FLOAT",
+          "size": "single"
+        },
+        {
+          "name": "c",
+          "role": "condition",
+          "type": "INT",
+          "size": "word"
+        },
+        {
+          "name": "N",
+          "role": "read-only",
+          "type": "INT",
+          "size": "word"
+        }
+      ],
+      "instruction_list": [
+        {
+          "text": "tmp = V[i]",
+          "cLine": 5,
+          "type": "MEM",
+          "oper": "LOAD",
+          "size": "word",
+          "destin": "tmp",
+          "source1": "i",
+          "source2": "V",
+          "source3": "",
+          "constant": "",
+          "stride": 1,
+          "lanes": 1
+        },
+        {
+          "text": "sum = sum + tmp",
+          "cLine": 5,
+          "type": "FLOAT",
+          "oper": "ADD",
+          "size": "single",
+          "destin": "sum",
+          "source1": "sum",
+          "source2": "tmp",
+          "source3": "",
+          "constant": ""
+        },
+        {
+          "text": "tmp = W[i]",
+          "cLine": 5,
+          "type": "MEM",
+          "oper": "LOAD",
+          "size": "word",
+          "destin": "tmp",
+          "source1": "i",
+          "source2": "W",
+          "source3": "",
+          "constant": "",
+          "stride": 1,
+          "lanes": 1
+        },
+        {
+          "text": "sum = sum + tmp",
+          "cLine": 5,
+          "type": "FLOAT",
+          "oper": "ADD",
+          "size": "single",
+          "destin": "sum",
+          "source1": "sum",
+          "source2": "tmp",
+          "source3": "",
+          "constant": ""
+        },
+        {
+          "text": "i = i + 1",
+          "cLine": 4,
+          "type": "INT",
+          "oper": "ARITH",
+          "size": "word",
+          "destin": "i",
+          "source1": "i",
+          "source2": "",
+          "source3": "",
+          "constant": "1",
+          "stride": 1
+        },
+        {
+          "text": "c = i != N",
+          "cLine": 4,
+          "type": "INT",
+          "oper": "ARITH",
+          "size": "word",
+          "destin": "c",
+          "source1": "i",
+          "source2": "N",
+          "source3": "",
+          "constant": "",
+          "stride": 1
+        },
+        {
+          "text": "if c go back",
+          "cLine": 4,
+          "type": "BRANCH",
+          "oper": "",
+          "size": "",
+          "destin": "",
+          "source1": "c",
+          "source2": "",
+          "source3": "",
+          "constant": "",
+          "stride": 1
+        }
+      ],
+      "N": 64,
+      "sourceNote": {
+        "en": "two vectors read forward, one element per iteration",
+        "es": "dos vectores leídos hacia adelante, un elemento por iteración",
+        "ca": "dos vectors llegits cap endavant, un element per iteració"
+      }
+    },
+    {
+      "name": "REVCOPY",
+      "N": 64,
+      "description": "void revcopy(float V[], float W[], int N)\n{\n  for (int i=0; i<N; i++)\n    W[i] = V[N-1-i];\n}",
+      "declarations": [
+        {
+          "name": "t",
+          "role": "data",
+          "type": "FLOAT",
+          "size": "single"
+        },
+        {
+          "name": "V",
+          "role": "array",
+          "type": "FLOAT",
+          "size": "single"
+        },
+        {
+          "name": "W",
+          "role": "array",
+          "type": "FLOAT",
+          "size": "single"
+        },
+        {
+          "name": "i",
+          "role": "index",
+          "type": "INT",
+          "size": "word"
+        },
+        {
+          "name": "c",
+          "role": "condition",
+          "type": "INT",
+          "size": "word"
+        },
+        {
+          "name": "N",
+          "role": "read-only",
+          "type": "INT",
+          "size": "word"
+        }
+      ],
+      "instruction_list": [
+        {
+          "text": "t = V[N-1-i]",
+          "type": "MEM",
+          "oper": "LOAD",
+          "size": "word",
+          "destin": "t",
+          "source1": "i",
+          "source2": "V",
+          "source3": "",
+          "constant": "1",
+          "stride": -1,
+          "lanes": 1,
+          "cLine": 4
+        },
+        {
+          "text": "W[i] = t",
+          "type": "MEM",
+          "oper": "STORE",
+          "size": "word",
+          "destin": "",
+          "source1": "t",
+          "source2": "W",
+          "source3": "i",
+          "constant": "",
+          "stride": 1,
+          "lanes": 1,
+          "cLine": 4
+        },
+        {
+          "text": "i = i + 1",
+          "type": "INT",
+          "oper": "ARITH",
+          "size": "word",
+          "destin": "i",
+          "source1": "i",
+          "source2": "",
+          "source3": "",
+          "constant": "1",
+          "cLine": 3
+        },
+        {
+          "text": "c = i != N",
+          "type": "INT",
+          "oper": "ARITH",
+          "size": "word",
+          "destin": "c",
+          "source1": "i",
+          "source2": "N",
+          "source3": "",
+          "constant": "",
+          "cLine": 3
+        },
+        {
+          "text": "if c go back",
+          "type": "BRANCH",
+          "oper": "",
+          "size": "",
+          "destin": "",
+          "source1": "c",
+          "source2": "",
+          "source3": "",
+          "constant": "",
+          "stride": 1,
+          "cLine": 3
+        }
+      ],
+      "sourceNote": {
+        "en": "V read backward, W written forward",
+        "es": "V leído hacia atrás, W escrito hacia adelante",
+        "ca": "V llegit cap enrere, W escrit cap endavant"
+      }
+    },
+    {
+      "name": "STRIDE3",
+      "N": 64,
+      "description": "float sum3(float V[], int N)\n{\n  float sum = 0;\n  for (int i=0; i<N; i++)\n    sum = sum + V[3*i];\n  return sum;\n}",
+      "declarations": [
+        {
+          "name": "sum",
+          "role": "data",
+          "type": "FLOAT",
+          "size": "single"
+        },
+        {
+          "name": "t",
+          "role": "data",
+          "type": "FLOAT",
+          "size": "single"
+        },
+        {
+          "name": "V",
+          "role": "array",
+          "type": "FLOAT",
+          "size": "single"
+        },
+        {
+          "name": "i",
+          "role": "index",
+          "type": "INT",
+          "size": "word"
+        },
+        {
+          "name": "c",
+          "role": "condition",
+          "type": "INT",
+          "size": "word"
+        },
+        {
+          "name": "N",
+          "role": "read-only",
+          "type": "INT",
+          "size": "word"
+        }
+      ],
+      "instruction_list": [
+        {
+          "text": "t = V[3*i]",
+          "type": "MEM",
+          "oper": "LOAD",
+          "size": "word",
+          "destin": "t",
+          "source1": "i",
+          "source2": "V",
+          "source3": "",
+          "constant": "",
+          "stride": 3,
+          "lanes": 1,
+          "cLine": 5
+        },
+        {
+          "text": "sum = sum + t",
+          "type": "FLOAT",
+          "oper": "ADD",
+          "size": "single",
+          "destin": "sum",
+          "source1": "sum",
+          "source2": "t",
+          "source3": "",
+          "constant": "",
+          "cLine": 5
+        },
+        {
+          "text": "i = i + 1",
+          "type": "INT",
+          "oper": "ARITH",
+          "size": "word",
+          "destin": "i",
+          "source1": "i",
+          "source2": "",
+          "source3": "",
+          "constant": "1",
+          "cLine": 4
+        },
+        {
+          "text": "c = i != N",
+          "type": "INT",
+          "oper": "ARITH",
+          "size": "word",
+          "destin": "c",
+          "source1": "i",
+          "source2": "N",
+          "source3": "",
+          "constant": "",
+          "cLine": 4
+        },
+        {
+          "text": "if c go back",
+          "type": "BRANCH",
+          "oper": "",
+          "size": "",
+          "destin": "",
+          "source1": "c",
+          "source2": "",
+          "source3": "",
+          "constant": "",
+          "stride": 1,
+          "cLine": 4
+        }
+      ],
+      "sourceNote": {
+        "en": "one element out of every 3",
+        "es": "un elemento de cada 3",
+        "ca": "un element de cada 3"
+      }
+    },
+    {
+      "name": "MV-rows",
+      "N": 8,
+      "rep": 8,
+      "repStrides": {
+        "A": 8,
+        "Y": 1
+      },
+      "mapWidth": {
+        "A": 8
+      },
+      "description": "// A: 8×8 floats stored by rows\nvoid mv(float A[8][8], float X[8], float Y[8])\n{\n  for (int i=0; i<8; i++) {   // Rep: one call per row\n    float s = 0;\n    for (int j=0; j<8; j++)\n      s = s + A[i][j] * X[j];\n    Y[i] = s;\n  }\n}",
+      "declarations": [
+        {
+          "name": "s",
+          "role": "data",
+          "type": "FLOAT",
+          "size": "single"
+        },
+        {
+          "name": "a",
+          "role": "data",
+          "type": "FLOAT",
+          "size": "single"
+        },
+        {
+          "name": "x",
+          "role": "data",
+          "type": "FLOAT",
+          "size": "single"
+        },
+        {
+          "name": "A",
+          "role": "array",
+          "type": "FLOAT",
+          "size": "single"
+        },
+        {
+          "name": "X",
+          "role": "array",
+          "type": "FLOAT",
+          "size": "single"
+        },
+        {
+          "name": "Y",
+          "role": "array",
+          "type": "FLOAT",
+          "size": "single"
+        },
+        {
+          "name": "j",
+          "role": "index",
+          "type": "INT",
+          "size": "word"
+        },
+        {
+          "name": "c",
+          "role": "condition",
+          "type": "INT",
+          "size": "word"
+        },
+        {
+          "name": "N",
+          "role": "read-only",
+          "type": "INT",
+          "size": "word"
+        }
+      ],
+      "instruction_list": [
+        {
+          "text": "a = A[i][j]",
+          "type": "MEM",
+          "oper": "LOAD",
+          "size": "word",
+          "destin": "a",
+          "source1": "j",
+          "source2": "A",
+          "source3": "",
+          "constant": "",
+          "stride": 1,
+          "lanes": 1,
+          "cLine": 7
+        },
+        {
+          "text": "x = X[j]",
+          "type": "MEM",
+          "oper": "LOAD",
+          "size": "word",
+          "destin": "x",
+          "source1": "j",
+          "source2": "X",
+          "source3": "",
+          "constant": "",
+          "stride": 1,
+          "lanes": 1,
+          "cLine": 7
+        },
+        {
+          "text": "s = s + a*x",
+          "type": "FLOAT",
+          "oper": "FMA",
+          "size": "single",
+          "destin": "s",
+          "source1": "a",
+          "source2": "x",
+          "source3": "s",
+          "constant": "",
+          "cLine": 7
+        },
+        {
+          "text": "j = j + 1",
+          "type": "INT",
+          "oper": "ARITH",
+          "size": "word",
+          "destin": "j",
+          "source1": "j",
+          "source2": "",
+          "source3": "",
+          "constant": "1",
+          "cLine": 6
+        },
+        {
+          "text": "c = j != N",
+          "type": "INT",
+          "oper": "ARITH",
+          "size": "word",
+          "destin": "c",
+          "source1": "j",
+          "source2": "N",
+          "source3": "",
+          "constant": "",
+          "cLine": 6
+        },
+        {
+          "text": "if c go back",
+          "type": "BRANCH",
+          "oper": "",
+          "size": "",
+          "destin": "",
+          "source1": "c",
+          "source2": "",
+          "source3": "",
+          "constant": "",
+          "stride": 1,
+          "cLine": 6
+        }
+      ],
+      "epilogue": [
+        {
+          "text": "Y[i] = s",
+          "type": "MEM",
+          "oper": "STORE",
+          "size": "word",
+          "destin": "",
+          "source1": "s",
+          "source2": "Y",
+          "source3": "i",
+          "constant": "",
+          "stride": 0,
+          "lanes": 1,
+          "cLine": 8
+        }
+      ],
+      "sourceNote": {
+        "en": "A stored by rows: the inner loop walks along a row (contiguous elements)",
+        "es": "A guardada por filas: el bucle interno recorre una fila (elementos contiguos)",
+        "ca": "A desada per files: el bucle intern recorre una fila (elements contigus)"
+      }
+    },
+    {
+      "name": "MV-cols",
+      "N": 8,
+      "rep": 8,
+      "repStrides": {
+        "A": 1,
+        "Y": 1
+      },
+      "mapWidth": {
+        "A": 8
+      },
+      "description": "// A: 8×8 floats stored by columns: A[j][i] is the element (i, j)\nvoid mv(float A[8][8], float X[8], float Y[8])\n{\n  for (int i=0; i<8; i++) {   // Rep: one call per row\n    float s = 0;\n    for (int j=0; j<8; j++)\n      s = s + A[j][i] * X[j];\n    Y[i] = s;\n  }\n}",
+      "declarations": [
+        {
+          "name": "s",
+          "role": "data",
+          "type": "FLOAT",
+          "size": "single"
+        },
+        {
+          "name": "a",
+          "role": "data",
+          "type": "FLOAT",
+          "size": "single"
+        },
+        {
+          "name": "x",
+          "role": "data",
+          "type": "FLOAT",
+          "size": "single"
+        },
+        {
+          "name": "A",
+          "role": "array",
+          "type": "FLOAT",
+          "size": "single"
+        },
+        {
+          "name": "X",
+          "role": "array",
+          "type": "FLOAT",
+          "size": "single"
+        },
+        {
+          "name": "Y",
+          "role": "array",
+          "type": "FLOAT",
+          "size": "single"
+        },
+        {
+          "name": "j",
+          "role": "index",
+          "type": "INT",
+          "size": "word"
+        },
+        {
+          "name": "c",
+          "role": "condition",
+          "type": "INT",
+          "size": "word"
+        },
+        {
+          "name": "N",
+          "role": "read-only",
+          "type": "INT",
+          "size": "word"
+        }
+      ],
+      "instruction_list": [
+        {
+          "text": "a = A[j][i]",
+          "type": "MEM",
+          "oper": "LOAD",
+          "size": "word",
+          "destin": "a",
+          "source1": "j",
+          "source2": "A",
+          "source3": "",
+          "constant": "",
+          "stride": 8,
+          "lanes": 1,
+          "cLine": 7
+        },
+        {
+          "text": "x = X[j]",
+          "type": "MEM",
+          "oper": "LOAD",
+          "size": "word",
+          "destin": "x",
+          "source1": "j",
+          "source2": "X",
+          "source3": "",
+          "constant": "",
+          "stride": 1,
+          "lanes": 1,
+          "cLine": 7
+        },
+        {
+          "text": "s = s + a*x",
+          "type": "FLOAT",
+          "oper": "FMA",
+          "size": "single",
+          "destin": "s",
+          "source1": "a",
+          "source2": "x",
+          "source3": "s",
+          "constant": "",
+          "cLine": 7
+        },
+        {
+          "text": "j = j + 1",
+          "type": "INT",
+          "oper": "ARITH",
+          "size": "word",
+          "destin": "j",
+          "source1": "j",
+          "source2": "",
+          "source3": "",
+          "constant": "1",
+          "cLine": 6
+        },
+        {
+          "text": "c = j != N",
+          "type": "INT",
+          "oper": "ARITH",
+          "size": "word",
+          "destin": "c",
+          "source1": "j",
+          "source2": "N",
+          "source3": "",
+          "constant": "",
+          "cLine": 6
+        },
+        {
+          "text": "if c go back",
+          "type": "BRANCH",
+          "oper": "",
+          "size": "",
+          "destin": "",
+          "source1": "c",
+          "source2": "",
+          "source3": "",
+          "constant": "",
+          "stride": 1,
+          "cLine": 6
+        }
+      ],
+      "epilogue": [
+        {
+          "text": "Y[i] = s",
+          "type": "MEM",
+          "oper": "STORE",
+          "size": "word",
+          "destin": "",
+          "source1": "s",
+          "source2": "Y",
+          "source3": "i",
+          "constant": "",
+          "stride": 0,
+          "lanes": 1,
+          "cLine": 8
+        }
+      ],
+      "sourceNote": {
+        "en": "A stored by columns: the inner loop jumps 8 elements at each access",
+        "es": "A guardada por columnas: el bucle interno salta 8 elementos en cada acceso",
+        "ca": "A desada per columnes: el bucle intern salta 8 elements a cada accés"
+      }
+    }
+  ],
+  "processors": [
+    {
+      "name": "GC-small",
+      "dispatch": 6,
+      "retire": 6,
+      "ROBsize": 64,
+      "bPenalty": 10,
+      "nBlocks": 4,
+      "blkSize": 32,
+      "mPenalty": 12,
+      "mIssueTime": 1,
+      "nFillBuffers": 2,
+      "nWriteBuffers": 2,
+      "nStoreBuffers": 2,
+      "rThru": 2,
+      "latencies": {
+        "INT": 1,
+        "INT.ARITH": 1,
+        "INT.LOGIC": 1,
+        "INT.SHIFT": 1,
+        "INT.CVT": 6,
+        "VINT": 1,
+        "VINT.ARITH": 1,
+        "VINT.LOGIC": 1,
+        "VINT.SHIFT": 1,
+        "VINT.CVT": 4,
+        "VINT.SHUFFLE": 1,
+        "VINT.PERMUTE": 3,
+        "MEM.STORE": 1,
+        "MEM.LOAD": 5,
+        "VMEM.STORE": 1,
+        "VMEM.LOAD": 6,
+        "FLOAT.ADD": 2,
+        "FLOAT.MUL": 4,
+        "FLOAT.FMA": 4,
+        "FLOAT.DIV": 11,
+        "FLOAT.DIV.double": 14,
+        "FLOAT.SQRT": 12,
+        "FLOAT.SQRT.double": 16,
+        "FLOAT.CVT": 4,
+        "FLOAT.CVT.single": 5,
+        "VFLOAT.ADD": 2,
+        "VFLOAT.MUL": 4,
+        "VFLOAT.FMA": 4,
+        "VFLOAT.DIV": 11,
+        "VFLOAT.DIV.double": 14,
+        "VFLOAT.SQRT": 12,
+        "VFLOAT.SQRT.double": 16,
+        "VFLOAT.CVT": 4,
+        "VFLOAT.CVT.single": 5,
+        "VFLOAT.SHUFFLE": 1,
+        "VFLOAT.PERMUTE": 3,
+        "BRANCH": 1
+      },
+      "ports": {
+        "0": [
+          "INT.ARITH",
+          "INT.LOGIC",
+          "INT.SHIFT",
+          "INT.CVT",
+          "FLOAT.MUL",
+          "FLOAT.FMA",
+          "FLOAT.DIV",
+          "FLOAT.SQRT",
+          "FLOAT.CVT",
+          "VFLOAT.MUL",
+          "VFLOAT.FMA",
+          "VFLOAT.DIV",
+          "VFLOAT.SQRT",
+          "VFLOAT.CVT",
+          "VINT.ARITH",
+          "VINT.LOGIC",
+          "VINT.SHIFT",
+          "VINT.CVT"
+        ],
+        "1": [
+          "INT.ARITH",
+          "INT.LOGIC",
+          "INT.CVT",
+          "FLOAT.ADD",
+          "FLOAT.MUL",
+          "FLOAT.FMA",
+          "FLOAT.CVT",
+          "VFLOAT.ADD",
+          "VFLOAT.MUL",
+          "VFLOAT.FMA",
+          "VFLOAT.CVT",
+          "VINT.ARITH",
+          "VINT.LOGIC",
+          "VINT.SHIFT",
+          "VINT.CVT",
+          "VINT.SHUFFLE",
+          "VFLOAT.SHUFFLE"
+        ],
+        "2": [
+          "MEM.LOAD",
+          "VMEM.LOAD"
+        ],
+        "3": [
+          "MEM.LOAD",
+          "VMEM.LOAD"
+        ],
+        "5": [
+          "INT.ARITH",
+          "INT.LOGIC",
+          "FLOAT.ADD",
+          "VFLOAT.ADD",
+          "VINT.ARITH",
+          "VINT.LOGIC",
+          "VINT.SHUFFLE",
+          "VINT.PERMUTE",
+          "VFLOAT.SHUFFLE",
+          "VFLOAT.PERMUTE"
+        ],
+        "6": [
+          "INT.ARITH",
+          "INT.LOGIC",
+          "INT.SHIFT",
+          "BRANCH"
+        ],
+        "7": [
+          "MEM.STORE",
+          "VMEM.STORE"
+        ]
+      }
+    }
+  ],
+  "start": {
+    "program": "Base",
+    "processor": "GC-small",
+    "N": 64
+  },
+  "hidden": [
+    "simulation",
+    "simulationPanel",
+    "analysis",
+    "timeline",
+    "processorRevert"
+  ],
+  "locks": {
+    "programEditor": true,
+    "tutorialEditor": true,
+    "loopTransforms": true,
+    "upload": true,
+    "remove": true,
+    "processor": "all",
+    "simulation": {
+      "sched": "optimal",
+      "speculation": "stall"
+    }
+  },
+  "tutorial": {
+    "id": "L1-locality-tutorial",
+    "name": {
+      "en": "Lesson 1: when does the cache miss?",
+      "es": "Lección 1: ¿cuándo falla la cache?",
+      "ca": "Lliçó 1: quan falla la cache?"
+    },
+    "flowVersion": 2,
+    "steps": [
+      {
+        "id": "welcome",
+        "type": "step",
+        "position": "center",
+        "wWidth": 700,
+        "lock": [
+          "program",
+          "N",
+          "Rep"
+        ],
+        "title": {
+          "en": "Lesson 1: when does the cache miss?",
+          "es": "Lección 1: ¿cuándo falla la cache?",
+          "ca": "Lliçó 1: quan falla la cache?"
+        },
+        "description": {
+          "en": "<p>A <b>cache</b> keeps copies of recently used blocks of memory. An access <b>hits</b> if its block is in the cache, and <b>misses</b> if it must be brought from main memory: that is slow, and it is what this lesson is about.</p><p>Here we forget about time: the program runs <b>one instruction after another</b>, and we only look at its LOADs and STOREs. The cache of the processor has <b>4 lines of 32 bytes</b>: each line holds one block of 8 floats.</p>",
+          "es": "<p>Una <b>cache</b> guarda copias de bloques de memoria usados hace poco. Un acceso <b>acierta</b> si su bloque está en la cache, y <b>falla</b> si hay que traerlo de la memoria principal: eso es lento, y de eso trata esta lección.</p><p>Aquí nos olvidamos del tiempo: el programa se ejecuta <b>una instrucción después de otra</b>, y solo miramos sus LOAD y STORE. La cache del procesador tiene <b>4 líneas de 32 bytes</b>: cada línea guarda un bloque de 8 floats.</p>",
+          "ca": "<p>Una <b>cache</b> desa còpies de blocs de memòria usats fa poc. Un accés <b>encerta</b> si el seu bloc és a la cache, i <b>falla</b> si cal portar-lo de la memòria principal: això és lent, i d'això tracta aquesta lliçó.</p><p>Aquí ens oblidem del temps: el programa s'executa <b>una instrucció després de l'altra</b>, i només mirem els seus LOAD i STORE. La cache del processador té <b>4 línies de 32 bytes</b>: cada línia desa un bloc de 8 floats.</p>"
+        },
+        "actions": [
+          "revertProcessor",
+          "selectProgram:Base",
+          "setN:64",
+          "setRep:1",
+          "switchTo:cacheTraceComponent",
+          "sidePanel:show"
+        ],
+        "next": [
+          "tour"
+        ]
+      },
+      {
+        "id": "tour",
+        "type": "step",
+        "position": "left",
+        "wWidth": 460,
+        "lock": [
+          "program",
+          "N",
+          "Rep"
+        ],
+        "explore": "required",
+        "title": {
+          "en": "The Cache panel",
+          "es": "El panel Cache",
+          "ca": "El panell Cache"
+        },
+        "description": {
+          "en": "<p>The program <b>Base</b> adds V[i] and W[i]. The <b>Cache</b> panel shows its accesses one by one:</p><p>&bull; the <b>memory map</b>: the elements of V and W, with a mark │ where each block starts;<br>&bull; the <b>lines</b> of the cache: the block that each one holds, and its order of use (LRU);<br>&bull; the <b>table</b>: each access with its address, its block and the result;<br>&bull; the line above the map explains the last access.</p><p>Move with ▶ and ◀ (or the arrow keys) through the first 20 accesses.</p>",
+          "es": "<p>El programa <b>Base</b> suma V[i] y W[i]. El panel <b>Cache</b> muestra sus accesos uno a uno:</p><p>&bull; el <b>mapa de memoria</b>: los elementos de V y W, con una marca │ donde empieza cada bloque;<br>&bull; las <b>líneas</b> de la cache: el bloque que guarda cada una, y su orden de uso (LRU);<br>&bull; la <b>tabla</b>: cada acceso con su dirección, su bloque y el resultado;<br>&bull; la línea encima del mapa explica el último acceso.</p><p>Muévete con ▶ y ◀ (o las flechas del teclado) por los 20 primeros accesos.</p>",
+          "ca": "<p>El programa <b>Base</b> suma V[i] i W[i]. El panell <b>Cache</b> mostra els seus accessos un a un:</p><p>&bull; el <b>mapa de memòria</b>: els elements de V i W, amb una marca │ on comença cada bloc;<br>&bull; les <b>línies</b> de la cache: el bloc que desa cadascuna, i el seu ordre d'ús (LRU);<br>&bull; la <b>taula</b>: cada accés amb la seva adreça, el seu bloc i el resultat;<br>&bull; la línia damunt del mapa explica l'últim accés.</p><p>Mou-te amb ▶ i ◀ (o les fletxes del teclat) pels 20 primers accessos.</p>"
+        },
+        "exploreHint": {
+          "en": "<p>Step forward and backward, and read the explanation of each access. When you are done, click here.</p>",
+          "es": "<p>Avanza y retrocede, y lee la explicación de cada acceso. Cuando acabes, pulsa aquí.</p>",
+          "ca": "<p>Avança i retrocedeix, i llegeix l'explicació de cada accés. Quan acabis, prem aquí.</p>"
+        },
+        "actions": [
+          "revertProcessor",
+          "selectProgram:Base",
+          "setN:64",
+          "setRep:1",
+          "switchTo:cacheTraceComponent",
+          "sidePanel:show",
+          "cacheTrace:predict=off",
+          "cacheTrace:step=0"
+        ],
+        "next": [
+          "predict-base"
+        ]
+      },
+      {
+        "id": "predict-base",
+        "type": "step",
+        "position": "left",
+        "wWidth": 460,
+        "lock": [
+          "program",
+          "N",
+          "Rep"
+        ],
+        "explore": "required",
+        "title": {
+          "en": "Predict before you look",
+          "es": "Predice antes de mirar",
+          "ca": "Prediu abans de mirar"
+        },
+        "description": {
+          "en": "<p>Now the panel is in <b>Predict</b> mode: before each access, say whether it will <b>hit</b> or <b>miss</b> (buttons, or keys A and F). RVCAT counts your right predictions.</p><p>Predict the first 32 accesses. Think of the block of each element: a block holds 8 floats.</p>",
+          "es": "<p>Ahora el panel está en modo <b>Predecir</b>: antes de cada acceso, di si <b>acertará</b> o <b>fallará</b> (botones, o teclas A y F). RVCAT cuenta tus predicciones correctas.</p><p>Predice los 32 primeros accesos. Piensa en el bloque de cada elemento: un bloque guarda 8 floats.</p>",
+          "ca": "<p>Ara el panell és en mode <b>Predir</b>: abans de cada accés, digues si <b>encertarà</b> o <b>fallarà</b> (botons, o tecles E i F). RVCAT compta les teves prediccions correctes.</p><p>Prediu els 32 primers accessos. Pensa en el bloc de cada element: un bloc desa 8 floats.</p>"
+        },
+        "exploreHint": {
+          "en": "<p>Predict access after access. When you are done, click here.</p>",
+          "es": "<p>Predice acceso tras acceso. Cuando acabes, pulsa aquí.</p>",
+          "ca": "<p>Prediu accés rere accés. Quan acabis, prem aquí.</p>"
+        },
+        "actions": [
+          "revertProcessor",
+          "selectProgram:Base",
+          "setN:64",
+          "setRep:1",
+          "switchTo:cacheTraceComponent",
+          "sidePanel:show",
+          "cacheTrace:predict=on",
+          "cacheTrace:step=0"
+        ],
+        "next": [
+          "q-base"
+        ]
+      },
+      {
+        "id": "q-base",
+        "type": "question",
+        "position": "left",
+        "wWidth": 440,
+        "lock": [
+          "program",
+          "N",
+          "Rep"
+        ],
+        "answerMode": "numbers",
+        "answers": [],
+        "title": {
+          "en": "All the misses of Base",
+          "es": "Todos los fallos de Base",
+          "ca": "Totes les fallades de Base"
+        },
+        "questionText": {
+          "en": "<p>Base with N = 64 makes 128 accesses. How many <b>misses</b> are there in total? What is the <b>miss rate</b> (misses / accesses)?</p><p>Predict it first, then check it in the box <b>Whole program</b>.</p>",
+          "es": "<p>Base con N = 64 hace 128 accesos. ¿Cuántos <b>fallos</b> hay en total? ¿Cuál es la <b>tasa de fallos</b> (fallos / accesos)?</p><p>Predícelo primero, y después compruébalo en el recuadro <b>Todo el programa</b>.</p>",
+          "ca": "<p>Base amb N = 64 fa 128 accessos. Quantes <b>fallades</b> hi ha en total? Quina és la <b>taxa de fallades</b> (fallades / accessos)?</p><p>Prediu-ho primer, i després comprova-ho al requadre <b>Tot el programa</b>.</p>"
+        },
+        "numericFields": [
+          {
+            "label": {
+              "en": "Misses",
+              "es": "Fallos",
+              "ca": "Fallades"
+            },
+            "value": 16,
+            "tolerance": 0,
+            "unit": {
+              "en": "misses",
+              "es": "fallos",
+              "ca": "fallades"
+            },
+            "correct": {
+              "en": "Right: 8 blocks of V and 8 of W, one miss each: the first element of each block.",
+              "es": "Correcto: 8 bloques de V y 8 de W, un fallo cada uno: el primer elemento de cada bloque.",
+              "ca": "Correcte: 8 blocs de V i 8 de W, una fallada cadascun: el primer element de cada bloc."
+            },
+            "wrong": {
+              "en": "Read the box Whole program, at the bottom of the Cache panel.",
+              "es": "Lee el recuadro Todo el programa, abajo del panel Cache.",
+              "ca": "Llegeix el requadre Tot el programa, a baix del panell Cache."
+            }
+          },
+          {
+            "label": {
+              "en": "Miss rate",
+              "es": "Tasa de fallos",
+              "ca": "Taxa de fallades"
+            },
+            "value": 12.5,
+            "tolerance": 0.1,
+            "unit": "%",
+            "correct": {
+              "en": "Right: 1 of every 8 accesses (16 / 128): the other 7 elements of the block hit. This is <b>spatial locality</b>: the next elements are in the block already brought.",
+              "es": "Correcto: 1 de cada 8 accesos (16 / 128): los otros 7 elementos del bloque aciertan. Es la <b>localidad espacial</b>: los elementos siguientes están en el bloque ya traído.",
+              "ca": "Correcte: 1 de cada 8 accessos (16 / 128): els altres 7 elements del bloc encerten. És la <b>localitat espacial</b>: els elements següents són al bloc ja portat."
+            },
+            "wrong": {
+              "en": "Read the box Whole program, at the bottom of the Cache panel.",
+              "es": "Lee el recuadro Todo el programa, abajo del panel Cache.",
+              "ca": "Llegeix el requadre Tot el programa, a baix del panell Cache."
+            }
+          }
+        ],
+        "help": {
+          "hint": {
+            "en": "How many floats does a block hold? Each vector has 64 elements: how many blocks is that?",
+            "es": "¿Cuántos floats guarda un bloque? Cada vector tiene 64 elementos: ¿cuántos bloques son?",
+            "ca": "Quants floats desa un bloc? Cada vector té 64 elements: quants blocs són?"
+          },
+          "show": {
+            "text": {
+              "en": "<p>The marked numbers are the totals of the whole program.</p>",
+              "es": "<p>Los números marcados son los totales de todo el programa.</p>",
+              "ca": "<p>Els números marcats són els totals de tot el programa.</p>"
+            },
+            "actions": [
+              "cacheTrace:predict=off",
+              "cacheTrace:step=end"
+            ],
+            "selector": "#ct-total-cold, #ct-miss-rate"
+          }
+        },
+        "actions": [
+          "revertProcessor",
+          "selectProgram:Base",
+          "setN:64",
+          "setRep:1",
+          "switchTo:cacheTraceComponent",
+          "sidePanel:show"
+        ],
+        "next": [
+          "q-base-kind"
+        ]
+      },
+      {
+        "id": "q-base-kind",
+        "type": "question",
+        "position": "left",
+        "wWidth": 440,
+        "lock": [
+          "program",
+          "N",
+          "Rep"
+        ],
+        "answerMode": "single",
+        "title": {
+          "en": "What kind of misses?",
+          "es": "¿Qué tipo de fallos?",
+          "ca": "Quin tipus de fallades?"
+        },
+        "questionText": {
+          "en": "<p>All the misses of Base are <b>cold misses</b>. Why are there no capacity misses, with a cache of only 4 lines?</p>",
+          "es": "<p>Todos los fallos de Base son <b>fallos en frío</b>. ¿Por qué no hay fallos de capacidad, con una cache de solo 4 líneas?</p>",
+          "ca": "<p>Totes les fallades de Base són <b>fallades en fred</b>. Per què no hi ha fallades de capacitat, amb una cache de només 4 línies?</p>"
+        },
+        "answers": [
+          {
+            "text": {
+              "en": "Each block is used only while the loop walks through it, and then never again: 2 lines (one for V, one for W) are enough",
+              "es": "Cada bloque se usa solo mientras el bucle lo recorre, y después nunca más: bastan 2 líneas (una para V y otra para W)",
+              "ca": "Cada bloc es fa servir només mentre el bucle el recorre, i després mai més: n'hi ha prou amb 2 línies (una per a V i una altra per a W)"
+            },
+            "isCorrect": true,
+            "explanation": {
+              "en": "Yes: when a block leaves the cache, the program does not need it any more.",
+              "es": "Sí: cuando un bloque sale de la cache, el programa ya no lo necesita.",
+              "ca": "Sí: quan un bloc surt de la cache, el programa ja no el necessita."
+            }
+          },
+          {
+            "text": {
+              "en": "The 16 blocks of V and W fit in 4 lines",
+              "es": "Los 16 bloques de V y W caben en 4 líneas",
+              "ca": "Els 16 blocs de V i W caben en 4 línies"
+            },
+            "isCorrect": false,
+            "explanation": {
+              "en": "No: 16 blocks do not fit in 4 lines; look at the map: most blocks are red, evicted.",
+              "es": "No: 16 bloques no caben en 4 líneas; mira el mapa: la mayoría de los bloques están en rojo, expulsados.",
+              "ca": "No: 16 blocs no caben en 4 línies; mira el mapa: la majoria dels blocs són vermells, expulsats."
+            }
+          },
+          {
+            "text": {
+              "en": "The cache brings the next block before it is needed",
+              "es": "La cache trae el bloque siguiente antes de que se necesite",
+              "ca": "La cache porta el bloc següent abans que es necessiti"
+            },
+            "isCorrect": false,
+            "explanation": {
+              "en": "No: here there is no prefetching; each block is brought by its first access, a cold miss.",
+              "es": "No: aquí no hay prefetching; cada bloque lo trae su primer acceso, un fallo en frío.",
+              "ca": "No: aquí no hi ha prefetching; cada bloc el porta el seu primer accés, una fallada en fred."
+            }
+          }
+        ],
+        "help": {
+          "hint": {
+            "en": "When a block of V leaves the cache, does the program read it again later?",
+            "es": "Cuando un bloque de V sale de la cache, ¿lo vuelve a leer el programa más tarde?",
+            "ca": "Quan un bloc de V surt de la cache, el programa el torna a llegir més tard?"
+          },
+          "show": {
+            "text": {
+              "en": "<p>The map at the end: the evicted blocks (red) are never accessed again.</p>",
+              "es": "<p>El mapa al final: los bloques expulsados (rojo) no se vuelven a acceder.</p>",
+              "ca": "<p>El mapa al final: els blocs expulsats (vermell) no es tornen a accedir.</p>"
+            },
+            "actions": [
+              "cacheTrace:predict=off",
+              "cacheTrace:step=end"
+            ],
+            "selector": "#ct-map"
+          }
+        },
+        "actions": [
+          "switchTo:cacheTraceComponent",
+          "sidePanel:show"
+        ],
+        "next": [
+          "q-one-line"
+        ]
+      },
+      {
+        "id": "q-one-line",
+        "type": "question",
+        "position": "bottom-right",
+        "wWidth": 440,
+        "lock": [
+          "program",
+          "N",
+          "Rep"
+        ],
+        "answerMode": "numbers",
+        "answers": [],
+        "allow": [
+          "processor.cache"
+        ],
+        "title": {
+          "en": "A cache of one line",
+          "es": "Una cache de una línea",
+          "ca": "Una cache d'una línia"
+        },
+        "questionText": {
+          "en": "<p>Change the cache to <b>1 line</b> (click the Memory box of the Processor panel, then Configure the cache…, and change Blocks (the lines)). How many misses does Base have now?</p>",
+          "es": "<p>Cambia la cache a <b>1 línea</b> (haz clic en la caja Memoria del panel del procesador, después en Configurar la cache…, y cambia Bloques (las líneas)). ¿Cuántos fallos tiene Base ahora?</p>",
+          "ca": "<p>Canvia la cache a <b>1 línia</b> (fes clic a la caixa Memòria del panell del processador, després a Configura la cache…, i canvia Blocs (les línies)). Quantes fallades té Base ara?</p>"
+        },
+        "numericFields": [
+          {
+            "label": {
+              "en": "Misses",
+              "es": "Fallos",
+              "ca": "Fallades"
+            },
+            "value": 128,
+            "tolerance": 0,
+            "unit": {
+              "en": "misses",
+              "es": "fallos",
+              "ca": "fallades"
+            },
+            "correct": {
+              "en": "Right: all 128. V[i] and W[i] alternate, and each one evicts the block of the other: every access misses (16 cold, 112 capacity).",
+              "es": "Correcto: los 128. V[i] y W[i] se alternan, y cada uno expulsa el bloque del otro: todos los accesos fallan (16 en frío, 112 de capacidad).",
+              "ca": "Correcte: els 128. V[i] i W[i] s'alternen, i cadascun expulsa el bloc de l'altre: tots els accessos fallen (16 en fred, 112 de capacitat)."
+            },
+            "wrong": {
+              "en": "Read the box Whole program, at the bottom of the Cache panel.",
+              "es": "Lee el recuadro Todo el programa, abajo del panel Cache.",
+              "ca": "Llegeix el requadre Tot el programa, a baix del panell Cache."
+            }
+          }
+        ],
+        "help": {
+          "hint": {
+            "en": "With one line, what is in the cache when W[0] arrives? And when V[1] arrives?",
+            "es": "Con una línea, ¿qué hay en la cache cuando llega W[0]? ¿Y cuando llega V[1]?",
+            "ca": "Amb una línia, què hi ha a la cache quan arriba W[0]? I quan arriba V[1]?"
+          },
+          "show": {
+            "text": {
+              "en": "<p>The cache has now 1 line: look at the first accesses, and at the totals.</p>",
+              "es": "<p>La cache tiene ahora 1 línea: mira los primeros accesos, y los totales.</p>",
+              "ca": "<p>La cache té ara 1 línia: mira els primers accessos, i els totals.</p>"
+            },
+            "actions": [
+              "setProcessor:nBlocks=1",
+              "cacheTrace:predict=off",
+              "cacheTrace:step=4"
+            ],
+            "selector": "#ct-table, #ct-total-capacity"
+          }
+        },
+        "actions": [
+          "revertProcessor",
+          "selectProgram:Base",
+          "setN:64",
+          "setRep:1",
+          "switchTo:cacheTraceComponent",
+          "sidePanel:show",
+          "cacheTrace:predict=off"
+        ],
+        "next": [
+          "rep-intro"
+        ]
+      },
+      {
+        "id": "rep-intro",
+        "type": "step",
+        "position": "left",
+        "wWidth": 460,
+        "lock": [
+          "program",
+          "N",
+          "Rep"
+        ],
+        "title": {
+          "en": "Using the data again",
+          "es": "Volver a usar los datos",
+          "ca": "Tornar a fer servir les dades"
+        },
+        "description": {
+          "en": "<p>Now the function is called twice (<b>Rep = 2</b>) with the same vectors: the second call reads again the 16 blocks of the first one. The cache has 4 lines again.</p><p>Will the second call find its blocks in the cache? Use F▶ to jump from miss to miss, and look at the accesses of the second call (Call = 1).</p>",
+          "es": "<p>Ahora la función se llama dos veces (<b>Rep = 2</b>) con los mismos vectores: la segunda llamada vuelve a leer los 16 bloques de la primera. La cache vuelve a tener 4 líneas.</p><p>¿Encontrará la segunda llamada sus bloques en la cache? Usa F▶ para saltar de fallo en fallo, y mira los accesos de la segunda llamada (Llamada = 1).</p>",
+          "ca": "<p>Ara la funció es crida dues vegades (<b>Rep = 2</b>) amb els mateixos vectors: la segona crida torna a llegir els 16 blocs de la primera. La cache torna a tenir 4 línies.</p><p>Trobarà la segona crida els seus blocs a la cache? Fes servir F▶ per saltar de fallada en fallada, i mira els accessos de la segona crida (Crida = 1).</p>"
+        },
+        "actions": [
+          "revertProcessor",
+          "selectProgram:Base",
+          "setN:64",
+          "setRep:2",
+          "switchTo:cacheTraceComponent",
+          "sidePanel:show",
+          "cacheTrace:predict=off",
+          "cacheTrace:step=0"
+        ],
+        "next": [
+          "q-rep"
+        ]
+      },
+      {
+        "id": "q-rep",
+        "type": "question",
+        "position": "bottom-right",
+        "wWidth": 440,
+        "lock": [
+          "program",
+          "N",
+          "Rep"
+        ],
+        "answerMode": "numbers",
+        "answers": [],
+        "allow": [
+          "processor.cache"
+        ],
+        "title": {
+          "en": "Temporal locality",
+          "es": "Localidad temporal",
+          "ca": "Localitat temporal"
+        },
+        "questionText": {
+          "en": "<p>With 4 lines, how many <b>capacity misses</b> does Rep = 2 have? Then change the number of lines (click the Memory box of the Processor panel, then Configure the cache…, and change Blocks (the lines)): what is the <b>smallest number of lines</b> with which the second call only hits?</p>",
+          "es": "<p>Con 4 líneas, ¿cuántos <b>fallos de capacidad</b> tiene Rep = 2? Después cambia el número de líneas (haz clic en la caja Memoria del panel del procesador, después en Configurar la cache…, y cambia Bloques (las líneas)): ¿cuál es el <b>número mínimo de líneas</b> con el que la segunda llamada solo acierta?</p>",
+          "ca": "<p>Amb 4 línies, quantes <b>fallades de capacitat</b> té Rep = 2? Després canvia el nombre de línies (fes clic a la caixa Memòria del panell del processador, després a Configura la cache…, i canvia Blocs (les línies)): quin és el <b>nombre mínim de línies</b> amb què la segona crida només encerta?</p>"
+        },
+        "numericFields": [
+          {
+            "label": {
+              "en": "Capacity misses (4 lines)",
+              "es": "Fallos de capacidad (4 líneas)",
+              "ca": "Fallades de capacitat (4 línies)"
+            },
+            "value": 16,
+            "tolerance": 0,
+            "unit": {
+              "en": "misses",
+              "es": "fallos",
+              "ca": "fallades"
+            },
+            "correct": {
+              "en": "Right: the second call misses in all its 16 blocks again: they were evicted.",
+              "es": "Correcto: la segunda llamada vuelve a fallar en sus 16 bloques: fueron expulsados.",
+              "ca": "Correcte: la segona crida torna a fallar als seus 16 blocs: van ser expulsats."
+            },
+            "wrong": {
+              "en": "Read the box Whole program, at the bottom of the Cache panel.",
+              "es": "Lee el recuadro Todo el programa, abajo del panel Cache.",
+              "ca": "Llegeix el requadre Tot el programa, a baix del panell Cache."
+            }
+          },
+          {
+            "label": {
+              "en": "Smallest number of lines",
+              "es": "Número mínimo de líneas",
+              "ca": "Nombre mínim de línies"
+            },
+            "value": 16,
+            "tolerance": 0,
+            "unit": {
+              "en": "lines",
+              "es": "líneas",
+              "ca": "línies"
+            },
+            "correct": {
+              "en": "Right: 16 lines hold the 16 blocks of V and W, and the second call only hits (<b>temporal locality</b>: data used again soon). With 15, the LRU replacement evicts each block just before it is needed again: 16 capacity misses again.",
+              "es": "Correcto: 16 líneas guardan los 16 bloques de V y W, y la segunda llamada solo acierta (<b>localidad temporal</b>: datos que se vuelven a usar pronto). Con 15, el reemplazo LRU expulsa cada bloque justo antes de volver a necesitarlo: otra vez 16 fallos de capacidad.",
+              "ca": "Correcte: 16 línies desen els 16 blocs de V i W, i la segona crida només encerta (<b>localitat temporal</b>: dades que es tornen a fer servir aviat). Amb 15, el reemplaçament LRU expulsa cada bloc just abans de tornar-lo a necessitar: una altra vegada 16 fallades de capacitat."
+            },
+            "wrong": {
+              "en": "Try with more lines until the capacity misses are 0.",
+              "es": "Prueba con más líneas hasta que los fallos de capacidad sean 0.",
+              "ca": "Prova amb més línies fins que les fallades de capacitat siguin 0."
+            }
+          }
+        ],
+        "help": {
+          "hint": {
+            "en": "How many different blocks does one call use? The second call only hits if all of them are still in the cache.",
+            "es": "¿Cuántos bloques distintos usa una llamada? La segunda llamada solo acierta si todos siguen en la cache.",
+            "ca": "Quants blocs diferents fa servir una crida? La segona crida només encerta si tots són encara a la cache."
+          },
+          "show": {
+            "text": {
+              "en": "<p>The cache has now 16 lines: look at the capacity misses.</p>",
+              "es": "<p>La cache tiene ahora 16 líneas: mira los fallos de capacidad.</p>",
+              "ca": "<p>La cache té ara 16 línies: mira les fallades de capacitat.</p>"
+            },
+            "actions": [
+              "setProcessor:nBlocks=16",
+              "cacheTrace:step=end"
+            ],
+            "selector": "#ct-total-capacity"
+          }
+        },
+        "actions": [
+          "revertProcessor",
+          "selectProgram:Base",
+          "setN:64",
+          "setRep:2",
+          "switchTo:cacheTraceComponent",
+          "sidePanel:show"
+        ],
+        "next": [
+          "rev-intro"
+        ]
+      },
+      {
+        "id": "rev-intro",
+        "type": "step",
+        "position": "left",
+        "wWidth": 460,
+        "lock": [
+          "program",
+          "N",
+          "Rep"
+        ],
+        "title": {
+          "en": "Backward and forward",
+          "es": "Hacia atrás y hacia adelante",
+          "ca": "Cap enrere i cap endavant"
+        },
+        "description": {
+          "en": "<p><b>REVCOPY</b> copies V into W in reverse order: <b>W[i] = V[N-1-i]</b>. It reads V <b>backward</b>, from V[63] to V[0], and writes W forward.</p><p>A STORE that misses also brings its block to the cache (and then writes in it): the block is <b>modified</b> (M), and when it leaves the cache it must be <b>written back</b> to memory.</p>",
+          "es": "<p><b>REVCOPY</b> copia V en W en orden inverso: <b>W[i] = V[N-1-i]</b>. Lee V <b>hacia atrás</b>, de V[63] a V[0], y escribe W hacia adelante.</p><p>Un STORE que falla también trae su bloque a la cache (y después escribe en él): el bloque queda <b>modificado</b> (M), y cuando sale de la cache hay que <b>escribirlo</b> en la memoria.</p>",
+          "ca": "<p><b>REVCOPY</b> copia V a W en ordre invers: <b>W[i] = V[N-1-i]</b>. Llegeix V <b>cap enrere</b>, de V[63] a V[0], i escriu W cap endavant.</p><p>Un STORE que falla també porta el seu bloc a la cache (i després hi escriu): el bloc queda <b>modificat</b> (M), i quan surt de la cache cal <b>escriure'l</b> a la memòria.</p>"
+        },
+        "actions": [
+          "revertProcessor",
+          "selectProgram:REVCOPY",
+          "setN:64",
+          "setRep:1",
+          "switchTo:cacheTraceComponent",
+          "sidePanel:show",
+          "cacheTrace:predict=on",
+          "cacheTrace:step=0"
+        ],
+        "next": [
+          "q-rev"
+        ]
+      },
+      {
+        "id": "q-rev",
+        "type": "question",
+        "position": "left",
+        "wWidth": 440,
+        "lock": [
+          "program",
+          "N",
+          "Rep"
+        ],
+        "answerMode": "numbers",
+        "answers": [],
+        "title": {
+          "en": "Misses backward",
+          "es": "Fallos hacia atrás",
+          "ca": "Fallades cap enrere"
+        },
+        "questionText": {
+          "en": "<p>Predict some accesses, then answer. Which element of V misses <b>second</b> (after V[63])? How many misses are there in total? How many blocks are <b>written back</b> to memory?</p>",
+          "es": "<p>Predice algunos accesos, y después responde. ¿Qué elemento de V falla en <b>segundo</b> lugar (después de V[63])? ¿Cuántos fallos hay en total? ¿Cuántos bloques se <b>escriben</b> en la memoria?</p>",
+          "ca": "<p>Prediu alguns accessos, i després respon. Quin element de V falla en <b>segon</b> lloc (després de V[63])? Quantes fallades hi ha en total? Quants blocs s'<b>escriuen</b> a la memòria?</p>"
+        },
+        "numericFields": [
+          {
+            "label": {
+              "en": "Second miss of V",
+              "es": "Segundo fallo de V",
+              "ca": "Segona fallada de V"
+            },
+            "value": 55,
+            "tolerance": 0,
+            "unit": {
+              "en": "element",
+              "es": "elemento",
+              "ca": "element"
+            },
+            "correct": {
+              "en": "Right: V[55], the last element of the block V[48–55]. Backward, a block misses in its last element, and its other 7 elements hit.",
+              "es": "Correcto: V[55], el último elemento del bloque V[48–55]. Hacia atrás, un bloque falla en su último elemento, y sus otros 7 elementos aciertan.",
+              "ca": "Correcte: V[55], l'últim element del bloc V[48–55]. Cap enrere, un bloc falla en el seu últim element, i els altres 7 elements encerten."
+            },
+            "wrong": {
+              "en": "V[63] is the last element of its block. Which element is the last one of the previous block?",
+              "es": "V[63] es el último elemento de su bloque. ¿Cuál es el último del bloque anterior?",
+              "ca": "V[63] és l'últim element del seu bloc. Quin és l'últim del bloc anterior?"
+            }
+          },
+          {
+            "label": {
+              "en": "Misses",
+              "es": "Fallos",
+              "ca": "Fallades"
+            },
+            "value": 16,
+            "tolerance": 0,
+            "unit": {
+              "en": "misses",
+              "es": "fallos",
+              "ca": "fallades"
+            },
+            "correct": {
+              "en": "Right: 16, as forward: the direction does not change the number of misses.",
+              "es": "Correcto: 16, como hacia adelante: el sentido no cambia el número de fallos.",
+              "ca": "Correcte: 16, com cap endavant: el sentit no canvia el nombre de fallades."
+            },
+            "wrong": {
+              "en": "Read the box Whole program, at the bottom of the Cache panel.",
+              "es": "Lee el recuadro Todo el programa, abajo del panel Cache.",
+              "ca": "Llegeix el requadre Tot el programa, a baix del panell Cache."
+            }
+          },
+          {
+            "label": {
+              "en": "Blocks written back",
+              "es": "Bloques escritos en memoria",
+              "ca": "Blocs escrits a memòria"
+            },
+            "value": 6,
+            "tolerance": 0,
+            "unit": {
+              "en": "blocks",
+              "es": "bloques",
+              "ca": "blocs"
+            },
+            "correct": {
+              "en": "Right: 6 of the 8 blocks of W leave the cache modified; the last 2 are still in the cache at the end.",
+              "es": "Correcto: 6 de los 8 bloques de W salen de la cache modificados; los 2 últimos siguen en la cache al final.",
+              "ca": "Correcte: 6 dels 8 blocs de W surten de la cache modificats; els 2 últims són encara a la cache al final."
+            },
+            "wrong": {
+              "en": "Read the box Whole program, at the bottom of the Cache panel.",
+              "es": "Lee el recuadro Todo el programa, abajo del panel Cache.",
+              "ca": "Llegeix el requadre Tot el programa, a baix del panell Cache."
+            }
+          }
+        ],
+        "help": {
+          "hint": {
+            "en": "A block holds 8 floats: V[56–63], V[48–55]... Going backward, which element of each block is accessed first?",
+            "es": "Un bloque guarda 8 floats: V[56–63], V[48–55]... Hacia atrás, ¿qué elemento de cada bloque se accede primero?",
+            "ca": "Un bloc desa 8 floats: V[56–63], V[48–55]... Cap enrere, quin element de cada bloc s'accedeix primer?"
+          },
+          "show": {
+            "text": {
+              "en": "<p>The marked step is the second miss of V; the totals are below.</p>",
+              "es": "<p>El paso marcado es el segundo fallo de V; los totales están abajo.</p>",
+              "ca": "<p>El pas marcat és la segona fallada de V; els totals són a baix.</p>"
+            },
+            "actions": [
+              "cacheTrace:predict=off",
+              "cacheTrace:step=17"
+            ],
+            "selector": "#ct-message, #ct-total-writebacks"
+          }
+        },
+        "actions": [
+          "switchTo:cacheTraceComponent",
+          "sidePanel:show"
+        ],
+        "next": [
+          "stride-intro"
+        ]
+      },
+      {
+        "id": "stride-intro",
+        "type": "step",
+        "position": "left",
+        "wWidth": 460,
+        "lock": [
+          "program",
+          "N",
+          "Rep"
+        ],
+        "title": {
+          "en": "Jumping through a vector",
+          "es": "Saltando por un vector",
+          "ca": "Saltant per un vector"
+        },
+        "description": {
+          "en": "<p><b>STRIDE3</b> adds one element of every three: V[0], V[3], V[6]... (a <b>stride</b> of 3). Look at the map: how many elements of each block does the program use?</p>",
+          "es": "<p><b>STRIDE3</b> suma un elemento de cada tres: V[0], V[3], V[6]... (un <b>stride</b> de 3). Mira el mapa: ¿cuántos elementos de cada bloque usa el programa?</p>",
+          "ca": "<p><b>STRIDE3</b> suma un element de cada tres: V[0], V[3], V[6]... (un <b>stride</b> de 3). Mira el mapa: quants elements de cada bloc fa servir el programa?</p>"
+        },
+        "actions": [
+          "revertProcessor",
+          "selectProgram:STRIDE3",
+          "setN:64",
+          "setRep:1",
+          "switchTo:cacheTraceComponent",
+          "sidePanel:show",
+          "cacheTrace:predict=off",
+          "cacheTrace:step=0"
+        ],
+        "next": [
+          "q-stride"
+        ]
+      },
+      {
+        "id": "q-stride",
+        "type": "question",
+        "position": "left",
+        "wWidth": 440,
+        "lock": [
+          "program",
+          "N",
+          "Rep"
+        ],
+        "answerMode": "numbers",
+        "answers": [],
+        "title": {
+          "en": "The cost of a stride",
+          "es": "El coste de un stride",
+          "ca": "El cost d'un stride"
+        },
+        "questionText": {
+          "en": "<p>What is the miss rate of STRIDE3? And if the stride were 8 (V[0], V[8], V[16]...)?</p>",
+          "es": "<p>¿Cuál es la tasa de fallos de STRIDE3? ¿Y si el stride fuera 8 (V[0], V[8], V[16]...)?</p>",
+          "ca": "<p>Quina és la taxa de fallades de STRIDE3? I si l'stride fos 8 (V[0], V[8], V[16]...)?</p>"
+        },
+        "numericFields": [
+          {
+            "label": {
+              "en": "Stride 3",
+              "es": "Stride 3",
+              "ca": "Stride 3"
+            },
+            "value": 37.5,
+            "tolerance": 0.2,
+            "unit": "%",
+            "correct": {
+              "en": "Right: 24 misses of 64 accesses, 3 of every 8: a block of 8 floats serves only about 8/3 accesses.",
+              "es": "Correcto: 24 fallos de 64 accesos, 3 de cada 8: un bloque de 8 floats solo sirve a unos 8/3 accesos.",
+              "ca": "Correcte: 24 fallades de 64 accessos, 3 de cada 8: un bloc de 8 floats només serveix uns 8/3 accessos."
+            },
+            "wrong": {
+              "en": "Read the box Whole program, at the bottom of the Cache panel.",
+              "es": "Lee el recuadro Todo el programa, abajo del panel Cache.",
+              "ca": "Llegeix el requadre Tot el programa, a baix del panell Cache."
+            }
+          },
+          {
+            "label": {
+              "en": "Stride 8",
+              "es": "Stride 8",
+              "ca": "Stride 8"
+            },
+            "value": 100,
+            "tolerance": 0.2,
+            "unit": "%",
+            "correct": {
+              "en": "Right: with a stride of 8 or more, each access is in a different block: every access misses, and the cache brings 8 floats to use only one.",
+              "es": "Correcto: con un stride de 8 o más, cada acceso está en un bloque distinto: todos los accesos fallan, y la cache trae 8 floats para usar solo uno.",
+              "ca": "Correcte: amb un stride de 8 o més, cada accés és en un bloc diferent: tots els accessos fallen, i la cache porta 8 floats per fer-ne servir només un."
+            },
+            "wrong": {
+              "en": "With a stride of 8, how many accesses fall into each block?",
+              "es": "Con un stride de 8, ¿cuántos accesos caen en cada bloque?",
+              "ca": "Amb un stride de 8, quants accessos cauen a cada bloc?"
+            }
+          }
+        ],
+        "help": {
+          "hint": {
+            "en": "Count the accesses that fall into one block of 8 floats with a stride of 3, and with a stride of 8.",
+            "es": "Cuenta los accesos que caen en un bloque de 8 floats con un stride de 3, y con un stride de 8.",
+            "ca": "Compta els accessos que cauen en un bloc de 8 floats amb un stride de 3, i amb un stride de 8."
+          },
+          "show": {
+            "text": {
+              "en": "<p>The marked numbers are the totals of the whole program.</p>",
+              "es": "<p>Los números marcados son los totales de todo el programa.</p>",
+              "ca": "<p>Els números marcats són els totals de tot el programa.</p>"
+            },
+            "actions": [
+              "cacheTrace:step=end"
+            ],
+            "selector": "#ct-miss-rate"
+          }
+        },
+        "actions": [
+          "switchTo:cacheTraceComponent",
+          "sidePanel:show"
+        ],
+        "next": [
+          "mv-intro"
+        ]
+      },
+      {
+        "id": "mv-intro",
+        "type": "step",
+        "position": "left",
+        "wWidth": 460,
+        "lock": [
+          "program",
+          "N",
+          "Rep"
+        ],
+        "title": {
+          "en": "A matrix times a vector",
+          "es": "Una matriz por un vector",
+          "ca": "Una matriu per un vector"
+        },
+        "description": {
+          "en": "<p><b>MV-rows</b> computes Y = A·X with an 8×8 matrix A of floats. The inner loop (j) computes one element of Y: it walks through <b>a row of A</b> and through X. The outer loop is simulated with <b>Rep = 8</b>: each call is one row i, and A advances 8 elements (a row) from one call to the next.</p><p>A is stored <b>by rows</b>: a row has 8 contiguous floats, exactly one block. In the map, each row of A is one row of the drawing.</p>",
+          "es": "<p><b>MV-rows</b> calcula Y = A·X con una matriz A de 8×8 floats. El bucle interno (j) calcula un elemento de Y: recorre <b>una fila de A</b> y X. El bucle externo se simula con <b>Rep = 8</b>: cada llamada es una fila i, y A avanza 8 elementos (una fila) de una llamada a la siguiente.</p><p>A está guardada <b>por filas</b>: una fila son 8 floats contiguos, justo un bloque. En el mapa, cada fila de A es una fila del dibujo.</p>",
+          "ca": "<p><b>MV-rows</b> calcula Y = A·X amb una matriu A de 8×8 floats. El bucle intern (j) calcula un element de Y: recorre <b>una fila d'A</b> i X. El bucle extern se simula amb <b>Rep = 8</b>: cada crida és una fila i, i A avança 8 elements (una fila) d'una crida a la següent.</p><p>A està desada <b>per files</b>: una fila són 8 floats contigus, just un bloc. Al mapa, cada fila d'A és una fila del dibuix.</p>"
+        },
+        "actions": [
+          "revertProcessor",
+          "selectProgram:MV-rows",
+          "setN:8",
+          "setRep:8",
+          "switchTo:cacheTraceComponent",
+          "sidePanel:show",
+          "cacheTrace:predict=off",
+          "cacheTrace:step=0"
+        ],
+        "next": [
+          "q-mv-rows"
+        ]
+      },
+      {
+        "id": "q-mv-rows",
+        "type": "question",
+        "position": "left",
+        "wWidth": 440,
+        "lock": [
+          "program",
+          "N",
+          "Rep"
+        ],
+        "answerMode": "numbers",
+        "answers": [],
+        "title": {
+          "en": "By rows",
+          "es": "Por filas",
+          "ca": "Per files"
+        },
+        "questionText": {
+          "en": "<p>How many misses does the LOAD of A have? And the whole program (A, X and Y)?</p>",
+          "es": "<p>¿Cuántos fallos tiene el LOAD de A? ¿Y todo el programa (A, X e Y)?</p>",
+          "ca": "<p>Quantes fallades té el LOAD d'A? I tot el programa (A, X i Y)?</p>"
+        },
+        "numericFields": [
+          {
+            "label": {
+              "en": "Misses of A",
+              "es": "Fallos de A",
+              "ca": "Fallades d'A"
+            },
+            "value": 8,
+            "tolerance": 0,
+            "unit": {
+              "en": "misses",
+              "es": "fallos",
+              "ca": "fallades"
+            },
+            "correct": {
+              "en": "Right: one per row: each row is one block, used completely and then never again.",
+              "es": "Correcto: uno por fila: cada fila es un bloque, que se usa entero y después nunca más.",
+              "ca": "Correcte: una per fila: cada fila és un bloc, que es fa servir sencer i després mai més."
+            },
+            "wrong": {
+              "en": "Read the row of a = A[i][j] in the table of instructions of the box Whole program.",
+              "es": "Lee la fila de a = A[i][j] en la tabla de instrucciones del recuadro Todo el programa.",
+              "ca": "Llegeix la fila d'a = A[i][j] a la taula d'instruccions del requadre Tot el programa."
+            }
+          },
+          {
+            "label": {
+              "en": "Total misses",
+              "es": "Fallos en total",
+              "ca": "Fallades en total"
+            },
+            "value": 10,
+            "tolerance": 0,
+            "unit": {
+              "en": "misses",
+              "es": "fallos",
+              "ca": "fallades"
+            },
+            "correct": {
+              "en": "Right: 8 of A, 1 of X (its block is used again in every call, and stays in the cache) and 1 of Y. All of them are cold misses.",
+              "es": "Correcto: 8 de A, 1 de X (su bloque se vuelve a usar en cada llamada, y se queda en la cache) y 1 de Y. Todos son fallos en frío.",
+              "ca": "Correcte: 8 d'A, 1 d'X (el seu bloc es torna a fer servir a cada crida, i es queda a la cache) i 1 d'Y. Totes són fallades en fred."
+            },
+            "wrong": {
+              "en": "Read the box Whole program, at the bottom of the Cache panel.",
+              "es": "Lee el recuadro Todo el programa, abajo del panel Cache.",
+              "ca": "Llegeix el requadre Tot el programa, a baix del panell Cache."
+            }
+          }
+        ],
+        "help": {
+          "hint": {
+            "en": "How many blocks does A have? Is any block of A used in two different calls?",
+            "es": "¿Cuántos bloques tiene A? ¿Se usa algún bloque de A en dos llamadas distintas?",
+            "ca": "Quants blocs té A? Es fa servir algun bloc d'A en dues crides diferents?"
+          },
+          "show": {
+            "text": {
+              "en": "<p>The marked numbers are the totals of the whole program.</p>",
+              "es": "<p>Los números marcados son los totales de todo el programa.</p>",
+              "ca": "<p>Els números marcats són els totals de tot el programa.</p>"
+            },
+            "actions": [
+              "cacheTrace:step=end"
+            ],
+            "selector": "#ct-instr-0, #ct-total-cold"
+          }
+        },
+        "actions": [
+          "switchTo:cacheTraceComponent",
+          "sidePanel:show"
+        ],
+        "next": [
+          "mv-cols-intro"
+        ]
+      },
+      {
+        "id": "mv-cols-intro",
+        "type": "step",
+        "position": "left",
+        "wWidth": 460,
+        "lock": [
+          "program",
+          "N",
+          "Rep"
+        ],
+        "title": {
+          "en": "The same matrix, by columns",
+          "es": "La misma matriz, por columnas",
+          "ca": "La mateixa matriu, per columnes"
+        },
+        "description": {
+          "en": "<p><b>MV-cols</b> makes the same computation, but A is stored <b>by columns</b>: the element (i, j) is at position j·8 + i. Now the inner loop jumps <b>8 elements</b> at each access (a stride of 8): each access of a row of the matrix falls into a different block.</p><p>In the map, each row of the drawing is now a <b>column</b> of the matrix (8 contiguous floats, one block). Predict the first accesses of the second call (Call = 1): will A hit?</p>",
+          "es": "<p><b>MV-cols</b> hace el mismo cálculo, pero A está guardada <b>por columnas</b>: el elemento (i, j) está en la posición j·8 + i. Ahora el bucle interno salta <b>8 elementos</b> en cada acceso (un stride de 8): cada acceso de una fila de la matriz cae en un bloque distinto.</p><p>En el mapa, cada fila del dibujo es ahora una <b>columna</b> de la matriz (8 floats contiguos, un bloque). Predice los primeros accesos de la segunda llamada (Llamada = 1): ¿acertará A?</p>",
+          "ca": "<p><b>MV-cols</b> fa el mateix càlcul, però A està desada <b>per columnes</b>: l'element (i, j) és a la posició j·8 + i. Ara el bucle intern salta <b>8 elements</b> a cada accés (un stride de 8): cada accés d'una fila de la matriu cau en un bloc diferent.</p><p>Al mapa, cada fila del dibuix és ara una <b>columna</b> de la matriu (8 floats contigus, un bloc). Prediu els primers accessos de la segona crida (Crida = 1): encertarà A?</p>"
+        },
+        "actions": [
+          "revertProcessor",
+          "selectProgram:MV-cols",
+          "setN:8",
+          "setRep:8",
+          "switchTo:cacheTraceComponent",
+          "sidePanel:show",
+          "cacheTrace:predict=off",
+          "cacheTrace:grid=on",
+          "cacheTrace:step=17"
+        ],
+        "next": [
+          "q-mv-cols"
+        ]
+      },
+      {
+        "id": "q-mv-cols",
+        "type": "question",
+        "position": "left",
+        "wWidth": 440,
+        "lock": [
+          "program",
+          "N",
+          "Rep"
+        ],
+        "answerMode": "numbers",
+        "answers": [],
+        "title": {
+          "en": "By columns",
+          "es": "Por columnas",
+          "ca": "Per columnes"
+        },
+        "questionText": {
+          "en": "<p>With 4 lines, how many <b>cold</b> and how many <b>capacity</b> misses does MV-cols have?</p>",
+          "es": "<p>Con 4 líneas, ¿cuántos fallos <b>en frío</b> y cuántos <b>de capacidad</b> tiene MV-cols?</p>",
+          "ca": "<p>Amb 4 línies, quantes fallades <b>en fred</b> i quantes <b>de capacitat</b> té MV-cols?</p>"
+        },
+        "numericFields": [
+          {
+            "label": {
+              "en": "Cold misses",
+              "es": "Fallos en frío",
+              "ca": "Fallades en fred"
+            },
+            "value": 10,
+            "tolerance": 0,
+            "unit": {
+              "en": "misses",
+              "es": "fallos",
+              "ca": "fallades"
+            },
+            "correct": {
+              "en": "Right: the same 10 blocks as by rows: the data are the same.",
+              "es": "Correcto: los mismos 10 bloques que por filas: los datos son los mismos.",
+              "ca": "Correcte: els mateixos 10 blocs que per files: les dades són les mateixes."
+            },
+            "wrong": {
+              "en": "Read the box Whole program, at the bottom of the Cache panel.",
+              "es": "Lee el recuadro Todo el programa, abajo del panel Cache.",
+              "ca": "Llegeix el requadre Tot el programa, a baix del panell Cache."
+            }
+          },
+          {
+            "label": {
+              "en": "Capacity misses",
+              "es": "Fallos de capacidad",
+              "ca": "Fallades de capacitat"
+            },
+            "value": 63,
+            "tolerance": 0,
+            "unit": {
+              "en": "misses",
+              "es": "fallos",
+              "ca": "fallades"
+            },
+            "correct": {
+              "en": "Right: 63: every access to A after the first call misses. Each call uses the 8 blocks of A again (one element of each), but 4 lines cannot keep them from one call to the next.",
+              "es": "Correcto: 63: todos los accesos a A después de la primera llamada fallan. Cada llamada vuelve a usar los 8 bloques de A (un elemento de cada uno), pero 4 líneas no pueden guardarlos de una llamada a la siguiente.",
+              "ca": "Correcte: 63: tots els accessos a A després de la primera crida fallen. Cada crida torna a fer servir els 8 blocs d'A (un element de cadascun), però 4 línies no els poden desar d'una crida a la següent."
+            },
+            "wrong": {
+              "en": "Read the box Whole program, at the bottom of the Cache panel.",
+              "es": "Lee el recuadro Todo el programa, abajo del panel Cache.",
+              "ca": "Llegeix el requadre Tot el programa, a baix del panell Cache."
+            }
+          }
+        ],
+        "help": {
+          "hint": {
+            "en": "The second call reads A[1], A[9], A[17]...: the same 8 blocks as the first call. Are they still in the cache?",
+            "es": "La segunda llamada lee A[1], A[9], A[17]...: los mismos 8 bloques que la primera llamada. ¿Siguen en la cache?",
+            "ca": "La segona crida llegeix A[1], A[9], A[17]...: els mateixos 8 blocs que la primera crida. Són encara a la cache?"
+          },
+          "show": {
+            "text": {
+              "en": "<p>The marked numbers are the totals of the whole program.</p>",
+              "es": "<p>Los números marcados son los totales de todo el programa.</p>",
+              "ca": "<p>Els números marcats són els totals de tot el programa.</p>"
+            },
+            "actions": [
+              "cacheTrace:step=end"
+            ],
+            "selector": "#ct-total-cold, #ct-total-capacity"
+          }
+        },
+        "actions": [
+          "switchTo:cacheTraceComponent",
+          "sidePanel:show"
+        ],
+        "next": [
+          "q-mv-lines"
+        ]
+      },
+      {
+        "id": "q-mv-lines",
+        "type": "question",
+        "position": "bottom-right",
+        "wWidth": 440,
+        "lock": [
+          "program",
+          "N",
+          "Rep"
+        ],
+        "answerMode": "numbers",
+        "answers": [],
+        "allow": [
+          "processor.cache"
+        ],
+        "title": {
+          "en": "How many lines?",
+          "es": "¿Cuántas líneas?",
+          "ca": "Quantes línies?"
+        },
+        "questionText": {
+          "en": "<p>Change the number of lines (click the Memory box of the Processor panel, then Configure the cache…, and change Blocks (the lines)). How many capacity misses are there with <b>9 lines</b>? What is the <b>smallest number of lines</b> without capacity misses?</p>",
+          "es": "<p>Cambia el número de líneas (haz clic en la caja Memoria del panel del procesador, después en Configurar la cache…, y cambia Bloques (las líneas)). ¿Cuántos fallos de capacidad hay con <b>9 líneas</b>? ¿Cuál es el <b>número mínimo de líneas</b> sin fallos de capacidad?</p>",
+          "ca": "<p>Canvia el nombre de línies (fes clic a la caixa Memòria del panell del processador, després a Configura la cache…, i canvia Blocs (les línies)). Quantes fallades de capacitat hi ha amb <b>9 línies</b>? Quin és el <b>nombre mínim de línies</b> sense fallades de capacitat?</p>"
+        },
+        "numericFields": [
+          {
+            "label": {
+              "en": "Capacity misses (9 lines)",
+              "es": "Fallos de capacidad (9 líneas)",
+              "ca": "Fallades de capacitat (9 línies)"
+            },
+            "value": 63,
+            "tolerance": 0,
+            "unit": {
+              "en": "misses",
+              "es": "fallos",
+              "ca": "fallades"
+            },
+            "correct": {
+              "en": "Right: still 63, as with 4 lines.",
+              "es": "Correcto: siguen siendo 63, como con 4 líneas.",
+              "ca": "Correcte: continuen sent 63, com amb 4 línies."
+            },
+            "wrong": {
+              "en": "Read the box Whole program, at the bottom of the Cache panel.",
+              "es": "Lee el recuadro Todo el programa, abajo del panel Cache.",
+              "ca": "Llegeix el requadre Tot el programa, a baix del panell Cache."
+            }
+          },
+          {
+            "label": {
+              "en": "Smallest number of lines",
+              "es": "Número mínimo de líneas",
+              "ca": "Nombre mínim de línies"
+            },
+            "value": 10,
+            "tolerance": 0,
+            "unit": {
+              "en": "lines",
+              "es": "líneas",
+              "ca": "línies"
+            },
+            "correct": {
+              "en": "Right: 10 lines: the 8 blocks of A (the 8 columns), the block of X and the block of Y. With one line less, LRU always evicts the block that will be needed soonest: all or nothing.",
+              "es": "Correcto: 10 líneas: los 8 bloques de A (las 8 columnas), el bloque de X y el bloque de Y. Con una línea menos, el LRU siempre expulsa el bloque que se necesitará antes: todo o nada.",
+              "ca": "Correcte: 10 línies: els 8 blocs d'A (les 8 columnes), el bloc d'X i el bloc d'Y. Amb una línia menys, el LRU sempre expulsa el bloc que es necessitarà abans: tot o res."
+            },
+            "wrong": {
+              "en": "Count the blocks that one call uses: those of A, of X and of Y.",
+              "es": "Cuenta los bloques que usa una llamada: los de A, de X y de Y.",
+              "ca": "Compta els blocs que fa servir una crida: els d'A, d'X i d'Y."
+            }
+          }
+        ],
+        "help": {
+          "hint": {
+            "en": "Count the blocks that one call uses. They must all stay in the cache until the next call.",
+            "es": "Cuenta los bloques que usa una llamada. Tienen que seguir todos en la cache hasta la llamada siguiente.",
+            "ca": "Compta els blocs que fa servir una crida. Han de continuar tots a la cache fins a la crida següent."
+          },
+          "show": {
+            "text": {
+              "en": "<p>The cache has now 10 lines: look at the capacity misses.</p>",
+              "es": "<p>La cache tiene ahora 10 líneas: mira los fallos de capacidad.</p>",
+              "ca": "<p>La cache té ara 10 línies: mira les fallades de capacitat.</p>"
+            },
+            "actions": [
+              "setProcessor:nBlocks=10",
+              "cacheTrace:step=end"
+            ],
+            "selector": "#ct-total-capacity"
+          }
+        },
+        "actions": [
+          "revertProcessor",
+          "selectProgram:MV-cols",
+          "setN:8",
+          "setRep:8",
+          "switchTo:cacheTraceComponent",
+          "sidePanel:show",
+          "cacheTrace:grid=off"
+        ],
+        "next": [
+          "summary"
+        ]
+      },
+      {
+        "id": "summary",
+        "type": "step",
+        "style": "takeaway",
+        "position": "center",
+        "wWidth": 720,
+        "lock": [
+          "program",
+          "N",
+          "Rep"
+        ],
+        "title": {
+          "en": "Locality",
+          "es": "Localidad",
+          "ca": "Localitat"
+        },
+        "description": {
+          "en": "<p>&bull; <b>Cold misses</b>: the first use of each block. With contiguous data, 1 miss per block: the other elements of the block hit (<b>spatial locality</b>), forward or backward.<br>&bull; <b>Stride</b>: jumping through the data uses fewer elements of each block; with a stride as large as the block, every access misses.<br>&bull; <b>Capacity misses</b>: a block used again misses if it was evicted in between. Data used again soon (<b>temporal locality</b>) hit only if the data used in between fit in the cache.<br>&bull; The <b>order of the data</b> matters: the same matrix, by rows, has 10 misses; by columns, 73, unless the cache keeps a block for each column.</p>",
+          "es": "<p>&bull; <b>Fallos en frío</b>: el primer uso de cada bloque. Con datos contiguos, 1 fallo por bloque: los demás elementos del bloque aciertan (<b>localidad espacial</b>), hacia adelante o hacia atrás.<br>&bull; <b>Stride</b>: saltar por los datos usa menos elementos de cada bloque; con un stride tan grande como el bloque, todos los accesos fallan.<br>&bull; <b>Fallos de capacidad</b>: un bloque que se vuelve a usar falla si fue expulsado entretanto. Los datos que se vuelven a usar pronto (<b>localidad temporal</b>) solo aciertan si los datos usados entretanto caben en la cache.<br>&bull; El <b>orden de los datos</b> importa: la misma matriz, por filas, tiene 10 fallos; por columnas, 73, salvo que la cache guarde un bloque por columna.</p>",
+          "ca": "<p>&bull; <b>Fallades en fred</b>: el primer ús de cada bloc. Amb dades contigües, 1 fallada per bloc: els altres elements del bloc encerten (<b>localitat espacial</b>), cap endavant o cap enrere.<br>&bull; <b>Stride</b>: saltar per les dades fa servir menys elements de cada bloc; amb un stride tan gran com el bloc, tots els accessos fallen.<br>&bull; <b>Fallades de capacitat</b>: un bloc que es torna a fer servir falla si en va ser expulsat mentrestant. Les dades que es tornen a fer servir aviat (<b>localitat temporal</b>) només encerten si les dades usades mentrestant caben a la cache.<br>&bull; L'<b>ordre de les dades</b> importa: la mateixa matriu, per files, té 10 fallades; per columnes, 73, tret que la cache desi un bloc per columna.</p>"
+        },
+        "actions": [
+          "revertProcessor",
+          "switchTo:cacheTraceComponent",
+          "sidePanel:show"
+        ],
+        "next": []
+      }
+    ]
+  }
+}
