@@ -10,7 +10,7 @@
     "es": "<p>Los accesos de cinco programas a la cache, uno a uno y sin tiempo: fallos en frío y de capacidad, localidad espacial y temporal, strides, y una matriz guardada por filas o por columnas.</p>",
     "ca": "<p>Els accessos de cinc programes a la cache, un a un i sense temps: fallades en fred i de capacitat, localitat espacial i temporal, strides, i una matriu desada per files o per columnes.</p>"
   },
-  "version": 1,
+  "version": 2,
   "programs": [
     {
       "name": "Base",
@@ -1016,9 +1016,9 @@
           "ca": "Totes les fallades de Base"
         },
         "questionText": {
-          "en": "<p>Base with N = 64 makes 128 accesses. How many <b>misses</b> are there in total? What is the <b>miss rate</b> (misses / accesses)?</p><p>Predict it first, then check it in the box <b>Whole program</b>.</p>",
-          "es": "<p>Base con N = 64 hace 128 accesos. ¿Cuántos <b>fallos</b> hay en total? ¿Cuál es la <b>tasa de fallos</b> (fallos / accesos)?</p><p>Predícelo primero, y después compruébalo en el recuadro <b>Todo el programa</b>.</p>",
-          "ca": "<p>Base amb N = 64 fa 128 accessos. Quantes <b>fallades</b> hi ha en total? Quina és la <b>taxa de fallades</b> (fallades / accessos)?</p><p>Prediu-ho primer, i després comprova-ho al requadre <b>Tot el programa</b>.</p>"
+          "en": "<p>Base with N = 64 makes 128 accesses. How many <b>misses</b> are there in total? What is the <b>miss rate</b> (misses / accesses)?</p><p>Predict it first, then check it with <b>Σ</b> (the totals of the whole program).</p>",
+          "es": "<p>Base con N = 64 hace 128 accesos. ¿Cuántos <b>fallos</b> hay en total? ¿Cuál es la <b>tasa de fallos</b> (fallos / accesos)?</p><p>Predícelo primero, y después compruébalo con <b>Σ</b> (los totales de todo el programa).</p>",
+          "ca": "<p>Base amb N = 64 fa 128 accessos. Quantes <b>fallades</b> hi ha en total? Quina és la <b>taxa de fallades</b> (fallades / accessos)?</p><p>Prediu-ho primer, i després comprova-ho amb <b>Σ</b> (els totals de tot el programa).</p>"
         },
         "numericFields": [
           {
@@ -1040,9 +1040,9 @@
               "ca": "Correcte: 8 blocs de V i 8 de W, una fallada cadascun: el primer element de cada bloc."
             },
             "wrong": {
-              "en": "Read the box Whole program, at the bottom of the Cache panel.",
-              "es": "Lee el recuadro Todo el programa, abajo del panel Cache.",
-              "ca": "Llegeix el requadre Tot el programa, a baix del panell Cache."
+              "en": "Click Σ (the first control of the Cache panel): it shows the totals of the whole program.",
+              "es": "Pulsa Σ (el primer control del panel Cache): muestra los totales de todo el programa.",
+              "ca": "Prem Σ (el primer control del panell Cache): mostra els totals de tot el programa."
             }
           },
           {
@@ -1060,9 +1060,9 @@
               "ca": "Correcte: 1 de cada 8 accessos (16 / 128): els altres 7 elements del bloc encerten. És la <b>localitat espacial</b>: els elements següents són al bloc ja portat."
             },
             "wrong": {
-              "en": "Read the box Whole program, at the bottom of the Cache panel.",
-              "es": "Lee el recuadro Todo el programa, abajo del panel Cache.",
-              "ca": "Llegeix el requadre Tot el programa, a baix del panell Cache."
+              "en": "Click Σ (the first control of the Cache panel): it shows the totals of the whole program.",
+              "es": "Pulsa Σ (el primer control del panel Cache): muestra los totales de todo el programa.",
+              "ca": "Prem Σ (el primer control del panell Cache): mostra els totals de tot el programa."
             }
           }
         ],
@@ -1080,7 +1080,7 @@
             },
             "actions": [
               "cacheTrace:predict=off",
-              "cacheTrace:step=end"
+              "cacheTrace:mode=global"
             ],
             "selector": "#ct-total-cold, #ct-miss-rate"
           }
@@ -1231,9 +1231,9 @@
               "ca": "Correcte: els 128. V[i] i W[i] s'alternen, i cadascun expulsa el bloc de l'altre: tots els accessos fallen (16 en fred, 112 de capacitat)."
             },
             "wrong": {
-              "en": "Read the box Whole program, at the bottom of the Cache panel.",
-              "es": "Lee el recuadro Todo el programa, abajo del panel Cache.",
-              "ca": "Llegeix el requadre Tot el programa, a baix del panell Cache."
+              "en": "Click Σ (the first control of the Cache panel): it shows the totals of the whole program.",
+              "es": "Pulsa Σ (el primer control del panel Cache): muestra los totales de todo el programa.",
+              "ca": "Prem Σ (el primer control del panell Cache): mostra els totals de tot el programa."
             }
           }
         ],
@@ -1245,16 +1245,16 @@
           },
           "show": {
             "text": {
-              "en": "<p>The cache has now 1 line: look at the first accesses, and at the totals.</p>",
-              "es": "<p>La cache tiene ahora 1 línea: mira los primeros accesos, y los totales.</p>",
-              "ca": "<p>La cache té ara 1 línia: mira els primers accessos, i els totals.</p>"
+              "en": "<p>The cache has now 1 line: look at the first accesses; Σ shows the totals.</p>",
+              "es": "<p>La cache tiene ahora 1 línea: mira los primeros accesos; Σ muestra los totales.</p>",
+              "ca": "<p>La cache té ara 1 línia: mira els primers accessos; Σ mostra els totals.</p>"
             },
             "actions": [
               "setProcessor:nBlocks=1",
               "cacheTrace:predict=off",
               "cacheTrace:step=4"
             ],
-            "selector": "#ct-table, #ct-total-capacity"
+            "selector": "#ct-table"
           }
         },
         "actions": [
@@ -1349,9 +1349,9 @@
               "ca": "Correcte: la segona crida torna a fallar als seus 16 blocs: van ser expulsats."
             },
             "wrong": {
-              "en": "Read the box Whole program, at the bottom of the Cache panel.",
-              "es": "Lee el recuadro Todo el programa, abajo del panel Cache.",
-              "ca": "Llegeix el requadre Tot el programa, a baix del panell Cache."
+              "en": "Click Σ (the first control of the Cache panel): it shows the totals of the whole program.",
+              "es": "Pulsa Σ (el primer control del panel Cache): muestra los totales de todo el programa.",
+              "ca": "Prem Σ (el primer control del panell Cache): mostra els totals de tot el programa."
             }
           },
           {
@@ -1393,7 +1393,7 @@
             },
             "actions": [
               "setProcessor:nBlocks=16",
-              "cacheTrace:step=end"
+              "cacheTrace:mode=global"
             ],
             "selector": "#ct-total-capacity"
           }
@@ -1510,9 +1510,9 @@
               "ca": "Correcte: 16, com cap endavant: el sentit no canvia el nombre de fallades."
             },
             "wrong": {
-              "en": "Read the box Whole program, at the bottom of the Cache panel.",
-              "es": "Lee el recuadro Todo el programa, abajo del panel Cache.",
-              "ca": "Llegeix el requadre Tot el programa, a baix del panell Cache."
+              "en": "Click Σ (the first control of the Cache panel): it shows the totals of the whole program.",
+              "es": "Pulsa Σ (el primer control del panel Cache): muestra los totales de todo el programa.",
+              "ca": "Prem Σ (el primer control del panell Cache): mostra els totals de tot el programa."
             }
           },
           {
@@ -1534,9 +1534,9 @@
               "ca": "Correcte: 6 dels 8 blocs de W surten de la cache modificats; els 2 últims són encara a la cache al final."
             },
             "wrong": {
-              "en": "Read the box Whole program, at the bottom of the Cache panel.",
-              "es": "Lee el recuadro Todo el programa, abajo del panel Cache.",
-              "ca": "Llegeix el requadre Tot el programa, a baix del panell Cache."
+              "en": "Click Σ (the first control of the Cache panel): it shows the totals of the whole program.",
+              "es": "Pulsa Σ (el primer control del panel Cache): muestra los totales de todo el programa.",
+              "ca": "Prem Σ (el primer control del panell Cache): mostra els totals de tot el programa."
             }
           }
         ],
@@ -1548,15 +1548,15 @@
           },
           "show": {
             "text": {
-              "en": "<p>The marked step is the second miss of V; the totals are below.</p>",
-              "es": "<p>El paso marcado es el segundo fallo de V; los totales están abajo.</p>",
-              "ca": "<p>El pas marcat és la segona fallada de V; els totals són a baix.</p>"
+              "en": "<p>The marked access is the second miss of V; Σ shows the totals (misses, blocks written back).</p>",
+              "es": "<p>El acceso marcado es el segundo fallo de V; Σ muestra los totales (fallos, bloques escritos en memoria).</p>",
+              "ca": "<p>L'accés marcat és la segona fallada de V; Σ mostra els totals (fallades, blocs escrits a memòria).</p>"
             },
             "actions": [
               "cacheTrace:predict=off",
               "cacheTrace:step=17"
             ],
-            "selector": "#ct-message, #ct-total-writebacks"
+            "selector": "#ct-message"
           }
         },
         "actions": [
@@ -1639,9 +1639,9 @@
               "ca": "Correcte: 24 fallades de 64 accessos, 3 de cada 8: un bloc de 8 floats només serveix uns 8/3 accessos."
             },
             "wrong": {
-              "en": "Read the box Whole program, at the bottom of the Cache panel.",
-              "es": "Lee el recuadro Todo el programa, abajo del panel Cache.",
-              "ca": "Llegeix el requadre Tot el programa, a baix del panell Cache."
+              "en": "Click Σ (the first control of the Cache panel): it shows the totals of the whole program.",
+              "es": "Pulsa Σ (el primer control del panel Cache): muestra los totales de todo el programa.",
+              "ca": "Prem Σ (el primer control del panell Cache): mostra els totals de tot el programa."
             }
           },
           {
@@ -1678,7 +1678,7 @@
               "ca": "<p>Els números marcats són els totals de tot el programa.</p>"
             },
             "actions": [
-              "cacheTrace:step=end"
+              "cacheTrace:mode=global"
             ],
             "selector": "#ct-miss-rate"
           }
@@ -1767,9 +1767,9 @@
               "ca": "Correcte: una per fila: cada fila és un bloc, que es fa servir sencer i després mai més."
             },
             "wrong": {
-              "en": "Read the row of a = A[i][j] in the table of instructions of the box Whole program.",
-              "es": "Lee la fila de a = A[i][j] en la tabla de instrucciones del recuadro Todo el programa.",
-              "ca": "Llegeix la fila d'a = A[i][j] a la taula d'instruccions del requadre Tot el programa."
+              "en": "Click Σ, and read the row of a = A[i][j] in the table of instructions.",
+              "es": "Pulsa Σ, y lee la fila de a = A[i][j] en la tabla de instrucciones.",
+              "ca": "Prem Σ, i llegeix la fila d'a = A[i][j] a la taula d'instruccions."
             }
           },
           {
@@ -1791,9 +1791,9 @@
               "ca": "Correcte: 8 d'A, 1 d'X (el seu bloc es torna a fer servir a cada crida, i es queda a la cache) i 1 d'Y. Totes són fallades en fred."
             },
             "wrong": {
-              "en": "Read the box Whole program, at the bottom of the Cache panel.",
-              "es": "Lee el recuadro Todo el programa, abajo del panel Cache.",
-              "ca": "Llegeix el requadre Tot el programa, a baix del panell Cache."
+              "en": "Click Σ (the first control of the Cache panel): it shows the totals of the whole program.",
+              "es": "Pulsa Σ (el primer control del panel Cache): muestra los totales de todo el programa.",
+              "ca": "Prem Σ (el primer control del panell Cache): mostra els totals de tot el programa."
             }
           }
         ],
@@ -1810,7 +1810,7 @@
               "ca": "<p>Els números marcats són els totals de tot el programa.</p>"
             },
             "actions": [
-              "cacheTrace:step=end"
+              "cacheTrace:mode=global"
             ],
             "selector": "#ct-instr-0, #ct-total-cold"
           }
@@ -1900,9 +1900,9 @@
               "ca": "Correcte: els mateixos 10 blocs que per files: les dades són les mateixes."
             },
             "wrong": {
-              "en": "Read the box Whole program, at the bottom of the Cache panel.",
-              "es": "Lee el recuadro Todo el programa, abajo del panel Cache.",
-              "ca": "Llegeix el requadre Tot el programa, a baix del panell Cache."
+              "en": "Click Σ (the first control of the Cache panel): it shows the totals of the whole program.",
+              "es": "Pulsa Σ (el primer control del panel Cache): muestra los totales de todo el programa.",
+              "ca": "Prem Σ (el primer control del panell Cache): mostra els totals de tot el programa."
             }
           },
           {
@@ -1924,9 +1924,9 @@
               "ca": "Correcte: 63: tots els accessos a A després de la primera crida fallen. Cada crida torna a fer servir els 8 blocs d'A (un element de cadascun), però 4 línies no els poden desar d'una crida a la següent."
             },
             "wrong": {
-              "en": "Read the box Whole program, at the bottom of the Cache panel.",
-              "es": "Lee el recuadro Todo el programa, abajo del panel Cache.",
-              "ca": "Llegeix el requadre Tot el programa, a baix del panell Cache."
+              "en": "Click Σ (the first control of the Cache panel): it shows the totals of the whole program.",
+              "es": "Pulsa Σ (el primer control del panel Cache): muestra los totales de todo el programa.",
+              "ca": "Prem Σ (el primer control del panell Cache): mostra els totals de tot el programa."
             }
           }
         ],
@@ -1943,7 +1943,7 @@
               "ca": "<p>Els números marcats són els totals de tot el programa.</p>"
             },
             "actions": [
-              "cacheTrace:step=end"
+              "cacheTrace:mode=global"
             ],
             "selector": "#ct-total-cold, #ct-total-capacity"
           }
@@ -2001,9 +2001,9 @@
               "ca": "Correcte: continuen sent 63, com amb 4 línies."
             },
             "wrong": {
-              "en": "Read the box Whole program, at the bottom of the Cache panel.",
-              "es": "Lee el recuadro Todo el programa, abajo del panel Cache.",
-              "ca": "Llegeix el requadre Tot el programa, a baix del panell Cache."
+              "en": "Click Σ (the first control of the Cache panel): it shows the totals of the whole program.",
+              "es": "Pulsa Σ (el primer control del panel Cache): muestra los totales de todo el programa.",
+              "ca": "Prem Σ (el primer control del panell Cache): mostra els totals de tot el programa."
             }
           },
           {
@@ -2045,7 +2045,7 @@
             },
             "actions": [
               "setProcessor:nBlocks=10",
-              "cacheTrace:step=end"
+              "cacheTrace:mode=global"
             ],
             "selector": "#ct-total-capacity"
           }

@@ -47,6 +47,7 @@
     expandWrite:   false,
     expandMemory:  false,  // the rows of the memory (MM, cache, buffers, SB): one row (the use of the MM bus), or all
     canvasScale:   1,
+    zoom:          0,      // zoom of the timeline: 0 fits the panel; each step ±15 % (see cellScale)
     canvasOffsetX: 0,
     canvasOffsetY: 0
   }
@@ -77,8 +78,22 @@
     const font = Math.round(13 * k)
     return { font, cellH: Math.round(18 * k), labelW: Math.round(font * 0.62 * compactIdChars) + Math.round(10 * k) }
   }
-  function timelineGeometry() {
+  // The scale of the cells: the one of the text of the page (A−/A+), limited so that at least
+  // MIN_INSTR_ROWS rows of instructions fit in the half of the panel that the resources leave (see
+  // RES_FRACTION), and multiplied by the zoom of the timeline (− / Fit / +: steps of 15 %). The
+  // zoom of the browser does not change the proportions: everything is measured in CSS pixels.
+  const MIN_INSTR_ROWS = 12, ZOOM_STEP = 1.15, ZOOM_MIN = -4, ZOOM_MAX = 4
+  function cellScale(baseCellH) {
     const k = Math.max(0.75, (parseFloat(getComputedStyle(document.documentElement).fontSize) || 16) / 16)
+    const h = document.getElementById('canvas-container')?.clientHeight || 0
+    const fit = h > 0 ? Math.max(0.65, Math.min(k, (h * (1 - RES_FRACTION)) / ((MIN_INSTR_ROWS + 1) * baseCellH))) : k
+    return Math.min(1.8, Math.max(0.5, fit * ZOOM_STEP ** (Number(timelineOptions.zoom) || 0)))
+  }
+  function zoomBy(step) {
+    timelineOptions.zoom = step === 0 ? 0 : Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, (Number(timelineOptions.zoom) || 0) + step))
+  }
+  function timelineGeometry() {
+    const k = cellScale(isCompact() ? 18 : 20)
     if (isCompact()) {
       // (the first column: the names of the resources and the identifiers of the instructions)
       const { font, cellH, labelW } = compactBase(k)
@@ -120,7 +135,7 @@
   // window fit also in its width: each row shown starts some cycles after the one above (the slope)
   // and lasts some cycles (a long one: the 75th percentile)
   function compactCellWidth(instructions) {
-    const k = Math.max(0.75, (parseFloat(getComputedStyle(document.documentElement).fontSize) || 16) / 16)
+    const k = cellScale(18)
     const maxW = compactMaxCellW(k)
     const wrapper = timelineCanvas.value?.parentElement
     const real = shownRows.filter(r => r >= 0)
@@ -416,7 +431,7 @@
         () => [timelineOptions.instructions, timelineOptions.cycles, timelineOptions.critical,
                timelineOptions.showPorts, timelineOptions.showCache, programHasStores.value, timelineOptions.showText,
                timelineOptions.expandPorts, timelineOptions.expandCache, timelineOptions.expandFill, timelineOptions.expandWrite,
-               timelineOptions.expandMemory,
+               timelineOptions.expandMemory, timelineOptions.zoom,
                timelineOptions.canvasScale, timelineOptions.canvasOffsetX, timelineOptions.canvasOffsetY ],
             ([, newCycles], [, oldCycles]) => {
               if (!timelineCanvas.value || !timeline.value) return
@@ -581,9 +596,109 @@
   let gapBands = new Map()            // critical path only: slot -> instructions between two rows (ROB)
   const criticalOnlyView = () => isCompact() && !!simState.timelineCriticalOnly
   const rowTop = (row) => (slotOfRow[row] >= 0 ? padY + (slotOfRow[row] + resourceRowCount + 1) * cellH : null)
-  let view = { scrollX: 0, scrollY: 0, topH: 0, leftW: 0, w: 0, h: 0, gap: 0 }   // gap: see present
+  let view = { scrollX: 0, scrollY: 0, topH: 0, worldTopH: 0, leftW: 0, w: 0, h: 0, gap: 0 }   // gap: see present
+  // (topH: the height of the fixed rows on the screen; worldTopH: in the world, where every row is whole)
 
   const visibleRowCount = () => Math.max(1, Math.floor((view.h - view.topH) / cellH))
+
+  // ---- The rows of the resources take at most RES_FRACTION of the height of the panel. Each
+  // folded group (and MM, SB) takes one row; the rows of the unfolded groups (ports, cache lines,
+  // fill and write buffers) share the rest: each group gets as many rows as it needs, up to an equal
+  // share (the share that a small group does not use goes to the others). A group that does not fit
+  // shows a window of full rows, and the rest of its rows above and below compressed into thin strips
+  // (only their colours). The window follows the pinned cell, and the rows related to the pointed
+  // instruction (after 300 ms); the wheel over the group moves it, and a click on a strip centres it.
+  const RES_FRACTION = 0.5
+  const groupWindow = {}             // group -> first row of its window (a position among its rows)
+  let groupOfRow = []                // resourceLayout index -> its group (unfolded member), or null
+  let groupRows = new Map()          // group -> the resourceLayout indices of its rows
+  let groupPlans = new Map()         // group -> { from, to, rows } (only the groups with compressed rows)
+  let topSegments = []               // [{ sy, sh, wy, wh, ri, group, compressed }]: screen <-> world
+  function computeGroups() {
+    groupOfRow = resourceLayout.map(() => null)
+    groupRows = new Map()
+    resourceLayout.forEach((r, ri) => {
+      const summary = resourceLayout.find(x => x.summary && x !== r && x.members?.includes(r))
+      if (!summary) return
+      groupOfRow[ri] = summary.summary
+      if (!groupRows.has(summary.summary)) groupRows.set(summary.summary, [])
+      groupRows.get(summary.summary).push(ri)
+    })
+  }
+  function computeTopLayout() {
+    const headH = padY + cellH
+    const segs = [{ sy: 0, sh: headH, wy: 0, wh: headH, ri: -1, group: null, compressed: false }]
+    const members = [...groupRows.values()].reduce((n, rows) => n + rows.length, 0)
+    const budget = Math.max(0, Math.floor((view.h * RES_FRACTION) / cellH) - 1)
+    let avail = Math.max(0, budget - (resourceRowCount - members))
+    const alloc = new Map()
+    const order = [...groupRows].sort((a, b) => a[1].length - b[1].length)
+    order.forEach(([key, rows], i) => {
+      const a = Math.min(rows.length, Math.floor(avail / (order.length - i)))
+      alloc.set(key, a)
+      avail -= a
+    })
+    groupPlans = new Map()
+    const strips = new Map()
+    for (const [key, rows] of groupRows) {
+      const a = alloc.get(key), n = rows.length
+      if (a >= n) continue
+      const full = Math.min(n, Math.max(2, a - 1))
+      const from = Math.min(Math.max(0, groupWindow[key] ?? 0), n - full)
+      groupWindow[key] = from
+      groupPlans.set(key, { from, to: from + full, rows })
+      strips.set(key, Math.max(2, Math.min(Math.floor(cellH / 3), Math.floor((Math.max(0, a - full) * cellH) / (n - full)))))
+    }
+    let sy = headH
+    resourceLayout.forEach((r, ri) => {
+      const key = groupOfRow[ri], plan = key ? groupPlans.get(key) : null
+      const j = plan ? plan.rows.indexOf(ri) : -1
+      const compressed = !!plan && (j < plan.from || j >= plan.to)
+      const sh = compressed ? strips.get(key) : cellH
+      segs.push({ sy, sh, wy: padY + (ri + 1) * cellH, wh: cellH, ri, group: key, compressed })
+      sy += sh
+    })
+    topSegments = segs
+    return sy
+  }
+  const segmentAt = (sy) => (sy < view.topH ? topSegments.find(s => sy >= s.sy && sy < s.sy + s.sh) ?? null : null)
+  // the window of a group shows its row ri (centred, or moved just enough)
+  function showResourceRow(ri, centre = false) {
+    const key = groupOfRow[ri], plan = key ? groupPlans.get(key) : null
+    if (!plan) return false
+    const j = plan.rows.indexOf(ri), full = plan.to - plan.from
+    if (!centre && j >= plan.from && j < plan.to) return false
+    groupWindow[key] = centre ? j - Math.floor((full - 1) / 2) : (j < plan.from ? j : j - full + 1)
+    return true
+  }
+  // Rows of the resources marked by the last highlights (see markRect), and the follow: at once for
+  // the pinned cell, after 300 ms for the cells pointed in the rows of the instructions
+  let markedResRows = new Set()
+  let followTimer = null
+  function followMarked() {
+    let moved = false
+    const sel = selectedCell.value
+    const pinnedRi = sel && Number.isInteger(sel.resourceIndex) ? sel.resourceIndex : null
+    if (pinnedRi !== null) moved = showResourceRow(pinnedRi) || moved
+    const byGroup = new Map()
+    for (const ri of markedResRows) {
+      const key = groupOfRow[ri]
+      if (!key || !groupPlans.has(key) || (pinnedRi !== null && groupOfRow[pinnedRi] === key)) continue
+      if (!byGroup.has(key)) byGroup.set(key, [])
+      byGroup.get(key).push(ri)
+    }
+    for (const rows of byGroup.values()) {
+      const plan = groupPlans.get(groupOfRow[rows[0]])
+      if (rows.some(ri => { const j = plan.rows.indexOf(ri); return j >= plan.from && j < plan.to })) continue
+      moved = showResourceRow(Math.min(...rows)) || moved
+    }
+    return moved
+  }
+  function scheduleFollow(now) {
+    clearTimeout(followTimer)
+    if (now) { if (followMarked()) present(); return }
+    followTimer = setTimeout(() => { if (followMarked()) present() }, 300)
+  }
   function maxScrollRow() {
     return Math.max(0, shownRows.length - visibleRowCount() + 1)
   }
@@ -599,7 +714,8 @@
       w = Math.max(200, Math.min(w, window.innerWidth * fraction - wrapper.getBoundingClientRect().left))
     view.w = w
     view.h = h
-    view.topH  = padY + (resourceRowCount + 1) * cellH
+    view.worldTopH = padY + (resourceRowCount + 1) * cellH
+    view.topH  = computeTopLayout()
     view.leftW = padX + labelW
     scrollRow.value = Math.min(Math.max(0, scrollRow.value), maxScrollRow())
     view.scrollY = scrollRow.value * cellH
@@ -641,16 +757,19 @@
       c.setTransform(1, 0, 0, 1, 0, 0)
       c.clearRect(0, 0, w, h)
       if (!source.width || !source.height) continue
-      const { scrollX, scrollY, topH, leftW, gap } = view
-      const blit = (sx, sy, sw, sh, dx, dy) => {
-        sw = Math.min(sw, source.width - sx)
-        sh = Math.min(sh, source.height - sy)
-        if (sw > 0 && sh > 0) c.drawImage(source, sx, sy, sw, sh, dx, dy, sw, sh)
+      const { scrollX, scrollY, topH, worldTopH, leftW, gap } = view
+      // (a part of the world, scaled to dw × dh: the compressed rows are thinner)
+      const blit = (sx, sy, sw, sh, dx, dy, dw = sw, dh = sh) => {
+        const cw = Math.min(sw, source.width - sx), ch = Math.min(sh, source.height - sy)
+        if (cw > 0 && ch > 0) c.drawImage(source, sx, sy, cw, ch, dx, dy, dw * cw / sw, dh * ch / sh)
       }
-      blit(leftW + scrollX, topH + scrollY, w - leftW - gap, h - topH, leftW + gap, topH)   // instructions × cycles
-      blit(0, topH + scrollY, leftW, h - topH, 0, topH)                                    // first column
-      blit(leftW + scrollX, 0, w - leftW - gap, topH, leftW + gap, 0)                     // cycles and resources
-      blit(0, 0, leftW, topH, 0, 0)                                            // corner
+      blit(leftW + scrollX, worldTopH + scrollY, w - leftW - gap, h - topH, leftW + gap, topH)   // instructions × cycles
+      blit(0, worldTopH + scrollY, leftW, h - topH, 0, topH)                                    // first column
+      for (const sg of topSegments) {                                                          // cycles and resources
+        blit(leftW + scrollX, sg.wy, w - leftW - gap, sg.wh, leftW + gap, sg.sy, w - leftW - gap, sg.sh)
+        if (!sg.compressed || target !== canvas) blit(0, sg.wy, leftW, sg.wh, 0, sg.sy, leftW, sg.sh)
+      }
+      if (target === canvas) drawCompressedLabels(c)
       if (target === canvas) {         // the borders of the fixed parts
         c.strokeStyle = '#7a8aa3'
         c.lineWidth = 2
@@ -662,6 +781,31 @@
       if (target === overlay) drawLabelFocus(c)
     }
     drawMinimap()
+  }
+  // The first column of the compressed rows: a grey band per run, with the number of rows
+  function drawCompressedLabels(c) {
+    c.save()
+    let run = null
+    const flush = () => {
+      if (!run) return
+      c.fillStyle = '#e3e8ef'
+      c.fillRect(padX, run.y, labelW, run.h)
+      c.strokeStyle = '#b8c2cf'
+      c.strokeRect(padX + 0.5, run.y + 0.5, labelW - 1, run.h - 1)
+      if (run.h >= 8) {
+        c.fillStyle = '#4a5568'
+        c.font = `${Math.max(8, Math.min(fontSize - 2, run.h - 1))}px sans-serif`
+        c.textBaseline = 'middle'
+        c.fillText(`⋯ ${run.n}`, padX + fontXOffset + 2, run.y + run.h / 2)
+      }
+      run = null
+    }
+    for (const sg of topSegments) {
+      if (sg.compressed && run && run.group === sg.group && run.y + run.h === sg.sy) { run.h += sg.sh; run.n++ }
+      else { flush(); if (sg.compressed) run = { y: sg.sy, h: sg.sh, n: 1, group: sg.group } }
+    }
+    flush()
+    c.restore()
   }
   // The instruction of the row pointed or pinned: its first cell, enlarged (like the cycle of the
   // header), with the iteration, the call of the loop (repetitions) and the text. It is drawn on the
@@ -685,7 +829,7 @@
   }
   function drawLabelFocus(c) {
     if (labelFocusRow === null || slotOfRow[labelFocusRow] === undefined || slotOfRow[labelFocusRow] < 0) return
-    const y = rowTop(labelFocusRow) - view.scrollY
+    const y = rowTop(labelFocusRow) - view.scrollY - view.worldTopH + view.topH
     if (y < view.topH || y > view.h - cellH) return
     const text = rowLabelText(labelFocusRow)
     c.save()
@@ -707,8 +851,10 @@
 
   // screen point (in the visible canvas) -> point of the world
   function toWorld(sx, sy) {
-    return { x: sx < view.leftW ? sx : sx - (view.gap ?? 0) + view.scrollX,
-             y: sy < view.topH  ? sy : sy + view.scrollY }
+    const x = sx < view.leftW ? sx : sx - (view.gap ?? 0) + view.scrollX
+    if (sy >= view.topH) return { x, y: sy - view.topH + view.worldTopH + view.scrollY }
+    const sg = segmentAt(sy)
+    return { x, y: sg ? sg.wy + ((sy - sg.sy) * sg.wh) / sg.sh : sy }
   }
 
   // after a move with the arrows, the selected cell is kept in view; the wheel, the keys of the
@@ -738,7 +884,18 @@
   }
   function onWheel(e) {
     e.preventDefault()
-    if (e.deltaY !== 0) scrollTo(scrollRow.value + Math.sign(e.deltaY))
+    if (e.deltaY === 0) return
+    // over a group with compressed rows: its window moves
+    const rect = timelineCanvas.value?.getBoundingClientRect()
+    const sg = rect ? segmentAt(e.clientY - rect.top) : null
+    const plan = sg?.group ? groupPlans.get(sg.group) : null
+    if (plan) {
+      groupWindow[sg.group] = plan.from + Math.sign(e.deltaY)
+      present()
+      return
+    }
+    if (rect && e.clientY - rect.top < view.topH) return
+    scrollTo(scrollRow.value + Math.sign(e.deltaY))
   }
 
   // ---- Minimap: the whole timeline (a line per instruction, from dispatch to retire), and the
@@ -985,6 +1142,7 @@
     resourceRowCount = resourceRows.length
     resourceLayout   = resourceRows
     resourceDetail   = detailedRows
+    computeGroups()
     cacheLinesByCycle = cacheStatesByCycle
 
 
@@ -1881,6 +2039,7 @@
   ) {
     const ctx = worldOverlay.getContext('2d')
     ctx.clearRect(0, 0, worldOverlay.width, worldOverlay.height)
+    markedResRows = new Set()
 
     drawSelectedCell()
 
@@ -1902,6 +2061,7 @@
       for (const linkedRow of linkedResourceRows) {
         const x = padX + labelW + linkedCycle * cellW
         const y = padY + (linkedRow + 1) * cellH
+        noteResourceY(y)
         ctx.fillStyle = 'rgba(255, 0, 0, 0.2)'
         ctx.fillRect(x, y, cellW, cellH)
         ctx.strokeRect(x, y, cellW, cellH)
@@ -2270,6 +2430,7 @@
     return ctx
   }
   function markRect(ctx, x, y, w, kind) {
+    noteResourceY(y)
     const [fill, stroke] = COLORS[kind]
     ctx.save()
     ctx.fillStyle = fill
@@ -2278,6 +2439,11 @@
     ctx.fillRect(x, y, w, cellH)
     ctx.strokeRect(x + 1, y + 1, w - 2, cellH - 2)
     ctx.restore()
+  }
+  // a mark in the rows of the resources (world y): its row is remembered for the follow of the windows
+  function noteResourceY(y) {
+    const ri = Math.round((y - padY) / cellH) - 1
+    if (ri >= 0 && ri < resourceRowCount) markedResRows.add(ri)
   }
   // the first column (label) of an instruction row
   function markRowLabel(ctx, row, kind) {
@@ -2344,6 +2510,10 @@
   function focusCell(cell) {
     focusCellOn(cell)
     present()
+    // (the pinned cell at once; a cell pointed in the rows of the resources does not move them)
+    if (pinned.value || selectedCell.value === cell) scheduleFollow(true)
+    else if (!cell.cellType && cell.rowIdx >= 0) scheduleFollow(false)
+    else clearTimeout(followTimer)
   }
   function focusCellOn(cell) {
     resetSharedHighlights()
@@ -2701,6 +2871,7 @@
     focusCell(cell)
     pinned.value = { cell, ...buildDetails(cell) }
     drawSelectedCell()
+    scheduleFollow(true)
   }
   function releasePin() {
     pinned.value = null
@@ -3028,6 +3199,14 @@
   }
   function onClick(e) {
     if (Math.abs(e.clientX - downX) > 4 || Math.abs(e.clientY - downY) > 4) return   // a drag
+    // a compressed row: the window of its group moves to show it (centred)
+    const rect = timelineCanvas.value.getBoundingClientRect()
+    const sg = segmentAt(e.clientY - rect.top)
+    if (sg?.compressed && e.clientX - rect.left <= view.w) {
+      showResourceRow(sg.ri, true)
+      present()
+      return
+    }
     const cell = cellAtEvent(e)
     if (cell?.cellType === 'resource-summary-label' && !isCompact()) {
       timelineOptions[cell.option] = !timelineOptions[cell.option]
@@ -3063,6 +3242,12 @@
         <span class="header-title">{{ t('Timeline: {program} on {processor}', { program: simState.simulatedProcess.name, processor: simState.processorName }) }}</span>
       </div>
       <!-- The view: detailed (letters, the first instructions) or compact (colours, many iterations) -->
+      <span class="timeline-zoom" id="timeline-zoom">
+        <button id="timeline-zoom-out" :disabled="(timelineOptions.zoom ?? 0) <= ZOOM_MIN" @click="zoomBy(-1)" :title="t('Smaller cells')">−</button>
+        <button id="timeline-zoom-fit" :class="{ on: !(timelineOptions.zoom ?? 0) }" @click="zoomBy(0)"
+                :title="t('Fit: cells as large as the text allows, with at least {n} rows of instructions in view', { n: MIN_INSTR_ROWS })">{{ t('Fit') }}</button>
+        <button id="timeline-zoom-in" :disabled="(timelineOptions.zoom ?? 0) >= ZOOM_MAX" @click="zoomBy(1)" :title="t('Larger cells')">+</button>
+      </span>
       <span class="view-switch" id="timeline-view" role="radiogroup"
             :title="t('Detailed: every instruction, with letters. Compact: colours only, many iterations, only the instructions ticked in the Program panel')">
         <button :class="{ on: simState.timelineView !== 'compact' }" role="radio" :aria-checked="simState.timelineView !== 'compact'"
@@ -3172,6 +3357,12 @@
 </template>
 
 <style scoped>
+  .timeline-zoom { display: inline-flex; margin-right: 8px; border: 1px solid #b0bec5; border-radius: 5px; overflow: hidden; vertical-align: middle; }
+  .timeline-zoom button { border: none; background: #fff; padding: 1px 8px; cursor: pointer; font-size: 0.85em; }
+  .timeline-zoom button + button { border-left: 1px solid #b0bec5; }
+  .timeline-zoom button:hover:not(:disabled) { background: #e3f2fd; }
+  .timeline-zoom button.on { background: #1565c0; color: #fff; }
+  .timeline-zoom button:disabled { opacity: 0.4; cursor: default; }
   .timeline-status {
     display:     flex;
     align-items: center;

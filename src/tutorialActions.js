@@ -33,7 +33,7 @@ export const TUTORIAL_ACTIONS = [
   ['sourceCode:open|close',    'unfold or fold the source code (C) of the program, above the table of instructions'],
   ['autorun:on|off',           'turn the automatic simulation (after every change of the student) on or off'],
   ['clearStoredResults',       'remove the results of the last simulation and all the stored results (table of the Simulation panel)'],
-  ['cacheTrace:step=N',        'Cache panel: step=N (the cache after N accesses; end: all of them), predict=on|off (prediction mode), grid=on|off'],
+  ['cacheTrace:step=N',        'Cache panel: step=N (the cache after N accesses; end: all of them), predict=on|off (prediction mode), grid=on|off, mode=global|trace (the totals, or step by step)'],
   ['processorPanel:fold|unfold', 'fold the Processor panel to one line (more room for the program) or show its diagram'],
 ]
 
@@ -186,7 +186,8 @@ export function createActionRunner(ctx) {
     async cacheTrace(a) {
       if (!$('#cache-trace-root')) await switchPanel('cacheTraceComponent')
       await waitUntil(() => $('#ct-controls') || $('#ct-no-cache'), 8000)
-      const value = a.key === 'step' ? (a.value === 'end' ? 'end' : Number(a.value) || 0) : a.value !== 'off'
+      const value = a.key === 'step' ? (a.value === 'end' ? 'end' : Number(a.value) || 0)
+                  : a.key === 'mode' ? (a.value === 'global' ? 'global' : 'trace') : a.value !== 'off'
       simState.cacheTraceRequest = { ...(simState.cacheTraceRequest ?? {}), [a.key]: value }
       await sleep(200)
     },

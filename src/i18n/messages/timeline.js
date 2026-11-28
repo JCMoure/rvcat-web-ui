@@ -1,5 +1,8 @@
 // Translations: timeline (generated from the review texts; English text = key)
 export default {
+  "Smaller cells": { es: "Celdas más pequeñas", ca: "Cel·les més petites" },
+  "Larger cells": { es: "Celdas más grandes", ca: "Cel·les més grans" },
+  "Fit: cells as large as the text allows, with at least {n} rows of instructions in view": { es: "Ajustar: celdas tan grandes como permite el texto, con al menos {n} filas de instrucciones a la vista", ca: "Ajusta: cel·les tan grans com permet el text, amb almenys {n} files d'instruccions a la vista" },
   "the block is requested to MM (the PREFETCH waits for a fill buffer, not for the block)": { es: "el bloque se pide a la MM (el PREFETCH espera un fill buffer, no el bloque)", ca: "el bloc es demana a la MM (el PREFETCH espera un fill buffer, no el bloc)" },
   "the block is in the cache or on the way: nothing to do": { es: "el bloque está en la cache o en camino: no hace nada", ca: "el bloc és a la cache o en camí: no fa res" },
   "prefetched, not used yet": { es: "traído por prefetch, aún sin usar", ca: "portat per prefetch, encara sense usar" },

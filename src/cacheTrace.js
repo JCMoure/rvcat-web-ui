@@ -78,15 +78,17 @@ export function memoryStateAt(trace, n) {
 }
 
 // Layout of an array in the memory map: rows of `width` elements, each element with its block
-// width: mapWidth of the program, or the elements that the array advances in each call, or 8 blocks
+// width: mapWidth of the program, or the elements that the array advances in each call, or the
+// elements that fit in fitElements (whole blocks), or 8 blocks
 export const MAP_MAX_ELEMENTS = 1024
-export function arrayLayout(trace, array, mapWidth = {}, repStrides = {}) {
+export function arrayLayout(trace, array, mapWidth = {}, repStrides = {}, fitElements = 0) {
   const es = array.elem_size || 1
   const count = Math.max(1, Math.floor(array.bytes / es))
   const perBlock = Math.max(1, Math.floor(trace.blkSize / es))
+  const fit = fitElements > 0 ? Math.max(perBlock, Math.floor(fitElements / perBlock) * perBlock) : perBlock * 8
   const width = Number(mapWidth?.[array.name]) > 0 ? Number(mapWidth[array.name])
               : Number(repStrides?.[array.name]) > 1 ? Number(repStrides[array.name])
-              : Math.min(count, perBlock * 8)
+              : Math.min(count, fit)
   if (count > MAP_MAX_ELEMENTS) return { name: array.name, count, tooLarge: true, rows: [] }
   const rows = []
   for (let start = 0; start < count; start += width) {
