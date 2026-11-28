@@ -1,0 +1,202 @@
+{
+  "name": "BSEARCH-pf2",
+  "description": "int search ( int A[], int n, int key ) {\n  int b = 0;\n  while ( n > 1 ) {\n    int h = n / 2;\n    __builtin_prefetch(&A[b + h/4]);          // the probes 2 iterations later:\n    __builtin_prefetch(&A[b + h/2 + h/4]);    // one for each of the 4 paths\n    __builtin_prefetch(&A[b + h + h/4]);\n    __builtin_prefetch(&A[b + h + h/2 + h/4]);\n    b = (A[b+h] < key) ? b+h : b;\n    n = n - h;\n  }\n  return b;\n}",
+  "N": 16,
+  "declarations": [
+    {
+      "name": "A",
+      "role": "array",
+      "type": "INT",
+      "size": "word"
+    },
+    {
+      "name": "b",
+      "role": "data",
+      "type": "INT",
+      "size": "word"
+    },
+    {
+      "name": "h",
+      "role": "data",
+      "type": "INT",
+      "size": "word"
+    },
+    {
+      "name": "n",
+      "role": "data",
+      "type": "INT",
+      "size": "word"
+    },
+    {
+      "name": "t",
+      "role": "data",
+      "type": "INT",
+      "size": "word"
+    },
+    {
+      "name": "key",
+      "role": "read-only",
+      "type": "INT",
+      "size": "word"
+    },
+    {
+      "name": "lt",
+      "role": "condition",
+      "type": "INT",
+      "size": "word"
+    },
+    {
+      "name": "c",
+      "role": "condition",
+      "type": "INT",
+      "size": "word"
+    }
+  ],
+  "instruction_list": [
+    {
+      "text": "h = n >> 1",
+      "type": "INT",
+      "oper": "SHIFT",
+      "size": "word",
+      "destin": "h",
+      "source1": "n",
+      "source2": "",
+      "source3": "",
+      "constant": "1"
+    },
+    {
+      "text": "prefetch A[b+h/4]",
+      "type": "MEM",
+      "oper": "PREFETCH",
+      "size": "word",
+      "destin": "",
+      "source1": "b",
+      "source2": "A",
+      "source3": "h",
+      "constant": "",
+      "stride": 0,
+      "lanes": 1,
+      "access": "search",
+      "ahead": 2,
+      "path": "LL"
+    },
+    {
+      "text": "prefetch A[b+h/2+h/4]",
+      "type": "MEM",
+      "oper": "PREFETCH",
+      "size": "word",
+      "destin": "",
+      "source1": "b",
+      "source2": "A",
+      "source3": "h",
+      "constant": "",
+      "stride": 0,
+      "lanes": 1,
+      "access": "search",
+      "ahead": 2,
+      "path": "LR"
+    },
+    {
+      "text": "prefetch A[b+h+h/4]",
+      "type": "MEM",
+      "oper": "PREFETCH",
+      "size": "word",
+      "destin": "",
+      "source1": "b",
+      "source2": "A",
+      "source3": "h",
+      "constant": "",
+      "stride": 0,
+      "lanes": 1,
+      "access": "search",
+      "ahead": 2,
+      "path": "RL"
+    },
+    {
+      "text": "prefetch A[b+h+h/2+h/4]",
+      "type": "MEM",
+      "oper": "PREFETCH",
+      "size": "word",
+      "destin": "",
+      "source1": "b",
+      "source2": "A",
+      "source3": "h",
+      "constant": "",
+      "stride": 0,
+      "lanes": 1,
+      "access": "search",
+      "ahead": 2,
+      "path": "RR"
+    },
+    {
+      "text": "t = A[b+h]",
+      "type": "MEM",
+      "oper": "LOAD",
+      "size": "word",
+      "destin": "t",
+      "source1": "b",
+      "source2": "A",
+      "source3": "h",
+      "constant": "",
+      "stride": 0,
+      "lanes": 1,
+      "access": "search"
+    },
+    {
+      "text": "lt = t < key",
+      "type": "INT",
+      "oper": "ARITH",
+      "size": "word",
+      "destin": "lt",
+      "source1": "t",
+      "source2": "key",
+      "source3": "",
+      "constant": ""
+    },
+    {
+      "text": "b = lt ? b+h : b",
+      "type": "INT",
+      "oper": "ARITH",
+      "size": "word",
+      "destin": "b",
+      "source1": "lt",
+      "source2": "b",
+      "source3": "h",
+      "constant": ""
+    },
+    {
+      "text": "n = n - h",
+      "type": "INT",
+      "oper": "ARITH",
+      "size": "word",
+      "destin": "n",
+      "source1": "n",
+      "source2": "h",
+      "source3": "",
+      "constant": ""
+    },
+    {
+      "text": "c = n > 1",
+      "type": "INT",
+      "oper": "ARITH",
+      "size": "word",
+      "destin": "c",
+      "source1": "n",
+      "source2": "",
+      "source3": "",
+      "constant": "1"
+    },
+    {
+      "text": "if c go back",
+      "type": "BRANCH",
+      "oper": "",
+      "size": "",
+      "destin": "",
+      "source1": "c",
+      "source2": "",
+      "source3": "",
+      "constant": "",
+      "stride": 1
+    }
+  ]
+}

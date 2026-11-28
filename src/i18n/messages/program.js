@@ -1,5 +1,12 @@
 // Translations: program (generated from the review texts; English text = key)
 export default {
+  "the element probed {n} iterations later if the key goes {path}": { es: "el elemento consultado {n} iteraciones después si la clave va a {path}", ca: "l'element consultat {n} iteracions després si la clau va a {path}" },
+  "right": { es: "la derecha", ca: "la dreta" },
+  "left": { es: "la izquierda", ca: "l'esquerra" },
+  "the element probed by a binary search (it depends on the key)": { es: "el elemento consultado por una búsqueda binaria (depende de la clave)", ca: "l'element consultat per una cerca binària (depèn de la clau)" },
+  "Requests into the cache the block of {probe}, of {array} (software prefetch: it does not wait for the block).": { es: "Pide a la cache el bloque de {probe}, de {array} (prefetch por software: no espera al bloque).", ca: "Demana a la cache el bloc de {probe}, de {array} (prefetch per programari: no espera el bloc)." },
+  "Loads {what} of {array} into {v}: {probe}.": { es: "Carga {what} de {array} en {v}: {probe}.", ca: "Carrega {what} de {array} a {v}: {probe}." },
+  "Requests into the cache the block of element {c} of {array}, advancing {elements} per iteration (software prefetch: it does not wait for the block).": { es: "Pide a la cache el bloque del elemento {c} de {array}, avanzando {elements} por iteración (prefetch por software: no espera al bloque).", ca: "Demana a la cache el bloc de l'element {c} de {array}, avançant {elements} per iteració (prefetch per programari: no espera el bloc)." },
   "Fixed by the lesson in this card": { es: "Fijado por la lección en esta tarjeta", ca: "Fixat per la lliçó en aquesta targeta" },
   "Show/hide the source code (e.g. C) of the loop from which the program was generated. It is saved with the program and shown in the header of the Program panel": { es: "Mostrar/ocultar el código fuente (p. ej., C) del bucle del que se generó el programa. Se guarda con el programa y se muestra en la cabecera del panel Program", ca: "Mostra/amaga el codi font (p. ex., C) del bucle a partir del qual es va generar el programa. Es desa amb el programa i es mostra a la capçalera del panell Program" },
   "Source code of the loop (e.g. C), saved with the program": { es: "Código fuente del bucle (p. ej., C), guardado con el programa", ca: "Codi font del bucle (p. ex., C), desat amb el programa" },

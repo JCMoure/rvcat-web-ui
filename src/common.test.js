@@ -196,7 +196,7 @@ describe('program validation', () => {
     }
 
     const errors = validateProgram(invalidProgram)
-    expect(errors).toContain('Instruction 1: oper must be one of: STORE, LOAD.')
+    expect(errors).toContain('Instruction 1: oper must be one of: STORE, LOAD, PREFETCH.')
     expect(errors).toContain('Instruction 1: size must be one of: byte, word, long.')
     expect(errors).toContain('Instruction 1: memory instructions must name an array in source2.')
     expect(errors).toContain('Instruction 1: stride must be a safe integer.')

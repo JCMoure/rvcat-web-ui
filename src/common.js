@@ -96,6 +96,15 @@ export const typeOperations = {
     'BRANCH': []
   };
 
+// Operations of the instructions of a program: those of the processor, and PREFETCH (MEM), a software
+// prefetch, executed in the ports of MEM.LOAD and with its latency (it is not an operation of a port)
+export const instructionOperations = { ...typeOperations, MEM: [...typeOperations.MEM, 'PREFETCH'] }
+
+// Access pattern of a memory instruction (field "access"): "" the element advances a stride per
+// iteration; "search" a binary search over the array (the element probed depends on the key of each
+// call); a PREFETCH with access "search" requests the probe "ahead" iterations later, along "path"
+export const SEARCH_MAX_AHEAD = 4
+
 // SHUFFLE (VINT, VFLOAT) combines the lanes of one or two vector registers within each 128-bit
 // block; PERMUTE moves them across 128-bit blocks (x86 AVX).
 // Processors written before CVT or SHUFFLE existed get default values:
@@ -112,6 +121,8 @@ const FALLBACK = {
   PERMUTE: { latency: DEFAULT_PERMUTE_LATENCY, op: { VINT: 'VINT.LOGIC', VFLOAT: 'VINT.LOGIC' } },
   // comparison of FLOAT data (result: an INT condition): ports and latency of the FP addition
   CMP:     { latency: null, op: { FLOAT: 'FLOAT.ADD', VFLOAT: 'VFLOAT.ADD' } },
+  // software prefetch: ports and latency of the LOAD
+  PREFETCH: { latency: null, op: { MEM: 'MEM.LOAD' } },
 }
 
 // Latencies of each size were saved by older versions of the processor editor as "TYPE-OPER-size";
@@ -310,7 +321,7 @@ export function validateProgram(program, options = {}) {
       return
     }
 
-    const operations = typeOperations[instruction.type]
+    const operations = instructionOperations[instruction.type]
     if (instruction.type === 'BRANCH') {
       branches.push(index)
       if (index < program.instruction_list.length - 1) {    // conditional branch "if c skip k"
@@ -373,6 +384,21 @@ export function validateProgram(program, options = {}) {
         addInstructionError(t('memory constant must be a safe integer offset.'))
       }
     }
+
+    const access = instruction.access ?? ''
+    if (access !== '' && access !== 'search') {
+      addInstructionError(t('access must be empty or "search".'))
+    } else if (access === 'search' && instruction.type !== 'MEM') {
+      addInstructionError(t('only a scalar memory instruction (MEM) can have the access "search".'))
+    } else if (access === 'search' && instruction.oper === 'PREFETCH') {
+      const ahead = instruction.ahead ?? 0, path = instruction.path ?? ''
+      if (!Number.isInteger(ahead) || ahead < 1 || ahead > SEARCH_MAX_AHEAD)
+        addInstructionError(t('ahead of a PREFETCH of a search must be an integer between 1 and {1}.', { 1: SEARCH_MAX_AHEAD }))
+      else if (typeof path !== 'string' || !new RegExp(`^[LR]{${ahead}}$`).test(path))
+        addInstructionError(t('path of a PREFETCH of a search must have {1} letters L or R.', { 1: ahead }))
+    }
+    if (instruction.oper === 'PREFETCH' && String(instruction.destin ?? '').trim())
+      addInstructionError(t('a PREFETCH has no destination.'))
   })
 
   // the loop branch is the final instruction; other BRANCH instructions are conditional ("if c skip k")
@@ -486,24 +512,28 @@ export function getLogicalElementCount(instructionList, loopIterations) {
 }
 
 // The execution of every instruction is E (loads and stores too): memoryOperation ('Load from',
-// 'Store to' or null, from the type of the instruction) tells a memory access
+// 'Store to', 'Prefetch of' or null, from the type of the instruction) tells a memory access
 export function charToProcessingState(ch, port, addr, memoryOperation = null) {
   if (port != null) {
     if (memoryOperation === 'Load from')
       return t('Load addr {1} on P{2}', { 1: addr, 2: port })
     else if (memoryOperation === 'Store to')
       return t('Store addr {1} on P{2}', { 1: addr, 2: port })
+    else if (memoryOperation === 'Prefetch of')
+      return t('Prefetch addr {1} on P{2}', { 1: addr, 2: port })
     else
       return t('Issued to P{1}', { 1: port })
   }
   switch (ch) {
     case "E": return memoryOperation === 'Load from' ? t('Load running')
-                   : memoryOperation === 'Store to' ? t('Store running') : t('Executing');
+                   : memoryOperation === 'Store to' ? t('Store running')
+                   : memoryOperation === 'Prefetch of' ? t('Prefetch running') : t('Executing');
     case "R": return t('Retire (write register)');
     case "D": return t('Dispatch');
     case "-": return t('Wait for older instr. to retire');
     case "W": return memoryOperation === "Store to"
       ? t('Write result to cache')
+      : memoryOperation === 'Prefetch of' ? t('Prefetch done (its block is requested)')
       : t('Write result to ROB');
     case ".": return t('Wait: data dependency');
     case "*": return t('Wait: port conflict');

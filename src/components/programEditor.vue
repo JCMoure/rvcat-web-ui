@@ -7,7 +7,7 @@
   import { useRVCAT_Api }                                     from '@/rvcatAPI'
   import { uiLocked }                                      from '@/authorMode'
   import { downloadJSON, uploadJSON, createGraphVizGraph, saveToLocalStorage,
-           instructionTypes, typeOperations, typeSizes,
+           instructionTypes, instructionOperations as typeOperations, typeSizes,
            normalizeProgramDefaults, MAX_LOGICAL_ELEMENT_COUNT, MAX_REP_INSTRUCTIONS }  from '@/common'
   import MemoryTrace                                         from '@/components/MemoryTrace.vue'
   import DeclarationsTable                                   from '@/components/DeclarationsTable.vue'
@@ -220,7 +220,8 @@ function loadEditedProgram() {
         stride:  inst.stride  ?? 1,  lanes:   inst.lanes   ?? 1,
         prob:    inst.prob ?? (inst.type === 'BRANCH' ? 0.5 : ''), mispredict: inst.mispredict ?? '',
         mask:    inst.mask ?? '',
-        ...(inst.cLine !== undefined ? { cLine: inst.cLine } : {})
+        ...(inst.cLine !== undefined ? { cLine: inst.cLine } : {}),
+        ...(inst.access ? { access: inst.access, ahead: inst.ahead ?? 0, path: inst.path ?? '' } : {})
       };
     }).map((inst, index, all) => index === all.length - 1 ? inst : enforceStructure(inst));
     console.log('📄Edited Program Reloaded from local storage')
@@ -350,6 +351,10 @@ function normalizeInstruction(inst) {
     lanes:    inst.lanes  ?? 1,
     ...(inst.cLine !== undefined && inst.cLine !== '' ? { cLine: inst.cLine } : {}),
     ...(String(inst.mask ?? '').trim() ? { mask: String(inst.mask).trim() } : {}),
+    // binary search (access "search"); a PREFETCH of a search: iterations ahead and path
+    ...(inst.access ? { access: inst.access,
+                        ...(inst.oper === 'PREFETCH' ? { ahead: Number(inst.ahead) || 0, path: String(inst.path ?? '') } : {}) }
+                    : {}),
     // conditional branch ("if c skip k"): probability of being taken, misprediction rate (empty: predictor)
     ...(inst.type === 'BRANCH' ? { prob: fraction(inst.prob) ?? 0.5,
                                    ...(fraction(inst.mispredict) !== null ? { mispredict: fraction(inst.mispredict) } : {}) }

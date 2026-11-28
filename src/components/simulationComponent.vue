@@ -237,6 +237,10 @@
     if ((instr1.prob ?? '') !== (instr2.prob ?? ''))             return false;
     if ((instr1.mask ?? '') !== (instr2.mask ?? ''))             return false;
     if ((instr1.mispredict ?? '') !== (instr2.mispredict ?? '')) return false;
+    if ((instr1.access ?? '') !== (instr2.access ?? ''))         return false;
+    if ((instr1.ahead ?? 0) !== (instr2.ahead ?? 0))             return false;
+    if ((instr1.path ?? '') !== (instr2.path ?? ''))             return false;
+    if ((instr1.oper ?? '') !== (instr2.oper ?? ''))             return false;
     return true; // ✅ all are equal
   }
 
@@ -968,6 +972,17 @@
               {{ t('late') }} {{ simState.executionResults.prefetch.late }} ·
               {{ t('not used') }} {{ simState.executionResults.prefetch.unused }}
               <template v-if="simState.executionResults.prefetch.dropped"> · {{ t('dropped') }} {{ simState.executionResults.prefetch.dropped }}</template>
+            </span>
+          </div>
+          <div v-if="simState.executionResults?.sw_prefetch" class="simulation-inline-item stat-cache" id="sw-prefetch-item">
+            <label>{{ t('PREFETCH instructions:') }}</label>
+            <span id="sw-prefetch-output"
+                  :title="t('PREFETCH instructions executed, and the blocks they requested to MM (the others were in the cache or on the way): useful (a LOAD found the block in the cache), late (the LOAD waited for the block on the way) and not used (replaced before a LOAD used it, or never used)')">
+              {{ simState.executionResults.sw_prefetch.executed }} ·
+              {{ t('requests') }} {{ simState.executionResults.sw_prefetch.issued }} ·
+              {{ t('useful') }} {{ simState.executionResults.sw_prefetch.useful }} ·
+              {{ t('late') }} {{ simState.executionResults.sw_prefetch.late }} ·
+              {{ t('not used') }} {{ simState.executionResults.sw_prefetch.unused }}
             </span>
           </div>
           <div class="simulation-inline-item stat-cache">

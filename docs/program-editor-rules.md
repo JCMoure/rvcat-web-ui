@@ -157,6 +157,29 @@ The mask is an extra source of the store (a data dependence). In the editor it i
 - **Mispredictions.** The expected mispredictions per iteration × penalty give an estimate of their cost (a lower bound: the dispatch also waits until the branch resolves).
 - **Dependence graph.** A consumer with several possible producers gets one dashed edge per producer, labeled with its probability. Conditional instructions are dashed and show their probability of being executed, and dotted edges go from the branch to the instructions it can skip (control, speculated: not a data dependence).
 
+## Software prefetch and binary search
+
+**PREFETCH** (type `MEM`, oper `PREFETCH`, no destination) is a software prefetch (`__builtin_prefetch`). It runs in the ports of `MEM.LOAD` with its latency: it is not an operation of the ports of the processor. In the cache:
+
+- if its block is in the cache or on the way, it does nothing;
+- otherwise it requests the block like a miss, and it waits for a fill buffer (and a line);
+- it is done as soon as its request gets the fill buffer: it does not wait for the block. The block is marked as prefetched until a LOAD uses it.
+
+The results count the PREFETCH instructions executed, the blocks they requested to MM, and of those the useful ones (a LOAD hit the block), the late ones (a LOAD waited for the block on the way) and the ones not used (`sw_prefetch`). The hardware prefetcher (`prefetchDistance`) has its own counters.
+
+**Binary search** (`access: "search"`, only scalar `MEM`). The array has 2^d elements, d = the iterations of a call (at most 24), and each call (Rep) searches a different key (a position drawn from a fixed seed: the same in every simulation). In iteration k, `base` keeps the high k bits of the position of the key, and the LOAD probes `base + 2^(d-1-k)` (a branchless search: `b = (A[b+h] < key) ? b+h : b`). The address does not advance with a stride, so the hardware prefetcher ignores it.
+
+A PREFETCH with `access: "search"` has two more fields:
+
+| Field | Meaning |
+|---|---|
+| `ahead` | Iterations ahead (1 to 4): it requests the probe of iteration k + ahead. |
+| `path` | One letter per iteration in between, `L` (the key is in the lower half: `b` stays) or `R` (upper half: `b += h`). Only one of the 2^ahead paths is the right one. |
+
+A PREFETCH without `access` uses the stride and the constant like a LOAD (`prefetch V[i+16]`). The text of a PREFETCH is not analyzed: its fields are not checked against the text.
+
+The programs `BSEARCH`, `BSEARCH-pf1` (2 prefetches, 1 iteration ahead) and `BSEARCH-pf2` (4 prefetches, 2 iterations ahead) are in `public/program` (not distributed).
+
 ## Conversions and vector registers
 
 **Conversions.** A conversion is written as a call to the type of its result:

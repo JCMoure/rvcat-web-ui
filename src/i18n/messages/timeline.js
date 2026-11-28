@@ -1,5 +1,7 @@
 // Translations: timeline (generated from the review texts; English text = key)
 export default {
+  "the block is requested to MM (the PREFETCH waits for a fill buffer, not for the block)": { es: "el bloque se pide a la MM (el PREFETCH espera un fill buffer, no el bloque)", ca: "el bloc es demana a la MM (el PREFETCH espera un fill buffer, no el bloc)" },
+  "the block is in the cache or on the way: nothing to do": { es: "el bloque está en la cache o en camino: no hace nada", ca: "el bloc és a la cache o en camí: no fa res" },
   "prefetched, not used yet": { es: "traído por prefetch, aún sin usar", ca: "portat per prefetch, encara sense usar" },
   "assigned: {list}": { es: "asignados: {list}", ca: "assignats: {list}" },
   "Timeline problem: all instructions must traverse an E state": { es: "Problema del timeline: todas las instrucciones deben pasar por un estado E", ca: "Problema del timeline: totes les instruccions han de passar per un estat E" },

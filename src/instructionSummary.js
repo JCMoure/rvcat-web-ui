@@ -39,6 +39,19 @@ export function instructionSummary(list, index) {
     const c = Number(String(inst.constant ?? '').trim() || 0)
     const what  = L > 1 ? t('{n} {size}s', { n: L, size: inst.size }) : t('one {size}', { size: inst.size })
     const array = inst.source2 || '?'
+    if (inst.access === 'search') {     // binary search: the element depends on the key
+      const probe = inst.oper === 'PREFETCH'
+        ? t('the element probed {n} iterations later if the key goes {path}', {
+            n: inst.ahead ?? 1,
+            path: String(inst.path ?? '').split('').map(c => (c === 'R' ? t('right') : t('left'))).join(', ') })
+        : t('the element probed by a binary search (it depends on the key)')
+      return (inst.oper === 'PREFETCH'
+        ? t('Requests into the cache the block of {probe}, of {array} (software prefetch: it does not wait for the block).', { probe, array })
+        : t('Loads {what} of {array} into {v}: {probe}.', { what, array, v: inst.destin || '?', probe })) + exec
+    }
+    if (inst.oper === 'PREFETCH')
+      return t('Requests into the cache the block of element {c} of {array}, advancing {elements} per iteration (software prefetch: it does not wait for the block).',
+               { c, array, elements: pl(L * Math.abs(s), '1 element', '{n} elements') }) + exec
     const where = s === 0 ? t('element {c} (fixed address)', { c })
                 : s < 0   ? t('element N−{c} backward', { c })
                 :           t('element {c}', { c })

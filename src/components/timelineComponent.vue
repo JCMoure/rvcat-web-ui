@@ -1570,7 +1570,7 @@
       // a memory access, from the type of the instruction (its execution is shown with E)
       const instr = instrAt(instrIdx)
       const memoryOperation = /MEM/.test(instr?.type ?? '')
-        ? (instr.oper === 'STORE' ? 'Store to' : instr.oper === 'LOAD' ? 'Load from' : null)
+        ? (instr.oper === 'STORE' ? 'Store to' : instr.oper === 'LOAD' ? 'Load from' : instr.oper === 'PREFETCH' ? 'Prefetch of' : null)
         : null
 
       // a row not drawn (compact view): only its first cell is kept (far away), for the texts
@@ -1954,6 +1954,9 @@
     const blk  = Number(simState.simulatedProcess?.blkSize) || 64
     const block = Math.floor(header.addr / blk) * blk
     const reads = (timeline.value?.resource_usage?.mm_requests ?? []).filter(q => q.operation !== 'write' && q.address === block)
+    if (header.memoryOperation === 'Prefetch of')     // a PREFETCH: it requested its block, or nothing to do
+      return { store: false, prefetch: true, addr: header.addr, block,
+               result: reads.some(q => q.prefetch_index === row) ? 'requested' : 'present' }
     let result = 'hit'
     if (reads.some(q => q.instruction_index === row)) result = 'primary'
     else if (reads.some(q => (q.instruction_indices ?? []).includes(row))) result = 'secondary'
@@ -1966,9 +1969,13 @@
   // -1: the instruction as a whole). A LOAD: its first ! or 2, or (a hit) its last E; a STORE: the
   // cycle in which it is written from the store buffer into the cache
   function memoryText(m, col = -1, row = null) {
-    const where = (m.store ? 'STORE' : 'LOAD') + ' ' + t('addr {a}, block {b}', { a: m.addr, b: m.block })
+    const where = (m.store ? 'STORE' : m.prefetch ? 'PREFETCH' : 'LOAD') + ' ' + t('addr {a}, block {b}', { a: m.addr, b: m.block })
     const when = row === null ? null : memoryResultCycle(row, m)
     if (col >= 0 && (when === null || col < when)) return where
+    if (m.prefetch)
+      return where + ': ' + (m.result === 'requested'
+        ? t('the block is requested to MM (the PREFETCH waits for a fill buffer, not for the block)')
+        : t('the block is in the cache or on the way: nothing to do'))
     return where + ': ' + (m.store   // a STORE accesses the cache from the store buffer, after it retires
       ? (m.result === 'hit' ? t('its block is in the cache when it is written') : t('write miss: its block is requested when it is written, after it retires'))
       : m.result === 'hit' ? t('hit') : m.result === 'primary' ? t('primary miss (it requests the block)') : t('secondary miss (the block is already coming)'))
@@ -2991,7 +2998,7 @@
       [{ text: lat === 1 ? t('Latency: 1 cycle') : t('Latency: {l} cycles', { l: lat }), kind: 'perf' }],
     ]
     if (cell.memoryOperation && Number.isFinite(cell.addr) && cell.addr >= 0)
-      lines.push([{ text: `${cell.memoryOperation === 'Store to' ? 'STORE' : 'LOAD'} MEMORY address: ${cell.addr}`, kind: 'mem' }])
+      lines.push([{ text: `${cell.memoryOperation === 'Store to' ? 'STORE' : cell.memoryOperation === 'Prefetch of' ? 'PREFETCH' : 'LOAD'} MEMORY address: ${cell.addr}`, kind: 'mem' }])
     if (cell.wrongPath || cell.mispredicted)
       lines.push([{ text: cell.wrongPath ? t('wrong path (squashed)') : t('mispredicted branch'), kind: 'note' }])
     return lines

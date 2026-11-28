@@ -1,5 +1,13 @@
 // Translations: processor (generated from the review texts; English text = key)
 export default {
+  "Prefetch addr {1} on P{2}": { es: "Prefetch de dir. {1} en P{2}", ca: "Prefetch de l'adr. {1} a P{2}" },
+  "Prefetch running": { es: "Prefetch en curso", ca: "Prefetch en curs" },
+  "Prefetch done (its block is requested)": { es: "Prefetch hecho (su bloque está pedido)", ca: "Prefetch fet (el seu bloc està demanat)" },
+  "access must be empty or \"search\".": { es: "access debe estar vacío o ser \"search\".", ca: "access ha d'estar buit o ser \"search\"." },
+  "only a scalar memory instruction (MEM) can have the access \"search\".": { es: "solo una instrucción de memoria escalar (MEM) puede tener el acceso \"search\".", ca: "només una instrucció de memòria escalar (MEM) pot tenir l'accés \"search\"." },
+  "ahead of a PREFETCH of a search must be an integer between 1 and {1}.": { es: "ahead de un PREFETCH de una búsqueda debe ser un entero entre 1 y {1}.", ca: "ahead d'un PREFETCH d'una cerca ha de ser un enter entre 1 i {1}." },
+  "path of a PREFETCH of a search must have {1} letters L or R.": { es: "path de un PREFETCH de una búsqueda debe tener {1} letras L o R.", ca: "path d'un PREFETCH d'una cerca ha de tenir {1} lletres L o R." },
+  "a PREFETCH has no destination.": { es: "un PREFETCH no tiene destino.", ca: "un PREFETCH no té destinació." },
   "Prefetch distance (blocks)": { es: "Distancia de prefetch (bloques)", ca: "Distància de prefetch (blocs)" },
   "Prefetching: a LOAD that accesses block B also requests the block D blocks ahead in its direction (0: no prefetching). A prefetch uses a free fill buffer and a line; without them it is dropped": { es: "Prefetching: un LOAD que accede al bloque B pide también el bloque D bloques más adelante en su sentido (0: sin prefetching). Un prefetch usa un fill buffer y una línea libres; sin ellos se descarta", ca: "Prefetching: un LOAD que accedeix al bloc B demana també el bloc D blocs més endavant en el seu sentit (0: sense prefetching). Un prefetch fa servir un fill buffer i una línia lliures; sense ells es descarta" },
   "Prefetching: a LOAD that accesses block B also requests the block {d} blocks ahead; a prefetch uses a free fill buffer and a line, or it is dropped.": { es: "Prefetching: un LOAD que accede al bloque B pide también el bloque {d} bloques más adelante; un prefetch usa un fill buffer y una línea libres, o se descarta.", ca: "Prefetching: un LOAD que accedeix al bloc B demana també el bloc {d} blocs més endavant; un prefetch fa servir un fill buffer i una línia lliures, o es descarta." },
