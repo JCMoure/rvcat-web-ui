@@ -8,23 +8,38 @@
 
 export const isMiss = (step) => step?.result === 'cold' || step?.result === 'capacity'
 
-// The array whose data a block holds (the first one that has an element in it)
-function arrayOfBlock(trace, block) {
+// The arrays whose data a block holds (in memory order)
+function arraysOfBlock(trace, block) {
   const blk = trace.blkSize
-  return (trace.arrays ?? []).find(a => a.base < block + blk && a.base + a.bytes > block) ?? null
+  return (trace.arrays ?? []).filter(a => a.base < block + blk && a.base + a.bytes > block)
 }
 
-// Name of a block: the elements of the array that it holds, e.g. V[8–15]; short: V1 (the second
-// block of V, counting from the block of its first element)
+// Name of a block: the elements of the arrays that it holds, e.g. V[8–15], or V[96–99] W[0–3] (a block
+// shared by two arrays); short: V1 (the second block of V, counting from the block of its first element)
 export function blockLabel(trace, block) {
-  const a = arrayOfBlock(trace, block)
-  if (!a) return { label: String(block), short: String(block), array: null }
-  const es = a.elem_size || 1
-  const n = Math.max(1, Math.floor(a.bytes / es))
-  const first = Math.max(0, Math.ceil((block - a.base) / es))
-  const last = Math.min(n - 1, Math.floor((block + trace.blkSize - 1 - a.base) / es))
+  const arrays = arraysOfBlock(trace, block)
+  if (!arrays.length) return { label: String(block), short: String(block), array: null }
+  const parts = arrays.map(a => {
+    const es = a.elem_size || 1
+    const n = Math.max(1, Math.floor(a.bytes / es))
+    const first = Math.max(0, Math.ceil((block - a.base) / es))
+    const last = Math.min(n - 1, Math.floor((block + trace.blkSize - 1 - a.base) / es))
+    return first === last ? `${a.name}[${first}]` : `${a.name}[${first}–${last}]`
+  })
+  const a = arrays[0]
   const index = Math.floor(block / trace.blkSize) - Math.floor(a.base / trace.blkSize)
-  return { label: first === last ? `${a.name}[${first}]` : `${a.name}[${first}–${last}]`, short: `${a.name}${index}`, array: a.name }
+  return { label: parts.join(' '), short: `${a.name}${index}`, array: a.name }
+}
+
+// The longest name of a block of the program (characters), for the width of the table of the cache
+export function longestBlockLabel(trace, maxBlocks = 20000) {
+  const blk = trace.blkSize, arrays = trace.arrays ?? []
+  if (!arrays.length || !blk) return 0
+  const lo = Math.min(...arrays.map(a => a.base)), hi = Math.max(...arrays.map(a => a.base + a.bytes))
+  let longest = 0
+  for (let b = lo - (lo % blk), n = 0; b < hi && n < maxBlocks; b += blk, n++)
+    longest = Math.max(longest, blockLabel(trace, b).label.length)
+  return longest
 }
 
 // The lines of the cache after n steps: [{ line, block, dirty, since, last, rank }] (block null: free;
@@ -90,15 +105,21 @@ export function arrayLayout(trace, array, mapWidth = {}, repStrides = {}, fitEle
               : Number(repStrides?.[array.name]) > 1 ? Number(repStrides[array.name])
               : Math.min(count, fit)
   if (count > MAP_MAX_ELEMENTS) return { name: array.name, count, tooLarge: true, rows: [] }
+  // aligned to the blocks: the first row starts at the block of the first element, and the positions
+  // of a block before the first element or after the last one are empty (pad: another array, or nothing)
+  const blk = trace.blkSize
+  const start0 = array.base - (array.base % blk)
+  const lead = Math.floor((array.base - start0) / es)
+  const positions = Math.ceil((lead + count) / perBlock) * perBlock
   const rows = []
-  for (let start = 0; start < count; start += width) {
+  for (let p0 = 0; p0 < positions; p0 += width) {
     const cells = []
-    for (let e = start; e < Math.min(count, start + width); e++) {
-      const addr = array.base + e * es
-      const block = addr - (addr % trace.blkSize)
-      cells.push({ elem: e, block, blockStart: e === 0 || (addr % trace.blkSize) < es })
+    for (let p = p0; p < Math.min(positions, p0 + width); p++) {
+      const addr = start0 + p * es
+      const e = p - lead
+      cells.push({ elem: e, block: addr - (addr % blk), blockStart: (addr % blk) < es, pad: e < 0 || e >= count })
     }
-    rows.push({ start, cells })
+    rows.push({ start: Math.max(0, p0 - lead), cells })
   }
-  return { name: array.name, count, width, perBlock, rows }
+  return { name: array.name, count, width, perBlock, lead, rows }
 }

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { blockLabel, cacheStateAt, countsUpTo, nextMiss, memoryStateAt, arrayLayout } from './cacheTrace'
+import { blockLabel, longestBlockLabel, cacheStateAt, countsUpTo, nextMiss, memoryStateAt, arrayLayout } from './cacheTrace'
 
 // Base-like trace: V[i] and W[i] (floats), cache of 2 lines of 32 bytes (8 floats), 10 accesses
 const step = (k, array, elem, result, line, extra = {}) => {
@@ -50,5 +50,19 @@ describe('cache trace', () => {
     expect(l.rows.length).toBe(4)
     expect(l.rows[0].cells.filter(c => c.blockStart).map(c => c.elem)).toEqual([0, 8])
     expect(arrayLayout(trace, trace.arrays[0], {}, { V: 8 }).width).toBe(8)
+  })
+
+  it('aligns an array to the blocks: the positions of its first and last blocks outside it are empty', () => {
+    // W starts in the middle of a block (base 16: 4 floats after the start of the block 0)
+    const t2 = { ...trace, arrays: [{ name: 'V', base: 0, elem_size: 4, bytes: 16 }, { name: 'W', base: 16, elem_size: 4, bytes: 40 }] }
+    const w = arrayLayout(t2, t2.arrays[1], { W: 8 })
+    expect(w.lead).toBe(4)
+    expect(w.rows[0].cells.slice(0, 5).map(c => c.pad)).toEqual([true, true, true, true, false])
+    expect(w.rows[0].cells[4]).toMatchObject({ elem: 0, block: 0 })
+    expect(w.rows[1].cells.map(c => c.pad)).toEqual([false, false, false, false, false, false, true, true])
+    expect(blockLabel(t2, 0).label).toBe('V[0–3] W[0–3]')
+    expect(longestBlockLabel(t2)).toBe('V[0–3] W[0–3]'.length)
+    const v = arrayLayout(t2, t2.arrays[0], { V: 8 })
+    expect(v.rows[0].cells.map(c => c.pad)).toEqual([false, false, false, false, true, true, true, true])
   })
 })

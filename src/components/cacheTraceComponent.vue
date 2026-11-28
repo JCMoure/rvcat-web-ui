@@ -14,7 +14,8 @@
   import HelpComponent from '@/components/helpComponent.vue'
   import { useRVCAT_Api } from '@/rvcatAPI'
   import { getLogicalElementCount } from '@/common'
-  import { blockLabel, cacheStateAt, countsUpTo, nextMiss, memoryStateAt, arrayLayout, isMiss } from '@/cacheTrace'
+  import { textScale } from '@/textScale'
+  import { blockLabel, longestBlockLabel, cacheStateAt, countsUpTo, nextMiss, memoryStateAt, arrayLayout, isMiss } from '@/cacheTrace'
 
   const simState = inject('simulationState')
   const { registerHandler, isReady } = inject('worker')
@@ -181,15 +182,36 @@
   }
   watch(message, () => nextTick(() => { if (msgEl.value) msgEl.value.scrollLeft = 0; updateMsgArrows() }))
 
+  // ---- The size of the text: the one of A−/A+, limited by the width of the panel (it needs about
+  // PANEL_EM ems of width: a narrow panel keeps a smaller text). When it is limited, a button folds the
+  // Processor and Program panels to give it room. Sizes in pixels (cells, rows) follow it. ----
+  const PANEL_EM = 45
+  const rootEl = ref(null)
+  const panelW = ref(0)
+  const scale = computed(() => {
+    const k = textScale.value
+    if (!panelW.value) return k
+    return Math.min(k, Math.max(0.875, panelW.value / (16 * PANEL_EM)))
+  })
+  const limited = computed(() => scale.value < textScale.value - 0.001)
+  const sideOpen = ref(true)
+  function foldSide() { document.getElementById('side-panel-toggle')?.click() }
+  const px = (n) => Math.round(n * scale.value)
+  const rootStyle = computed(() => ({ fontSize: `${16 * scale.value}px`, '--cell': `${px(13)}px` }))
+
   // ---- 4: memory map: the arrays side by side; each one scrolls by itself, and follows the element
   // accessed. When they do not fit in the width, all of them but the one of the last access are
   // compressed (narrower cells) -----------------------------------------------------------------
-  const CELL = 13, ROWLABEL = 34, GAP = 14
+  const CELL_BASE = 13, ROWLABEL_BASE = 34, GAP = 14
+  const CELL = computed(() => px(CELL_BASE))
+  const ROWLABEL = computed(() => px(ROWLABEL_BASE))
   const mapEl = ref(null)
   const mapSize = reactive({ w: 0, h: 0 })
   const bottomEl = ref(null)
   const bottomSize = reactive({ w: 0, h: 0 })
   function measure() {
+    if (rootEl.value) panelW.value = rootEl.value.clientWidth
+    sideOpen.value = !!document.getElementById('side-panel-toggle')
     if (mapEl.value) { mapSize.w = mapEl.value.clientWidth; mapSize.h = mapEl.value.clientHeight }
     if (bottomEl.value) { bottomSize.w = bottomEl.value.clientWidth; bottomSize.h = bottomEl.value.clientHeight }
     updateMsgArrows()
@@ -197,24 +219,27 @@
   const layouts = computed(() => {
     if (!trace.value) return []
     const arrays = trace.value.arrays ?? []
-    const each = Math.max(CELL, (mapSize.w - GAP * arrays.length) / Math.max(1, arrays.length) - ROWLABEL)
-    return arrays.map(a => arrayLayout(trace.value, a, proc.value.mapWidth, proc.value.repStrides, Math.floor(each / CELL)))
+    const each = Math.max(CELL.value, (mapSize.w - GAP * arrays.length) / Math.max(1, arrays.length) - ROWLABEL.value)
+    return arrays.map(a => arrayLayout(trace.value, a, proc.value.mapWidth, proc.value.repStrides, Math.floor(each / CELL.value)))
   })
   const activeArray = computed(() => current.value?.array ?? null)
   // the width of the cells of each array
   const cellWidths = computed(() => {
     const ls = layouts.value
-    const natural = ls.reduce((s, l) => s + ROWLABEL + GAP + (l.width ?? 0) * CELL, 0)
-    if (natural <= mapSize.w || !mapSize.w) return Object.fromEntries(ls.map(l => [l.name, CELL]))
+    const cell = CELL.value, rowLabel = ROWLABEL.value
+    const natural = ls.reduce((s, l) => s + rowLabel + GAP + (l.width ?? 0) * cell, 0)
+    if (natural <= mapSize.w || !mapSize.w) return Object.fromEntries(ls.map(l => [l.name, cell]))
     const active = ls.find(l => l.name === activeArray.value)
     const others = ls.filter(l => l !== active)
-    const room = mapSize.w - ls.length * (ROWLABEL + GAP) - (active ? (active.width ?? 0) * CELL : 0)
-    const cw = Math.max(2, Math.min(CELL, Math.floor(room / Math.max(1, others.reduce((s, l) => s + (l.width ?? 0), 0)))))
-    return Object.fromEntries(ls.map(l => [l.name, l === active ? CELL : cw]))
+    const room = mapSize.w - ls.length * (rowLabel + GAP) - (active ? (active.width ?? 0) * cell : 0)
+    const cw = Math.max(2, Math.min(cell, Math.floor(room / Math.max(1, others.reduce((s, l) => s + (l.width ?? 0), 0)))))
+    return Object.fromEntries(ls.map(l => [l.name, l === active ? cell : cw]))
   })
   function cellClass(name, cell) {
     const st = mem.value.blocks.get(cell.block)
     const s = current.value
+    if (cell.pad) return { 'ct-pad': true, 'ct-in': st === 'in', 'ct-out': st === 'out', 'ct-bstart': cell.blockStart,
+                           'ct-nowblock': !!s && s.block === cell.block }
     return {
       'ct-in': st === 'in', 'ct-out': st === 'out', 'ct-used': mem.value.used.has(`${name}:${cell.elem}`),
       'ct-now': !!s && s.array === name && s.elem === cell.elem,
@@ -222,6 +247,17 @@
       'ct-bstart': cell.blockStart,
     }
   }
+  // 5: the table of the cache has a fixed width (its widest possible contents), so that the map does
+  // not move when the lines fill: the longest name of a block (A[first–last]) and address
+  const cacheCols = computed(() => {
+    const arrays = trace.value?.arrays ?? []
+    const digits = (n) => String(Math.max(0, Math.floor(n))).length
+    const name = Math.max(6, trace.value ? longestBlockLabel(trace.value) : 0)
+    const top = Math.max(0, ...arrays.map(a => a.base + a.bytes))
+    const address = opts.hex ? 2 + top.toString(16).length : digits(top)
+    return { line: 5, block: name + 3 + address, lru: 4, m: 3 }
+  })
+  const cacheWidth = computed(() => { const c = cacheCols.value; return `calc(${c.line + c.block + c.lru + c.m}ch + 60px)` })
   // a scroll box shows its marked element (inside the box only)
   function keepInView(box, el) {
     if (!box || !el) return
@@ -236,8 +272,7 @@
   }))
 
   // ---- 7: table of the accesses: as many rows as fit, around the current one ----------------------
-  const ROW_H = 21
-  const rowsFit = computed(() => Math.max(3, Math.floor((bottomSize.h - 26) / ROW_H)))
+  const rowsFit = computed(() => Math.max(3, Math.floor((bottomSize.h - px(26)) / px(21))))
   const windowStart = computed(() => Math.max(0, Math.min(total.value - rowsFit.value, step.value - Math.floor(rowsFit.value / 3))))
   const tableRows = computed(() => steps.value.slice(windowStart.value, windowStart.value + rowsFit.value).map((s, j) => ({ s, i: windowStart.value + j })))
   function onTableWheel(e) { if (opts.predict && e.deltaY > 0) return; enter(); stop(); go(step.value + (e.deltaY > 0 ? 1 : -1)) }
@@ -247,7 +282,7 @@
   const showGrid = computed(() => opts.grid && gridOk.value)
   const gridCols = computed(() => {
     if (!trace.value || !showGrid.value) return []
-    const fit = Math.max(8, Math.floor((bottomSize.w - 60) / 46))
+    const fit = Math.max(8, Math.floor((bottomSize.w - px(60)) / px(46)))
     const end = Math.max(step.value, Math.min(total.value, fit)), start = Math.max(0, end - fit)
     const cols = []
     for (let n = start + 1; n <= end; n++) {
@@ -278,6 +313,7 @@
     observer.observe(document.getElementById('cache-trace-root'))
     nextTick(() => { request(); measure() })
   })
+  watch(scale, () => nextTick(measure))
   watch(() => [mode.value, showGrid.value, !!trace.value], () => nextTick(() => {
     for (const el of [mapEl.value, bottomEl.value]) if (el) observer?.observe(el)
     measure()
@@ -291,7 +327,7 @@
 </script>
 
 <template>
-  <div class="main ct-main" id="cache-trace-root">
+  <div class="main ct-main" id="cache-trace-root" ref="rootEl" :style="rootStyle">
     <!-- 1: title, options and the model (one line each) -->
     <div class="ct-head">
       <span class="info-icon" @click="showHelp = true" :title="t('Show Help')"><img src="/img/info.png" class="info-img"></span>
@@ -299,6 +335,8 @@
       <span class="ct-model" :title="t('Sequential execution, without time: only the LOADs and STOREs, in program order. The cache is fully associative with LRU replacement.')">
         <template v-if="hasCache">{{ t('Cache: {n} lines × blocks of {b} B, fully associative, LRU · sequential, no time: LOADs and STOREs only', { n: proc.nBlocks, b: proc.blkSize }) }}</template>
       </span>
+      <button v-if="limited && sideOpen" class="ct-room" id="ct-more-room" @click="foldSide"
+              :title="t('The text of this panel is smaller than the size chosen (A+): fold the Processor and Program panels to give it room')">⇤ A+</button>
       <span class="ct-options">
         <label :title="t('Before each access, say whether it will hit or miss')"><input type="checkbox" id="ct-predict" :checked="opts.predict" @change="setPredict($event.target.checked)"> {{ t('Predict') }}</label>
         <label v-if="gridOk" :title="t('The lines of the cache in the last steps (a column per access), instead of the table of the accesses')"><input type="checkbox" id="ct-grid" v-model="opts.grid"> {{ t('Grid') }}</label>
@@ -364,15 +402,15 @@
       </div>
 
       <!-- 4 and 5: memory map and lines of the cache (the same height) -->
+      <div class="ct-legend">
+        <span><i class="ct-sw"></i>{{ t('never in the cache') }}</span>
+        <span><i class="ct-sw ct-in"></i>{{ t('in the cache') }}</span>
+        <span><i class="ct-sw ct-out"></i>{{ t('evicted') }}</span>
+        <span><i class="ct-sw ct-now"></i>{{ t('element accessed') }}</span>
+        <span>│ {{ t('start of a block') }}</span>
+      </div>
       <div class="ct-middle">
         <div class="ct-mapcol">
-          <div class="ct-legend">
-            <span><i class="ct-sw"></i>{{ t('never in the cache') }}</span>
-            <span><i class="ct-sw ct-in"></i>{{ t('in the cache') }}</span>
-            <span><i class="ct-sw ct-out"></i>{{ t('evicted') }}</span>
-            <span><i class="ct-sw ct-now"></i>{{ t('element accessed') }}</span>
-            <span>│ {{ t('start of a block') }}</span>
-          </div>
           <div class="ct-map" id="ct-map" ref="mapEl">
             <div v-for="lay in layouts" :key="lay.name" class="ct-array" :class="{ 'ct-array-active': lay.name === activeArray }">
               <div class="ct-array-name">{{ lay.name }} <span class="ct-dim">({{ t('{n} elements', { n: lay.count }) }})</span></div>
@@ -382,20 +420,21 @@
                   <span class="ct-rowlabel">{{ row.start }}</span>
                   <span v-for="c in row.cells" :key="c.elem" class="ct-cell" :class="cellClass(lay.name, c)"
                         :style="{ width: cellWidths[lay.name] + 'px' }"
-                        :title="`${lay.name}[${c.elem}] · ${t('block')} ${addr(c.block)} (${label(c.block).label})`"></span>
+                        :title="(c.pad ? '' : `${lay.name}[${c.elem}] · `) + `${t('block')} ${addr(c.block)} (${label(c.block).label})`"></span>
                 </div>
               </div>
             </div>
           </div>
         </div>
 
-        <div class="ct-cache" id="ct-cache">
+        <div class="ct-cache" id="ct-cache" :style="{ width: cacheWidth }">
           <div class="ct-counters" id="ct-sofar">
             <div>{{ t('Hits') }} <b>{{ sofar.hit }}</b> · {{ t('cold') }} <b>{{ sofar.cold }}</b> · {{ t('capacity') }} <b>{{ sofar.capacity }}</b></div>
             <div class="ct-victim">{{ current && current.victim !== null ? t('Out: {v}', { v: label(current.victim).label }) + (current.dirty ? ' ✎' : '') : ' ' }}</div>
           </div>
           <div class="ct-cache-rows" ref="cacheBox">
-            <table>
+            <table class="ct-cache-table">
+              <colgroup><col :style="{ width: cacheCols.line + 2 + 'ch' }"><col><col :style="{ width: cacheCols.lru + 2 + 'ch' }"><col :style="{ width: cacheCols.m + 2 + 'ch' }"></colgroup>
               <thead><tr><th>{{ t('Line') }}</th><th>{{ t('Block') }}</th><th :title="t('Order of use: 1 = the most recently used')">LRU</th><th :title="t('Modified (dirty)')">M</th></tr></thead>
               <tbody>
                 <tr v-for="l in lines" :key="l.line" :id="'ct-line-' + l.line"
@@ -455,16 +494,18 @@
   .ct-head { display: flex; align-items: center; gap: 8px; min-width: 0; flex: 0 0 auto; }
   .ct-title { white-space: nowrap; font-size: 1.05em; }
   .ct-model { flex: 1 1 0; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #555; font-size: 0.85em; }
+  .ct-room { flex: 0 0 auto; border: 1px solid #1565c0; color: #1565c0; background: #fff; border-radius: 4px; padding: 0 0.4em; font-size: 0.8em; cursor: pointer; }
+  .ct-room:hover { background: #e3f2fd; }
   .ct-options { display: flex; gap: 10px; font-size: 0.85em; white-space: nowrap; }
   .ct-options label { cursor: pointer; }
   .ct-note { padding: 14px; border: 1px dashed #bbb; border-radius: 6px; color: #555; }
   .ct-error { color: #c62828; }
   /* 2 */
   .ct-controls { display: flex; align-items: center; gap: 4px; flex: 0 0 auto; min-width: 0; }
-  .ct-controls button { min-width: 28px; height: 24px; padding: 0 6px; border: 1px solid #90a4ae; border-radius: 4px; background: #fff; cursor: pointer; font-size: 0.85em; line-height: 1; }
+  .ct-controls button { min-width: 1.9em; height: 1.75em; padding: 0 0.4em; border: 1px solid #90a4ae; border-radius: 4px; background: #fff; cursor: pointer; font-size: 0.85em; line-height: 1; }
   .ct-controls button:hover:not(:disabled) { background: #e3f2fd; }
   .ct-controls button:disabled { opacity: 0.4; cursor: default; }
-  .ct-controls select { height: 24px; font-size: 0.85em; }
+  .ct-controls select { height: 1.75em; font-size: 0.85em; }
   .ct-controls.ct-dimmed > :not(.ct-sigma) { opacity: 0.45; }
   .ct-controls.ct-dimmed > :not(.ct-sigma):hover { opacity: 0.8; }
   .ct-sigma { font-weight: 700; }
@@ -477,7 +518,7 @@
   .ct-score, .ct-ask { font-size: 0.82em; white-space: nowrap; }
   .ct-ok { color: #2e7d32; font-weight: 700; } .ct-ko { color: #c62828; font-weight: 700; }
   /* 3 */
-  .ct-message { display: flex; align-items: center; flex: 0 0 auto; height: 24px; border-left: 4px solid #90a4ae; background: #f5f7f8; border-radius: 4px; min-width: 0; }
+  .ct-message { display: flex; align-items: center; flex: 0 0 auto; height: 1.6em; border-left: 4px solid #90a4ae; background: #f5f7f8; border-radius: 4px; min-width: 0; }
   .ct-msg-text { flex: 1 1 0; min-width: 0; overflow: hidden; white-space: nowrap; padding: 0 8px; font-size: 0.9em; }
   .ct-msg-arrow { flex: 0 0 auto; border: none; background: transparent; cursor: pointer; color: #37474f; padding: 0 4px; font-size: 0.8em; }
   .ct-msg-hit { border-left-color: #2e7d32; background: #eef7ee; }
@@ -493,29 +534,34 @@
   /* 4 and 5 */
   .ct-middle { flex: 1 1 0; min-height: 90px; display: flex; gap: 10px; min-width: 0; }
   .ct-mapcol { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; min-height: 0; }
-  .ct-legend { display: flex; flex-wrap: wrap; gap: 10px; font-size: 0.78em; color: #555; flex: 0 0 auto; }
-  .ct-sw { display: inline-block; width: 11px; height: 11px; border: 1px solid #bbb; background: #eceff1; margin-right: 3px; vertical-align: -1px; }
+  .ct-legend { display: flex; flex-wrap: nowrap; gap: 12px; font-size: 0.78em; color: #555; flex: 0 0 auto; white-space: nowrap; overflow: hidden; }
+  .ct-sw { display: inline-block; width: 0.8em; height: 0.8em; border: 1px solid #bbb; background: #eceff1; margin-right: 3px; vertical-align: -1px; }
   .ct-map { flex: 1 1 0; min-height: 0; display: flex; gap: 14px; align-items: stretch; overflow: hidden; }
   .ct-array { display: flex; flex-direction: column; min-height: 0; flex: 0 0 auto; }
   .ct-array-name { font-weight: 700; font-size: 0.85em; white-space: nowrap; }
   .ct-array-active .ct-array-name { color: #e65100; }
   .ct-array-rows { overflow-y: auto; overflow-x: hidden; min-height: 0; flex: 1 1 0; }
   .ct-row { display: flex; align-items: center; line-height: 0; margin: 1px 0; }
-  .ct-rowlabel { width: 30px; flex: 0 0 30px; font-size: 0.68em; color: #888; text-align: right; padding-right: 4px; line-height: 1; }
-  .ct-cell { display: inline-block; flex: 0 0 auto; height: 13px; border: 1px solid #fff; background: #eceff1; box-sizing: border-box; }
+  .ct-rowlabel { width: calc(var(--cell) * 2.3); flex: 0 0 calc(var(--cell) * 2.3); font-size: 0.68em; color: #888; text-align: right; padding-right: 4px; line-height: 1; }
+  .ct-cell { display: inline-block; flex: 0 0 auto; height: var(--cell); border: 1px solid #fff; background: #eceff1; box-sizing: border-box; }
   .ct-cell.ct-bstart { border-left: 2px solid #455a64; }
+  /* positions of a block outside the array (another array, or nothing): the colour of the block, dimmed */
+  .ct-cell.ct-pad { opacity: 0.35; background: transparent; border-top-style: dashed; }
+  .ct-cell.ct-pad:not(.ct-in):not(.ct-out) { background: repeating-linear-gradient(45deg, #eceff1 0 2px, #fff 2px 4px); }
   .ct-in { background: #a5d6a7 !important; }
   .ct-out { background: #f4c7c3 !important; }
-  .ct-cell.ct-used::after { content: ''; display: block; width: 3px; height: 3px; margin: 4px auto; border-radius: 50%; background: #37474f; }
+  .ct-cell.ct-used::after { content: ''; display: block; width: 3px; height: 3px; margin: calc(var(--cell) / 2 - 2.5px) auto 0; border-radius: 50%; background: #37474f; }
   .ct-now { outline: 2px solid #ff6f00; outline-offset: -1px; background: #ffcc80 !important; }
   .ct-sw.ct-now { outline-offset: 0; }
   .ct-nowblock { box-shadow: inset 0 0 0 1px #ff6f00; }
-  .ct-cache { flex: 0 0 auto; display: flex; flex-direction: column; min-height: 0; font-size: 0.85em; max-width: 45%; }
+  .ct-cache { flex: 0 0 auto; display: flex; flex-direction: column; min-height: 0; font-size: 0.85em; max-width: 50%; }
+  .ct-cache-table { table-layout: fixed; width: 100%; }
+  .ct-counters > div { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .ct-counters { flex: 0 0 auto; line-height: 1.25; }
   .ct-victim { color: #c62828; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-height: 1.25em; }
   .ct-cache-rows { flex: 1 1 0; min-height: 0; overflow-y: auto; }
   .ct-cache table, .ct-table table, .ct-grid table { border-collapse: collapse; }
-  .ct-cache th, .ct-cache td { border: 1px solid #ddd; padding: 1px 6px; text-align: left; white-space: nowrap; }
+  .ct-cache th, .ct-cache td { border: 1px solid #ddd; padding: 1px 4px; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .ct-cache thead th { background: #eceff1; position: sticky; top: 0; }
   .ct-line-now.ct-line-hit td { background: #c8e6c9; }
   .ct-line-now.ct-line-cold td { background: #bbdefb; }
@@ -524,7 +570,7 @@
   /* 6 and 7 */
   .ct-bottom { flex: 1 1 0; min-height: 80px; min-width: 0; overflow: hidden; display: flex; flex-direction: column; }
   .ct-grid { overflow: auto; font-size: 0.8em; flex: 1 1 0; min-height: 0; }
-  .ct-grid th, .ct-grid td { border: 1px solid #ddd; padding: 1px 4px; text-align: center; min-width: 34px; }
+  .ct-grid th, .ct-grid td { border: 1px solid #ddd; padding: 1px 4px; text-align: center; min-width: 2.6em; }
   .ct-grid thead th { background: #eceff1; }
   .ct-g-elem { font-weight: normal; }
   .ct-g-new { background: #bbdefb; font-weight: 700; }
@@ -532,7 +578,7 @@
   .ct-g-now { outline: 2px solid #ff6f00; outline-offset: -2px; }
   .ct-table { font-size: 0.85em; overflow-x: auto; overflow-y: hidden; flex: 1 1 0; min-height: 0; }
   .ct-table table { width: 100%; }
-  .ct-table th, .ct-table td { border-bottom: 1px solid #eee; padding: 1px 6px; text-align: left; white-space: nowrap; height: 20px; }
+  .ct-table th, .ct-table td { border-bottom: 1px solid #eee; padding: 1px 6px; text-align: center; white-space: nowrap; height: 1.45em; }
   .ct-table thead th { background: #eceff1; }
   .ct-table tbody tr { cursor: pointer; }
   .ct-row-now td { background: #fff3e0; font-weight: 600; }
